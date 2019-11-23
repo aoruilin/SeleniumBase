@@ -3,6 +3,10 @@ You can use this as a boilerplate for your test framework.
 Define your customized library methods in a master class like this.
 Then have all your test classes inherit it.
 BaseTestCase will inherit SeleniumBase methods from BaseCase.
+您可以将其作为测试框架的样板。
+像这样在一个主类中定义定制的库方法。
+然后让所有测试类继承它。
+BaseTestCase将从BaseCase继承SeleniumBase方法。
 '''
 
 from seleniumbase import BaseCase

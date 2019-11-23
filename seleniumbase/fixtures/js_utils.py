@@ -101,7 +101,9 @@ def wait_for_jquery_active(driver, timeout=None):
 
 def activate_jquery(driver):
     """ If "jQuery is not defined", use this method to activate it for use.
-        This happens because jQuery is not always defined on web sites. """
+        This happens because jQuery is not always defined on web sites.
+        如果“jQuery未定义”，请使用此方法激活它以供使用。
+        这是因为jQuery并不总是在web站点上定义。"""
     try:
         # Let's first find out if jQuery is already defined.
         driver.execute_script("jQuery('html')")

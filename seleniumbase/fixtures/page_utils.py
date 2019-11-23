@@ -1,5 +1,6 @@
 """
 This module contains useful utility methods.
+这个模块包含有用的实用方法。
 """
 import codecs
 import re
@@ -9,6 +10,7 @@ import requests
 def get_domain_url(url):
     """
     Use this to convert a url like this:
+    像这样使用这个转换一个url:
     https://blog.xkcd.com/2014/07/22/what-if-book-tour/
     Into this:
     https://blog.xkcd.com
@@ -25,6 +27,7 @@ def get_domain_url(url):
 def is_xpath_selector(selector):
     """
     A basic method to determine if a selector is an xpath selector.
+    确定选择器是否是xpath选择器的基本方法。
     """
     if (selector.startswith('/') or selector.startswith('./') or (
             selector.startswith('('))):
@@ -35,6 +38,7 @@ def is_xpath_selector(selector):
 def is_link_text_selector(selector):
     """
     A basic method to determine if a selector is a link text selector.
+    确定选择器是否是链接文本选择器的基本方法。
     """
     if (selector.startswith('link=') or selector.startswith('link_text=') or (
             selector.startswith('text='))):
@@ -45,6 +49,7 @@ def is_link_text_selector(selector):
 def is_partial_link_text_selector(selector):
     """
     A basic method to determine if a selector is a partial link text selector.
+    一个基本的方法来确定一个选择器是否是一个部分链接文本选择器。
     """
     if (selector.startswith('partial_link=') or (
             selector.startswith('partial_link_text=') or (
@@ -56,6 +61,7 @@ def is_partial_link_text_selector(selector):
 def is_name_selector(selector):
     """
     A basic method to determine if a selector is a name selector.
+    确定选择器是否是名称选择器的基本方法。
     """
     if selector.startswith('name='):
         return True
@@ -65,6 +71,7 @@ def is_name_selector(selector):
 def get_link_text_from_selector(selector):
     """
     A basic method to get the link text from a link text selector.
+    从链接文本选择器获取链接文本的基本方法。
     """
     if selector.startswith('link='):
         return selector.split('link=')[1]
@@ -78,6 +85,7 @@ def get_link_text_from_selector(selector):
 def get_partial_link_text_from_selector(selector):
     """
     A basic method to get the partial link text from a partial link selector.
+    从部分链接选择器获取部分链接文本的基本方法。
     """
     if selector.startswith('partial_link='):
         return selector.split('partial_link=')[1]
@@ -91,6 +99,7 @@ def get_partial_link_text_from_selector(selector):
 def get_name_from_selector(selector):
     """
     A basic method to get the name from a name selector.
+    从名称选择器获取名称的基本方法。
     """
     if selector.startswith('name='):
         return selector.split('name=')[1]
