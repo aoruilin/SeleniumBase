@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 The BaseCase class is the main gateway for using The SeleniumBase Framework.
 It inherits Python's unittest.TestCase class, and runs with Pytest or Nose.
@@ -213,10 +213,10 @@ class BaseCase(unittest.TestCase):
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
             timeout = self.__get_new_timeout(timeout)
         if not self.demo_mode:
-            self.click(selector, by=by, timeout=timeout, delay=1.05)
+            self.click(selector, by=by, timeout=timeout, delay=2.05)
         else:
             # Demo Mode already includes a small delay
-            self.click(selector, by=by, timeout=timeout, delay=0.25)
+            self.click(selector, by=by, timeout=timeout, delay=1.25)
 
     def double_click(self, selector, by=By.CSS_SELECTOR, timeout=None):
         from selenium.webdriver.common.action_chains import ActionChains
@@ -1048,7 +1048,7 @@ class BaseCase(unittest.TestCase):
     def find_elements(self, selector, by=By.CSS_SELECTOR, limit=0):
         """ Returns a list of matching WebElements.
             If "limit" is set and > 0, will only return that many elements.
-            如果设置了“limit”，并且>为0，则只返回那么多元素。"""
+            如果设置了“limit”，并且>0，则只返回那么多元素。"""
         self.wait_for_ready_state_complete()
         selector, by = self.__recalculate_selector(selector, by)
         elements = self.driver.find_elements(by=by, value=selector)

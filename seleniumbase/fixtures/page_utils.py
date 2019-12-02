@@ -1,4 +1,4 @@
-"""
+﻿"""
 This module contains useful utility methods.
 这个模块包含有用的实用方法。
 """

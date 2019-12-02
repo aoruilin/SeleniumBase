@@ -16,6 +16,7 @@ class BaseTestCase(BaseCase):
 
     def setUp(self):
         super(BaseTestCase, self).setUp()
+        self.url = 'http://192.168.0.160:8096'
         # Add custom setUp code for your tests AFTER the super().setUp()
 
     def tearDown(self):
@@ -26,7 +27,7 @@ class BaseTestCase(BaseCase):
         # <<< Placeholder. Add your code here. >>>
         # Reduce duplicate code in tests by having reusable methods like this.
         # If the UI changes, the fix can be applied in one place.
-        pass
+        self.open(self.url)
 
     def example_method(self):
         # <<< Placeholder. Add your code here. >>>
@@ -44,3 +45,4 @@ class MyTests(BaseTestCase):
         self.login()
         self.example_method()
 '''
+

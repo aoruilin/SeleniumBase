@@ -1,4 +1,4 @@
-"""
+﻿"""
 This module contains a set of methods that can be used for page loads and
 for waiting for elements to appear on a page.
 
@@ -408,6 +408,7 @@ def wait_for_element_absent(driver, selector, by=By.CSS_SELECTOR,
                 break
             time.sleep(0.1)
         except Exception:
+            time.sleep(0.5)
             return True
     plural = "s"
     if timeout == 1:

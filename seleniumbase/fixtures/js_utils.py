@@ -1,4 +1,4 @@
-"""
+﻿"""
 This module contains useful Javascript utility methods for base_case.py
 These helper methods SHOULD NOT be called directly from tests.
 """
