@@ -5,6 +5,8 @@ from seleniumbase import BaseCase
 from selenium.webdriver.common.keys import Keys
 
 from ui_auto.base.data import Data, PointIdIndex
+from ui_auto.common.get_answer import ParameterForOthers
+from ui_auto.common.mysql import get_code, get_choice
 from ui_auto.common.upload_file import upload_file_by_auto_it
 from ui_auto.common.picture_list_code import turtle_code
 from ui_auto.common.input_code import input_code
@@ -18,6 +20,7 @@ class BaseTestCase(BaseCase):
         self.url_for_edu = Data().ip_for_edu()
         self.url_for_uni = Data().ip_for_uni_teach()
         self.wait = self.__wait_for_loading()
+        self.parameter = ParameterForOthers(identity='student')
 
     def tearDown(self):
         # Add custom tearDown code for your tests BEFORE the super().tearDown()
@@ -352,21 +355,7 @@ class BaseTestCase(BaseCase):
                         f'//p[text()="{btn}"]/parent::div/parent::div/parent::div/div[2]')
             except Exception as e:
                 print(f'{e}缺少资源')
-            if '课件' == btn:
-                self.driver.switch_to_frame(self.driver.find_elements_by_tag_name('iframe')[0])
-                self.driver.switch_to_frame('wacframe')
-                try:
-                    self.wait_for_element_visible(ElementSelector.ppt_pages_num_loc)
-                    page_num_text = self.get_text(ElementSelector.ppt_pages_num_loc)
-                    page_text = page_num_text[11:]
-                    num_text = page_text[:2]
-                    page_num = int(num_text)
-                    for s in range(page_num):
-                        self.slow_click(ElementSelector.ppt_next_btn_loc)
-                except Exception as e:
-                    print(f'{e}PPT显示异常')
-                finally:
-                    self.switch_to_default_content()
+            self.__check_course_operation(btn)
 
     def student_check_course_loop(self):
         """
@@ -381,50 +370,42 @@ class BaseTestCase(BaseCase):
             self.student_check_course_simple(course_name)
             self.click(ElementSelector.crumbs_loc)
 
-    def uni_teach_student_check_course(self, course_name, enable_assert=False):
+    def uni_teach_student_check_course(self, course_name):
         """
         高校版学生查看课件
         :param course_name:查看的课件名称
         :param enable_assert: 是否检查
         :return: None
         """
-
-        if enable_assert:
-            Assert(self.driver).assert_equal(course_name, ElementSelector.index_course_name_loc)
-        self.driver.find_element(ElementSelector.uni_teach_start_course_btn_loc, tag=False, click=True)
-        self.driver.find_element(ElementSelector.first_course_loc, click=True)  # 点击课程名称进入课程详情页面
-
-        if enable_assert:
-            Assert(self.driver).assert_equal(course_name, ElementSelector.courseCard_tit_loc)
-            exp_number = ' 1'
-            Assert(self.driver).assert_equal(exp_number, ElementSelector.lookNumber_loc)
+        self.__assert_equal(course_name, ElementSelector.index_course_name_loc)
+        self.click(ElementSelector.uni_teach_start_course_btn_loc)
+        self.click(ElementSelector.first_course_loc)  # 点击课程名称进入课程详情页面
+        self.__assert_equal(course_name, ElementSelector.courseCard_tit_loc)
 
         btn_list = ['课件', '视频', '讲义']
         for btn in btn_list:
-            self.driver.find_element_by_xpath(f'//p[text()="{btn}"]', msg=btn, tag=False, click=True)
-            self.driver.find_element_by_xpath(f'//p[text()="{btn}"]'
-                                              f'/parent::div/parent::div/parent::div/div[2]/div/div/div',
-                                              msg=btn, tag=False, click=True)
-            if '课件' == btn:
-                self.driver.switch_to_frame(self.driver.find_elements_by_tag_name('iframe', msg='切换子页面')[0])
-                self.driver.switch_to_frame('wacframe')
-                try:
-                    wait = SeleniumDriver.webdriver_wait(self.driver)
-                    show_up = SeleniumDriver.element_presence(self.driver, ElementSelector.ppt_pages_num_loc)
-                    wait.until(show_up)
-                    page_num_text = self.driver.find_element(ElementSelector.ppt_pages_num_loc,
-                                                             no_wait=True, text=True)
-                    page_text = page_num_text[11:]
-                    num_text = page_text[:2]
-                    page_num = int(num_text)
-                    for s in range(page_num):
-                        self.driver.find_element(ElementSelector.ppt_next_btn_loc, tag=False, click=True)
-                except Exception as e:
-                    print(f'{e}PPT显示异常')
-                finally:
-                    self.driver.switch_to_default_content()
+            self.click(f'//p[text()="{btn}"]')
+            self.click(f'//p[text()="{btn}"]'
+                       f'/parent::div/parent::div/parent::div/div[2]/div/div/div')
+            self.__check_course_operation(btn)
 
-    def student_do_homework_simple(self, homework_name, enable_assert=False):
+    def __check_course_operation(self, btn):
+        if '课件' == btn:
+            self.driver.switch_to_frame(self.driver.find_elements_by_tag_name('iframe')[0])
+            self.driver.switch_to_frame('wacframe')
+            try:
+                page_num_text = self.get_text(ElementSelector.ppt_pages_num_loc)
+                page_text = page_num_text[11:]
+                num_text = page_text[:2]
+                page_num = int(num_text)
+                for s in range(page_num):
+                    self.slow_click(ElementSelector.ppt_next_btn_loc)
+            except Exception as e:
+                print(f'{e}PPT显示异常')
+            finally:
+                self.switch_to_default_content()
+
+    def student_do_homework_simple(self, homework_name):
         """
         标准授课做作业
 
@@ -433,64 +414,56 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         try:
-            self.driver.find_element(ElementSelector.homework_to_do_loc)
+            self.wait_for_element_visible(ElementSelector.homework_to_do_loc)
         except Exception as e:
             print(f'{e}学生端作业列表返回空列表')
-            self.driver.refresh()
+            self.refresh()
         finally:
-            if enable_assert:
-                Assert(self.driver).assert_equal(homework_name, ElementSelector.homework_to_do_loc)
-            self.driver.find_element(ElementSelector.homework_to_do_loc, tag=False, click=True)
-        self.driver.find_element(ElementSelector.view_code_btn_loc, click=True)
-        handle = self.driver.window_handles(1)
-        self.driver.switch_to_window(handle)
+            self.__assert_equal(homework_name, ElementSelector.homework_to_do_loc)
+            self.click(ElementSelector.homework_to_do_loc)
+        self.click(ElementSelector.view_code_btn_loc)
+        self.switch_to_window(1)
 
         eval_id_list = self.parameter.get_eval_id(traditional_teach=True)
         eval_id = eval_id_list[0]
 
         choice_problem_id_list = self.parameter.get_choice_problem_id_for_ui(eval_id)
         c_problem_id_list = [i for i, _ in choice_problem_id_list]
-        n = len(c_problem_id_list)
+        n = len(c_problem_id_list)  # 选择题题目数量
         self.do_homework_operation(n, c_problem_id_list, problem_type='选择')
 
         problem_id_list = self.parameter.get_problem_id_for_ui(eval_id, traditional_teach=True)
         m = len(problem_id_list)  # 操作题题目数量
         self.do_homework_operation(m, problem_id_list, problem_type='操作')
 
-        self.driver.find_element(ElementSelector.push_homework_btn_loc, click=True)
-        self.driver.find_element(ElementSelector.confirm_btn_loc, tag=False, click=True)
-        self.driver.find_element(ElementSelector.standard_emergency_challenge_btn_loc, click=True)
-        for r in range(5):
-            problem_name = self.driver.find_element(ElementSelector.standard_enm_problem_name_loc, text=True)
-            name_list = problem_name.split(' ')
-            name = name_list[-1]
-            code = get_code(problem_id=None, problem_name=name, challenge=True)
-            code_input = self.driver.find_element(ElementSelector.code_view_loc, tag=False)
-            input_code(code, code_input)
-            self.driver.find_element(ElementSelector.save_run_btn_loc, tag=False, click=True)
-            if enable_assert:
-                actual_tip = self.driver.find_element(ElementSelector.standard_challenge_result_tip_loc, text=True)
-                tc = TestCase()
+        self.click(ElementSelector.push_homework_btn_loc)
+        self.click(ElementSelector.confirm_btn_loc)
+        try:
+            self.click(ElementSelector.standard_emergency_challenge_btn_loc)
+        except Exception:
+            print('没有出现紧急挑战按钮，请检查题目是否全部正确')
+        else:
+            for r in range(5):
+                problem_name = self.get_text(ElementSelector.standard_enm_problem_name_loc)
+                name_list = problem_name.split(' ')
+                name = name_list[-1]
+                code = get_code(problem_id=None, problem_name=name, challenge=True)
+                code_input = self.get_element(ElementSelector.code_view_loc)
+                input_code(code, code_input)
+                self.click(ElementSelector.standard_challenge_run_btn_loc)
                 try:
-                    exp_tip = '挑战成功'
-                    tc.assertIn(exp_tip, actual_tip, '紧急挑战结果提示错误')
+                    self.wait_for_text_visible('挑战成功', ElementSelector.standard_challenge_result_tip_loc)
                 except BaseException as e:
                     print(f'{e}题目"{name}"答案错了，用挑战失败再断言一次')
-                    exp_tip = '挑战失败'
-                    Assert(self.driver).assert_in(exp_tip, ElementSelector.standard_challenge_result_tip_loc)
-            self.driver.find_element(ElementSelector.standard_keep_challenge_btn_loc, tag=False, click=True)
+                    self.wait_for_text_visible('挑战失败', ElementSelector.standard_challenge_result_tip_loc)
+                self.click(ElementSelector.standard_keep_challenge_btn_loc)
 
-        self.driver.close()
-        handle = self.driver.window_handles(0)
-        self.driver.switch_to_window(handle)
-        self.driver.refresh()
-        if enable_assert:
-            exp_status = '已完成'
-            exp_quality = '优秀'
-            Assert(self.driver).assert_equal(exp_quality, ElementSelector.homework_quality_loc)
-            Assert(self.driver).assert_equal(exp_status, ElementSelector.homework_status_loc)
+        self.switch_to_default_window()
+        self.refresh()
+        self.wait_for_text_visible('已完成', ElementSelector.homework_status_loc)
+        self.wait_for_text_visible('优秀', ElementSelector.homework_quality_loc)
 
-    def student_do_homework_loop(self, enable_assert=False):
+    def student_do_homework_loop(self):
         """
         标准授课遍历做作业列表前3个作业
 
@@ -499,25 +472,20 @@ class BaseTestCase(BaseCase):
         """
 
         for a in range(1, 4):  # 依次做作业列表3个作业
+            homework_name_sel = f'//div[@class="homework-container-gird"]/ul/li[{a}]/div/div/div/div[1]/div[1]/div'
             try:
-                self.driver.find_element_by_xpath(  # 点击作业名称
-                    f'//div[@class="homework-container-gird"]/ul/li[{a}]/div/div/div/div[1]/div[1]/div',
-                    msg=f'第{a}个作业')
+                self.wait_for_element_visible(homework_name_sel)
             except Exception as e:
-                self.driver.refresh()
                 print(f'{e}作业列表为空，刷新页面')
+                self.refresh()
             finally:
-                homework_name_elem = self.driver.find_element_by_xpath(  # 点击作业名称
-                    f'//div[@class="homework-container-gird"]/ul/li[{a}]/div/div/div/div[1]/div[1]/div',
-                    msg=f'点击第{a}个作业')
-                homework_name_elem.click()
-            self.driver.find_element(ElementSelector.view_code_btn_loc, click=True)
-            handle = self.driver.window_handles(a)
-            self.driver.switch_to_window(handle)
+                self.click(homework_name_sel)
+            self.click(ElementSelector.view_code_btn_loc)
+            self.switch_to_window(a)
 
             # problem_list = self.driver.find_elements(ElementSelector.problem_list_loc, tag=False)
             eval_id_list = self.parameter.get_eval_id(traditional_teach=True)
-            eval_id = eval_id_list[a - 1]
+            eval_id = eval_id_list[a - 1]  # 按顺序取出作业的eval_id
             choice_problem_id_list = self.parameter.get_choice_problem_id_for_ui(eval_id)
             c_problem_list = [i for i, _ in choice_problem_id_list]
             c = len(c_problem_list)
@@ -527,129 +495,33 @@ class BaseTestCase(BaseCase):
             n = len(problem_id_list)
             s = n - a
             self.do_homework_operation(s, problem_id_list, problem_type='操作')
-            self.driver.find_element_by_xpath(
-                f'//span[contains(text(),"操作")]/parent::div/parent::div/following-sibling::div[{n}]',
-                msg=f'操作题第{n}个题目', tag=False, click=True)
-            code_input = self.driver.find_element(ElementSelector.code_view_loc, tag=False)
+            self.click(
+                f'//span[contains(text(),"操作")]/parent::div/parent::div/following-sibling::div[{n}]')
+            code_input = self.get_element(ElementSelector.code_view_loc)
             wrong_answer = 'wrong_answer = "wrong"'
             code_input.send_keys(wrong_answer)
-            self.driver.find_element(ElementSelector.save_run_btn_loc, click=True)
-            if enable_assert:
-                Assert(self.driver).assert_in('测评不通过', ElementSelector.unpass_result_text_loc)
-            self.driver.find_element(ElementSelector.push_homework_btn_loc, click=True)
-            self.driver.find_element(ElementSelector.confirm_btn_loc, click=True)
+            self.click(ElementSelector.save_run_btn_loc)
+            self.wait_for_text_visible('评测不通过', ElementSelector.unpass_result_text_loc)
+            self.click(ElementSelector.push_homework_btn_loc)
+            self.click(ElementSelector.confirm_btn_loc)
 
             do_num = s + c
-            if enable_assert:
-                tc = TestCase()
-                try:
-                    if a == 1:
-                        homework_list_status = self.driver.find_element_by_xpath(  # 作业列表的完成状态
-                            f'//div[@class="homework-container-gird"]/ul/li[{a}]/div/div/div/div[2]/div[3]',
-                            msg=f'第{a}个作业的完成状态', text=True)
-
-                        tc.assertEqual(homework_list_status, '已完成', '作业列表状态错误')
-                    else:
-                        complete_text = self.driver.find_element_by_xpath(f'//div[@class="homework-container-gird"]'
-                                                                          f'/ul/li[{a}]/div/div/div/div[2]/div[2]'
-                                                                          f'/span[1]', msg=f'第{a}个作业的完成题目数量',
-                                                                          text=True)
-                        num = complete_text.split('/')
-                        complete_num = num[0]
-                        tc.assertEqual(complete_num, str(do_num + 1), '作业完成题目数错误')
-                except Exception as e:
-                    print(f'{e}作业完成状态和质量异常')
-                self.driver.find_element_by_xpath(  # 点击作业名称
-                    f'//div[@class="homework-container-gird"]/ul/li[{a}]/div/div/div/div[1]/div[1]/div',
-                    msg=f'第{a}个作业', tag=False, click=True)
-                try:
-                    correct_rate = int((do_num / (n + c)) * 100)
-                    if 100 >= correct_rate >= 85:
-                        exp_homework_quality = '优秀'
-                    elif 85 > correct_rate >= 70:
-                        exp_homework_quality = '良好'
-                    elif 70 > correct_rate >= 60:
-                        exp_homework_quality = '及格'
-                    else:
-                        exp_homework_quality = '不及格'
-
-                    Assert(self.driver).assert_equal(exp_homework_quality, ElementSelector.homework_quality_loc)
-                    Assert(self.driver).assert_equal('已完成', ElementSelector.homework_status_loc)
-                except Exception as e:
-                    print(f'{e}作业完成状态和质量异常')
-                self.driver.back()
-
-    def student_do_homework_for_teach(self, enable_assert=False):
-        """
-        高校版做作业操作
-
-        :param enable_assert: 是否检查
-        :return: None
-        """
-        for a in range(1, 7):  # 依次做作业列表6个作业
-            homework_name_elem = self.driver.find_element_by_xpath(  # 点击作业名称
-                f'//div[@class="homework-container-gird"]/ul/li[{a}]/div/div/div/div[1]/div[1]/div',
-                msg=f'第{a}个作业')
-            homework_name_elem.click()
-            self.driver.find_element(ElementSelector.view_code_btn_loc, click=True)
-            handle = self.driver.window_handles(a)  # 切换新弹出的table
-            self.driver.switch_to_window(handle)
-
-            problem_list = self.driver.find_elements_by_xpath('//div[@class="el-row"]/div',
-                                                              msg='题目列表', tag=False)
-            n = len(problem_list)
-            s = n - a
-            for i in range(1, s + 1):  # 依次点击题目列表的题，做题数量递减
-                self.driver.find_element_by_xpath(f'//div[@class="el-row"]/div[{i}]',
-                                                  msg=f'第{i}道题', click=True)
-
-                # DB中把code拿出来
-                get_problem_id = self.driver.find_element(ElementSelector.problem_id_loc, text=True)
-                len_text = len(get_problem_id)
-                problem_id = get_problem_id[:len_text - 1]
-                code = get_code(problem_id=problem_id, problem_name=None)
-                code_input = self.driver.find_element(ElementSelector.uni_teach_code_view_loc)
-                input_code(code, code_input)
-
-                self.driver.find_element(ElementSelector.save_run_btn_loc, tag=False, click=True)
-                if enable_assert:
-                    tc = TestCase()
-                    try:
-                        pass_result_text = self.driver.find_element(ElementSelector.uni_teach_result_text_loc,
-                                                                    text=True)
-                        tc.assertIn(pass_result_text, '通过', '运行结果错误')
-                    except Exception as e:
-                        print(f'{e}题目运行结果异常')
-            problem_list[n - 1].click()
-            code_input = self.driver.find_element(ElementSelector.uni_teach_code_view_loc, tag=False)
-            wrong_answer = 'wrong_answer = "wrong"'
-            code_input.send_keys(wrong_answer)
-            self.driver.find_element(ElementSelector.save_run_btn_loc, tag=False, click=True)
-            if enable_assert:
-                tc = TestCase()
-                try:
-                    unpass_result_text = self.driver.find_element(ElementSelector.unpass_result_text_loc,
-                                                                  text=True)
-                    tc.assertIn(unpass_result_text, '不通过', '运行结果错误')
-                except Exception as e:
-                    print(f'{e}错误答案运行结果异常')
-            self.driver.find_element(ElementSelector.push_homework_btn_loc, click=True)
-            self.driver.find_element(ElementSelector.confirm_btn_loc, tag=False, click=True)
-            if enable_assert:
-                homework_list_status = self.driver.find_element_by_xpath(  # 作业列表的完成状态
-                    f'//div[@class="homework-container-gird"]/ul/li[{a}]/div/div/div/div[2]/div[3]',
-                    msg=f'第{a}个作业的完成状态', text=True)
-                tc = TestCase()
-                tc.assertEqual(homework_list_status, '已完成', '作业列表状态错误')
-                self.driver.find_element_by_xpath(  # 点击作业名称
-                    f'//div[@class="homework-container-gird"]/ul/li[{a}]/div/div/div/div[1]/div[1]/div',
-                    msg=f'第{a}个作业', tag=False, click=True)
-                actual_homework_quality = self.driver.find_element(ElementSelector.homework_quality_loc,
-                                                                   text=True)
-                homework_status = self.driver.find_element(ElementSelector.homework_status_loc,
-                                                           tag=False, text=True)
-
-                correct_rate = int((s / n) * 100)
+            try:
+                if a == 1:
+                    self.__assert_equal('已完成', f'//div[@class="homework-container-gird"]'
+                                               f'/ul/li[{a}]/div/div/div/div[2]/div[3]')  # 作业列表的完成状态
+                else:
+                    complete_text = self.get_text(f'//div[@class="homework-container-gird"]'
+                                                  f'/ul/li[{a}]/div/div/div/div[2]/div[2]'
+                                                  f'/span[1]')
+                    num = complete_text.split('/')
+                    complete_num = num[0]
+                    assert (complete_num == str(do_num + 1))
+            except Exception as e:
+                print(f'{e}作业完成状态和质量异常')
+            self.click(homework_name_sel)  # 点击作业名称
+            try:
+                correct_rate = int((do_num / (n + c)) * 100)
                 if 100 >= correct_rate >= 85:
                     exp_homework_quality = '优秀'
                 elif 85 > correct_rate >= 70:
@@ -659,9 +531,72 @@ class BaseTestCase(BaseCase):
                 else:
                     exp_homework_quality = '不及格'
 
-                tc.assertEqual(actual_homework_quality, exp_homework_quality, '作业质量错误')
-                tc.assertEqual(homework_status, '已完成', '作业状态错误')
-                self.driver.back()
+                self.__assert_equal(exp_homework_quality, ElementSelector.homework_quality_loc)
+                self.__assert_equal('已完成', ElementSelector.homework_status_loc)
+            except Exception as e:
+                print(f'{e}作业完成状态和质量异常')
+            self.go_back()
+
+    def student_do_homework_for_teach(self):
+        """
+        高校版做作业操作
+
+        :param enable_assert: 是否检查
+        :return: None
+        """
+        for a in range(1, 7):  # 依次做作业列表6个作业
+            homework_name_sel = f'//div[@class="homework-container-gird"]/ul/li[{a}]/div/div/div/div[1]/div[1]/div'
+            self.click(homework_name_sel)
+            self.click(ElementSelector.view_code_btn_loc)
+            self.driver.switch_to_window(a)  # 切换新弹出的table
+
+            problem_list = self.driver.find_elements_by_xpath('//div[@class="el-row"]/div')
+            n = len(problem_list)
+            s = n - a
+            for i in range(1, s + 1):  # 依次点击题目列表的题，做题数量递减
+                self.click(f'//div[@class="el-row"]/div[{i}]')
+
+                # DB中把code拿出来
+                get_problem_id = self.get_text(ElementSelector.problem_id_loc)
+                len_text = len(get_problem_id)
+                problem_id = get_problem_id[:len_text - 1]
+                code = get_code(problem_id=problem_id, problem_name=None)
+                code_input = self.get_element(ElementSelector.uni_teach_code_view_loc)
+                input_code(code, code_input)
+
+                self.click(ElementSelector.save_run_btn_loc)
+                try:
+                    self.wait_for_text_visible('通过', ElementSelector.uni_teach_result_text_loc)
+                except Exception as e:
+                    print(f'{e}题目运行结果异常')
+            problem_list[n - 1].click()
+            code_input = self.get_element(ElementSelector.uni_teach_code_view_loc)
+            wrong_answer = 'wrong_answer = "wrong"'
+            code_input.send_keys(wrong_answer)
+            self.click(ElementSelector.save_run_btn_loc)
+            try:
+                self.wait_for_text_visible('不通过', ElementSelector.unpass_result_text_loc)
+            except Exception as e:
+                print(f'{e}错误答案运行结果异常')
+            self.click(ElementSelector.push_homework_btn_loc)
+            self.click(ElementSelector.confirm_btn_loc)
+            self.__assert_equal('已完成', f'//div[@class="homework-container-gird"]'
+                                       f'/ul/li[{a}]/div/div/div/div[2]/div[3]')
+            self.click(homework_name_sel)  # 点击作业名称
+
+            correct_rate = int((s / n) * 100)
+            if 100 >= correct_rate >= 85:
+                exp_homework_quality = '优秀'
+            elif 85 > correct_rate >= 70:
+                exp_homework_quality = '良好'
+            elif 70 > correct_rate >= 60:
+                exp_homework_quality = '及格'
+            else:
+                exp_homework_quality = '不及格'
+
+            self.__assert_equal(exp_homework_quality, ElementSelector.homework_quality_loc)
+            self.__assert_equal('已完成', ElementSelector.homework_status_loc)
+            self.go_back()
 
     def do_homework_operation(self, num, problem_id_list, problem_type=''):
         """
@@ -675,35 +610,31 @@ class BaseTestCase(BaseCase):
             raise Exception('problem_type不能为空，请输入“选择”或“操作”')
         for i in range(1, num + 1):  # 依次点击题目列表的题，做题数量递减
             try:
-                self.driver.find_element_by_xpath(
-                    f'//span[contains(text(),"{problem_type}")]/parent::div/parent::div/following-sibling::div[{i}]',
-                    msg=f'操作题第{i}个题目')
+                self.wait_for_element_visible(
+                    f'//span[contains(text(),"{problem_type}")]'
+                    f'/parent::div/parent::div/following-sibling::div[{i}]')
             except Exception as e:
                 print('学生作业作答页面题目列表返回空列表', e)
-                self.driver.refresh()
+                self.refresh()
             finally:
-                self.driver.find_element_by_xpath(
-                    f'//span[contains(text(),"{problem_type}")]/parent::div/parent::div/following-sibling::div[{i}]',
-                    msg=f'操作题第{i}个题目', tag=False, click=True)
+                if self.wait:
+                    self.slow_click(f'//span[contains(text(),"{problem_type}")]'
+                                    f'/parent::div/parent::div/following-sibling::div[{i}]')
 
-            problem_id = problem_id_list[i - 1]
+            problem_id = problem_id_list[i - 1]  # 取出对应索引题目的problem_id
             if '操作' == problem_type:
-                code = get_code(problem_id=problem_id, problem_name=None)
-                code_input = self.driver.find_element(ElementSelector.code_view_loc)
+                code = get_code(problem_id=problem_id, problem_name=None)  # 操作题查询代码
+                code_input = self.get_element(ElementSelector.code_view_loc)
                 input_code(code, code_input)
 
-                self.driver.find_element(ElementSelector.save_run_btn_loc, click=True)
-                tc = TestCase()
+                self.slow_click(ElementSelector.save_run_btn_loc)
                 try:
-                    pass_result_text = self.driver.find_element(ElementSelector.pass_result_text_loc, text=True)
-                    tc.assertIn('测评通过', pass_result_text, '运行结果错误')
+                    self.wait_for_text_visible('评测通过', ElementSelector.pass_result_text_loc)
                 except Exception as e:
                     print(f'{e}DB答案错误导致{problem_id}题目评测异常')
             elif '选择' == problem_type:
-                answer = get_choice(problem_id=problem_id, problem_name=None)
-                self.driver.find_element_by_xpath(
-                    f'//div[contains(text(),"{answer}")]/parent::span/preceding-sibling::span',
-                    msg=f'点击选项{answer}', click=True)
+                answer = get_choice(problem_id=problem_id, problem_name=None)  # 选择题查询答案
+                self.slow_click(f'//div[contains(text(),"{answer}")]/parent::span/preceding-sibling::span')
             else:
                 raise Exception('problem_type输入错误，请输入“选择”或“操作”')
 
@@ -775,18 +706,15 @@ class BaseTestCase(BaseCase):
         if '直接审核作品' == work_name:
             self.click(ElementSelector.direct_release_btn_loc)
             exp_tip = '发布成功'
-            actual_tip = self.get_text(ElementSelector.succ_tip_loc)
         elif '详细审核通过作品' == work_name:
             self.click(ElementSelector.detailed_review_btn_loc)
             self.click(ElementSelector.pass_review_btn_loc)
             exp_tip = '审核成功！'
-            actual_tip = self.get_text(ElementSelector.succ_tip_loc)
         else:
             self.click(ElementSelector.detailed_review_btn_loc)
             self.click(ElementSelector.reject_btn_loc)
             exp_tip = '驳回成功！'
-            actual_tip = self.get_text(ElementSelector.succ_tip_loc)
-        self.__assert_equal(actual_tip, exp_tip)
+        self.__assert_equal(exp_tip, ElementSelector.succ_tip_loc)
         self.click_button(ElementSelector.creative_space_loc)
         if enable_assert:
             try:
@@ -816,7 +744,7 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         if self.wait:
-            self.click(ElementSelector.image_identify_tab_loc)
+            self.slow_click(ElementSelector.image_identify_tab_loc)
             self.click(ElementSelector.upload_pic_loc)
         upload_file_by_auto_it('jpg')
 

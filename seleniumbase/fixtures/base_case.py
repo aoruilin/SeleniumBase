@@ -213,10 +213,10 @@ class BaseCase(unittest.TestCase):
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
             timeout = self.__get_new_timeout(timeout)
         if not self.demo_mode:
-            self.click(selector, by=by, timeout=timeout, delay=2.05)
+            self.click(selector, by=by, timeout=timeout, delay=1.85)
         else:
             # Demo Mode already includes a small delay
-            self.click(selector, by=by, timeout=timeout, delay=1.25)
+            self.click(selector, by=by, timeout=timeout, delay=1.05)
 
     def double_click(self, selector, by=By.CSS_SELECTOR, timeout=None):
         from selenium.webdriver.common.action_chains import ActionChains

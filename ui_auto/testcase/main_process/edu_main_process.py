@@ -44,7 +44,7 @@ class TestMainProcess(BaseTestCase):
         self.student_check_course_simple(course_name)
         self.click_button(ElementSelector.crumbs_loc)
         self.click_button(ElementSelector.homework_btn_loc, wait=True)
-        self.student_do_homework_simple(self.homework_name, enable_assert=True)
+        self.student_do_homework_simple(self.homework_name)
 
     def test_MainProcess_02(self):
         self.driver_1.get(self.url)

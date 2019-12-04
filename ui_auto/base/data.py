@@ -1,4 +1,4 @@
-production = False
+production = True
 
 
 class Data:
