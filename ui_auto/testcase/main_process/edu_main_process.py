@@ -34,7 +34,7 @@ class TestMainProcess(BaseTestCase):
         self.click_button(ElementSelector.standard_course_btn_loc)
         course_name = self.add_course_simple(self.teaching_package_list[0])
         self.click_button(ElementSelector.homework_btn_loc)
-        self.click_button(ElementSelector.add_homework_btn_loc, wait=True)
+        self.click_button(ElementSelector.add_homework_btn_loc, loading=True)
         self.add_homework_simple(self.homework_name, self.answer_list[0])
 
         self.get_new_driver()
@@ -43,37 +43,35 @@ class TestMainProcess(BaseTestCase):
         self.click_button(ElementSelector.first_course_loc)
         self.student_check_course_simple(course_name)
         self.click_button(ElementSelector.crumbs_loc)
-        self.click_button(ElementSelector.homework_btn_loc, wait=True)
+        self.click_button(ElementSelector.homework_btn_loc, loading=True)
         self.student_do_homework_simple(self.homework_name)
 
     def test_MainProcess_02(self):
-        self.driver_1.get(self.url)
-        self.teacher_login.user_login(self.username_teacher, self.teacher_name, self.password, teacher_assert=True)
-        self.teacher_click.click_button(ElementSelector.checkpoint_course_loc)
-        self.teacher_click.click_button(ElementSelector.start_discover_btn_loc)
-        self.teacher_subject.click_china_map()
-        self.teacher_subject.click_map_path()
-        self.teacher_click.click_and_jump(ElementSelector.watch_course_btn_loc, 1)
-        self.teacher_click.click_button(ElementSelector.kj_add_checkpoint_course_loc)
-        checkpoint_course_name = self.teacher_subject.add_course_simple(StandardTeach.teaching_package_list[0],
-                                                                        discover=True, enable_assert=True)
-        self.teacher_click.click_and_jump(ElementSelector.watch_homework_btn_loc, 1)
-        self.teacher_click.click_button(ElementSelector.add_checkpoint_homework_loc)
-        self.teacher_subject.add_homework_simple(self.homework_name, SubjectTeach.answer_list[0],
-                                                 enable_assert=True)
-        self.driver_2.get(self.url)
-        self.student_login.user_login(self.username_student, self.student_name, self.password, student_assert=True)
-        self.student_click.click_button(ElementSelector.checkpoint_course_loc)
-        self.student_click.click_button(ElementSelector.start_discover_btn_loc)
-        self.student_subject.click_china_map()
-        self.student_subject.click_map_path()
-        self.student_click.click_and_jump(ElementSelector.watch_course_btn_loc, 1)
-        self.student_subject.student_check_course_simple(checkpoint_course_name,
-                                                         discover=True, enable_assert=True)
-        self.student_click.click_and_jump(ElementSelector.watch_homework_btn_loc, 1)
-        self.student_subject.student_do_homework_simple(self.homework_name, enable_assert=True)
+        self.login(self.username_teacher, self.teacher_name, self.password, teacher_assert=True)
+        self.click_button(ElementSelector.checkpoint_course_loc)
+        self.click_button(ElementSelector.start_discover_btn_loc)
+        self.click_china_map()
+        self.click_map_path()
+        self.click_and_jump(ElementSelector.watch_course_btn_loc, 1, loading=True)
+        self.click_button(ElementSelector.kj_add_checkpoint_course_loc)
+        checkpoint_course_name = self.subject_add_course_simple(self.teaching_package_list[0],
+                                                                discover=True)
+        self.click_and_jump(ElementSelector.watch_homework_btn_loc, 1)
+        self.click_button(ElementSelector.add_checkpoint_homework_loc, loading=True)
+        self.subject_add_homework_simple(self.homework_name, self.subject_answer_list[0])
+        self.get_new_driver()
+        self.login(self.username_student, self.student_name, self.password, student_assert=True)
+        self.click_button(ElementSelector.checkpoint_course_loc)
+        self.click_button(ElementSelector.start_discover_btn_loc)
+        self.click_china_map()
+        self.click_map_path()
+        self.click_and_jump(ElementSelector.watch_course_btn_loc, 1, loading=True)
+        self.subject_student_check_course_simple(checkpoint_course_name,
+                                                 discover=True)
+        self.click_and_jump(ElementSelector.watch_homework_btn_loc, 1)
+        self.subject_student_do_homework_simple(self.homework_name)
 
 
 if __name__ == "__main__":
-    # import sys;sys.argv = ['', 'Test.testName']
-    unittest.main()
+    TestMainProcess().test_MainProcess_01()
+    TestMainProcess().test_MainProcess_02()

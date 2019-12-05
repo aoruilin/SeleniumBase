@@ -1,4 +1,4 @@
-production = True
+production = False
 
 
 class Data:
@@ -139,8 +139,8 @@ class PointIdIndex:
     level_two_index = 2
     level_three_index = 1
 
-    checkpoint_level_one_index = 0
-    checkpoint_level_two_index = 1
+    checkpoint_level_one_index = 1
+    checkpoint_level_two_index = 2
     checkpoint_level_three_index = 0
 
 

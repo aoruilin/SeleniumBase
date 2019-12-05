@@ -255,9 +255,7 @@ class ElementSelector:
     checkpoint_view_code_btn_loc = '//div[@class="container-body"]/div[1]/div[4]'  # '去作答按钮'
     checkpoint_problem_list_btn_loc = \
         '//div[@class="codeview-bg clearfix main-content"]/div[2]/div[1]/button'  # '题目列表按钮'
-    checkpoint_save_run_btn_loc = '//span[text()="保存并运行"]'  # '保存并运行按钮'
-    checkpoint_result_pass_loc = '//div[@class="run-info-title run-pass"]'  # '评测通过提示'
-    checkpoint_result_unpass_loc = '//div[@class="run-info-title run-unpass"]'  # '评测未通过提示'
+    checkpoint_save_run_btn_loc = '//span[text()="保存并评测"]'  # '保存并运行按钮'
     checkpoint_confirm_btn_loc = '//span[text()="确定"]'  # '运行结果弹框确定按钮'
     checkpoint_push_homework_btn_loc = '//span[text()="提交全部作业"]'  # '提交作业按钮'
     checkpoint_push_confirm_btn_loc = '//div[text()="确定"]'  # '确定提交按钮'

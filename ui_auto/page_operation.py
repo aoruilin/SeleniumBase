@@ -1,8 +1,10 @@
 import time
 import datetime
 
-from seleniumbase import BaseCase
+from selenium.common.exceptions import NoSuchElementException, ElementNotVisibleException
 from selenium.webdriver.common.keys import Keys
+
+from seleniumbase import BaseCase
 
 from ui_auto.base.data import Data, PointIdIndex
 from ui_auto.common.get_answer import ParameterForOthers
@@ -26,28 +28,51 @@ class BaseTestCase(BaseCase):
         # Add custom tearDown code for your tests BEFORE the super().tearDown()
         super(BaseTestCase, self).tearDown()
 
-    def click_button(self, btn_loc, wait=False):
+    def click_button(self, btn_loc, wait=False, loading=False):
         """
         单独点击一个按钮
 
         :param btn_loc: 按钮定位器
         :param wait: 是否等待
+        :param loading: 是否等待遮罩层
         :return: None
         """
-        if wait:
-            self.slow_click(btn_loc)
+        if loading:
+            self.__wait_for_loading()
+            if wait:
+                self.slow_click(btn_loc)
+            else:
+                self.click(btn_loc)
         else:
-            self.click(btn_loc)
+            if wait:
+                self.slow_click(btn_loc)
+            else:
+                self.click(btn_loc)
 
-    def click_and_jump(self, btn_loc, handle_num):
+    def click_and_jump(self, btn_loc, handle_num, wait=False, loading=False):
         """
         点击按钮并跳转新开tab
         :param btn_loc: 按钮定位器
         :param handle_num: 窗口句柄索引号
-        :return: None
+        :param wait:
+        :param loading:
+        :return:
         """
-        self.click(btn_loc)
-        self.switch_to_window(handle_num)
+        if loading:
+            self.__wait_for_loading()
+            if wait:
+                self.slow_click(btn_loc)
+                self.switch_to_window(handle_num)
+            else:
+                self.click(btn_loc)
+                self.switch_to_window(handle_num)
+        else:
+            if wait:
+                self.slow_click(btn_loc)
+                self.switch_to_window(handle_num)
+            else:
+                self.click(btn_loc)
+                self.switch_to_window(handle_num)
 
     def login(self, username, name, password, teacher_assert=False, student_assert=False):
         self.maximize_window()
@@ -134,6 +159,8 @@ class BaseTestCase(BaseCase):
 
     teaching_package_list = ['叮当资源', '校本资源', '我的资源']
     answer_list = ['立即公布', '不公布', '截止时间公布']
+    subject_answer_list = ['显示', '不显示', '截止时间后显示']
+    course_btn_list = ['课件', '视频', '讲义']
 
     def add_course_simple(self, package_name):
         """
@@ -143,19 +170,20 @@ class BaseTestCase(BaseCase):
         :param enable_assert: 是否检查
         :return: None
         """
-        self.slow_click(ElementSelector.add_course_loc)
-        self.slow_click(f'//span[text()="{package_name}"]/parent::label/span[1]')  # 授课包选择
+        self.click_button(ElementSelector.add_course_loc, loading=True)
+        self.click_button(f'//span[text()="{package_name}"]/parent::label/span[1]',
+                          loading=True)  # 授课包选择
         if '叮当资源' == package_name:
             self.click(ElementSelector.selKnow_loc)
             self.__choice_point()
             try:
                 self.click(ElementSelector.choice_course_btn_loc)
-            except Exception as e:
+            except Exception:
                 self.click(ElementSelector.selKnow_loc)
                 self.click(ElementSelector.choice_course_btn_loc)
         else:
             self.click(ElementSelector.choice_course_btn_loc)
-        self.slow_click(ElementSelector.choice_class_btn_loc)
+        self.click_button(ElementSelector.choice_class_btn_loc, loading=True)
         self.click(ElementSelector.add_publish_btn)
         self.click(ElementSelector.add_btn_loc)
         self.__assert_add_course_tip('成功添加课件！', ElementSelector.succ_tip_loc,
@@ -164,6 +192,31 @@ class BaseTestCase(BaseCase):
         course_name = self.get_text(ElementSelector.course_name_loc)
 
         return course_name  # 返回课程名称
+
+    def subject_add_course_simple(self, package_name, discover=False) -> str:
+        """
+        主题授课添加课件
+
+        :param package_name: 添加的课件类型
+        :param discover: 是否从探索进入
+        :return: 添加的课件名称，传入学生查看课件
+        """
+
+        self.click_button(f'//span[text()="{package_name}"]/parent::label/span[1]',
+                          loading=True)  # 授课包选择
+        self.click_button(ElementSelector.checkpoint_choice_btn_loc)
+        self.click_button(ElementSelector.checkpoint_choice_class_btn_loc)
+        self.click_button(ElementSelector.checkpoint_add_publish_btn)
+        self.click_button(ElementSelector.checkpoint_publish_btn_loc)
+        self.__assert_add_course_tip('发布课件成功', ElementSelector.succ_tip_loc,
+                                     ElementSelector.repeated_tip_confirm_loc)
+        check_point_course_name = self.get_text(ElementSelector.check_point_course_name_loc) \
+            if discover else self.get_text(ElementSelector.first_course_name_loc)
+        if discover:
+            self.driver.close()
+            self.switch_to_window(0)
+
+        return check_point_course_name  # 返回课程名称
 
     def add_course_loop(self):
         """
@@ -177,6 +230,22 @@ class BaseTestCase(BaseCase):
             course_name = self.add_course_simple(name)
             course_name_list.append(course_name)
         return course_name_list  # 返回课件名称列表，包含3个课件名称
+
+    def subject_add_course_loop(self) -> list:
+        """
+        主题授课遍历3中资源类型添加课件
+
+        :return: 返回添加的3个课件名称
+        """
+        course_name_list = []
+        for name in self.teaching_package_list:
+            self.click_button(ElementSelector.add_checkpoint_course_loc)
+            self.click_button(ElementSelector.choice_checkpoint_loc)
+            self.__choice_point(subject=True)
+            check_point_course_name = self.subject_add_course_simple(name)
+            course_name_list.append(check_point_course_name)
+
+        return course_name_list
 
     def add_course_wrong(self):
         """
@@ -206,18 +275,6 @@ class BaseTestCase(BaseCase):
         self.click(ElementSelector.publish_btn_loc)
         self.__assert_equal('请选择您要发往的班级！', ElementSelector.fail_tip_loc)
 
-    def __assert_add_course_tip(self, exp_tip, tip_loc, repeated_tip_confirm_loc):
-        try:
-            self.find_element(tip_loc)
-        except Exception:
-            print('已有其他教师在该班级发布这个课件，点击确定继续发布')
-            self.click(repeated_tip_confirm_loc)
-            self.__assert_equal(exp_tip, tip_loc)
-        except BaseException as e:
-            print(f'出现未知异常：{e}')
-        else:
-            self.__assert_equal(exp_tip, tip_loc)
-
     def add_homework_simple(self, homework_name, answer_config, timing=None):
         """
         标准授课发布作业
@@ -237,7 +294,7 @@ class BaseTestCase(BaseCase):
         except Exception as e:
             self.click(ElementSelector.sel_know_loc)
             self.__choice_problem_for_homework()
-        self.slow_click(ElementSelector.choice_class_btn_loc)
+        self.click_button(ElementSelector.choice_class_btn_loc, loading=True)
         self.click(ElementSelector.show_answer_loc)
         self.click(f'//span[text()="{answer_config}"]/parent::li')
         if 1 == timing:
@@ -253,6 +310,39 @@ class BaseTestCase(BaseCase):
         self.__assert_equal('成功添加作业！', ElementSelector.succ_tip_loc)
         self.__assert_equal(homework_name, ElementSelector.homework_list_name)
 
+    def subject_add_homework_simple(self, homework_name, answer_config, timing=None):
+        """
+        主题授课发布作业
+
+        :param homework_name: 发布的作业名称
+        :param answer_config: 答案设置
+        :param timing: 定时设置
+        :return: None
+        """
+
+        self.add_text(ElementSelector.checkpoint_homework_name_input_loc, text=homework_name)
+        self.click_button(ElementSelector.checkpoint_choice_problem_btn_loc)
+        self.click_button(ElementSelector.checkpoint_choice_all_btn_loc)
+        self.click_button(ElementSelector.checkpoint_confirm_problem_btn_loc)
+        self.click_button(ElementSelector.checkpoint_choice_class_btn_loc, loading=True)
+        self.click_button(ElementSelector.checkpoint_show_answer_loc)
+        self.click_button(f'//span[text()="{answer_config}"]/parent::li')
+
+        if 1 == timing:
+            self.click_button(ElementSelector.checkpoint_timing_btn_loc)
+            self.add_text(ElementSelector.checkpoint_timing_input_loc,
+                          self.__input_time(start=True))
+            self.send_keys(ElementSelector.checkpoint_timing_input_loc,
+                           Keys.ENTER)
+
+        self.update_text(ElementSelector.checkpoint_end_time_input_loc,
+                         self.__input_time())
+        self.send_keys(ElementSelector.checkpoint_end_time_input_loc,
+                       Keys.ENTER)
+        self.click_button(ElementSelector.public_homework_btn_loc)
+        self.__assert_equal('发布成功！', ElementSelector.succ_tip_loc)
+        self.wait_for_text_visible(homework_name, ElementSelector.checkpoint_all_homework_name)
+
     def add_homework_loop(self):
         """
         遍历所有发布设置发布作业
@@ -264,6 +354,15 @@ class BaseTestCase(BaseCase):
                 homework_name = f'答案{a}定时{t}'
                 self.click_button(ElementSelector.add_homework_btn_loc)
                 self.add_homework_simple(homework_name, a, timing=t)
+
+    def subject_add_homework_loop(self):
+        for a in self.answer_list:
+            for t in range(0, 2):
+                homework_name = f'答案{a}定时{t}'
+                self.click_button(ElementSelector.add_checkpoint_homework_loc)
+                self.click_button(ElementSelector.choice_checkpoint_loc)
+                self.__choice_point(subject=True)
+                self.subject_add_homework_simple(homework_name, a, t)
 
     def add_homework_wrong(self):
         """
@@ -279,7 +378,7 @@ class BaseTestCase(BaseCase):
                 self.click(ElementSelector.sel_know_loc)
                 self.__choice_point()
                 self.__choice_problem_for_homework()
-                self.slow_click(ElementSelector.choice_class_btn_loc)
+                self.click_button(ElementSelector.choice_class_btn_loc, loading=True)
                 self.click(ElementSelector.public_homework_btn_loc)
                 self.__assert_equal('请输入作业名称！', ElementSelector.fail_tip_loc)
             elif '知识点' == i:
@@ -307,7 +406,7 @@ class BaseTestCase(BaseCase):
                 self.click(ElementSelector.sel_know_loc)
                 self.__choice_point()
                 self.__choice_problem_for_homework()
-                self.slow_click(ElementSelector.choice_class_btn_loc)
+                self.click_button(ElementSelector.choice_class_btn_loc, loading=True)
                 if '定时' == t:
                     self.click(ElementSelector.timing_btn_loc)
                     if 1 == n:
@@ -335,6 +434,16 @@ class BaseTestCase(BaseCase):
         self.__assert_equal(course_name, ElementSelector.index_course_name_loc)
         self.click_button(ElementSelector.standard_course_btn_loc)
 
+    def subject_student_check_index_course(self, course_name):
+        """
+        学生端检查首页课件名称
+
+        :param course_name: 断言用课件名称
+        :return: None
+        """
+        self.__assert_equal(course_name, ElementSelector.index_course_name_loc)
+        self.click_button(ElementSelector.checkpoint_course_loc)
+
     def student_check_course_simple(self, course_name):
         """
         标准授课学生查看课件
@@ -357,6 +466,41 @@ class BaseTestCase(BaseCase):
                 print(f'{e}缺少资源')
             self.__check_course_operation(btn)
 
+    def subject_student_check_course_simple(self, course_name, discover=False):
+        """
+        主题授课学生查看课件
+        :param course_name: 查看的课件名称
+        :param discover: 是否通过探索进入
+        :return: None
+        """
+        self.__assert_equal(course_name, ElementSelector.checkpoint_course_name_loc)
+
+        if discover:
+            self.click_button(ElementSelector.first_in_course_loc)
+
+        for btn in self.course_btn_list:
+            try:
+                self.click_button(f'//p[text()="{btn}"]')
+                if discover:
+                    self.click_button(
+                        f'//p[text()="{btn}"]/parent::div/parent::div/following-sibling::div')
+                else:
+                    if '自动上传课件' == course_name:
+                        self.click_button(
+                            f'//p[contains(text(),"{btn}")]'
+                            f'/parent::div/parent::div/parent::div/div[2]/div[2]/div/div')
+                    else:
+                        self.click_button(
+                            f'//p[contains(text(),"{btn}")]'
+                            f'/parent::div/parent::div/parent::div/div[2]/div/div/div')
+            except NoSuchElementException:
+                print(f'没有{btn}资源')
+            except Exception as e:
+                print(f'{e}课件资源异常')
+            self.__check_course_operation(btn)
+        self.driver.close()
+        self.switch_to_default_window()
+
     def student_check_course_loop(self):
         """
         学生端遍历查看列表前3个课件
@@ -369,6 +513,20 @@ class BaseTestCase(BaseCase):
             self.click(course_name_sel)  # 点击课程名称进入课程详情页面
             self.student_check_course_simple(course_name)
             self.click(ElementSelector.crumbs_loc)
+
+    def subject_student_check_course_loop(self):
+        """
+        主题授课学生查看课件
+
+        :return: None
+        """
+        for c in range(1, 4):
+            course_name = self.get_text(
+                f'//div[@class="dia-container clearfix"]/div[{c}]/div/div/div[2]')
+            self.click_button(
+                f'//div[@class="dia-container clearfix"]/div[{c}]/div/div/div[5]')
+            self.switch_to_window(1)
+            self.subject_student_check_course_simple(course_name)
 
     def uni_teach_student_check_course(self, course_name):
         """
@@ -389,28 +547,11 @@ class BaseTestCase(BaseCase):
                        f'/parent::div/parent::div/parent::div/div[2]/div/div/div')
             self.__check_course_operation(btn)
 
-    def __check_course_operation(self, btn):
-        if '课件' == btn:
-            self.driver.switch_to_frame(self.driver.find_elements_by_tag_name('iframe')[0])
-            self.driver.switch_to_frame('wacframe')
-            try:
-                page_num_text = self.get_text(ElementSelector.ppt_pages_num_loc)
-                page_text = page_num_text[11:]
-                num_text = page_text[:2]
-                page_num = int(num_text)
-                for s in range(page_num):
-                    self.slow_click(ElementSelector.ppt_next_btn_loc)
-            except Exception as e:
-                print(f'{e}PPT显示异常')
-            finally:
-                self.switch_to_default_content()
-
     def student_do_homework_simple(self, homework_name):
         """
         标准授课做作业
 
         :param homework_name: 断言用作业名称
-        :param enable_assert: 是否检查
         :return: None
         """
         try:
@@ -430,11 +571,11 @@ class BaseTestCase(BaseCase):
         choice_problem_id_list = self.parameter.get_choice_problem_id_for_ui(eval_id)
         c_problem_id_list = [i for i, _ in choice_problem_id_list]
         n = len(c_problem_id_list)  # 选择题题目数量
-        self.do_homework_operation(n, c_problem_id_list, problem_type='选择')
+        self.__do_homework_operation(n, c_problem_id_list, problem_type='选择')
 
         problem_id_list = self.parameter.get_problem_id_for_ui(eval_id, traditional_teach=True)
         m = len(problem_id_list)  # 操作题题目数量
-        self.do_homework_operation(m, problem_id_list, problem_type='操作')
+        self.__do_homework_operation(m, problem_id_list, problem_type='操作')
 
         self.click(ElementSelector.push_homework_btn_loc)
         self.click(ElementSelector.confirm_btn_loc)
@@ -443,31 +584,62 @@ class BaseTestCase(BaseCase):
         except Exception:
             print('没有出现紧急挑战按钮，请检查题目是否全部正确')
         else:
-            for r in range(5):
-                problem_name = self.get_text(ElementSelector.standard_enm_problem_name_loc)
-                name_list = problem_name.split(' ')
-                name = name_list[-1]
-                code = get_code(problem_id=None, problem_name=name, challenge=True)
-                code_input = self.get_element(ElementSelector.code_view_loc)
-                input_code(code, code_input)
-                self.click(ElementSelector.standard_challenge_run_btn_loc)
-                try:
-                    self.wait_for_text_visible('挑战成功', ElementSelector.standard_challenge_result_tip_loc)
-                except BaseException as e:
-                    print(f'{e}题目"{name}"答案错了，用挑战失败再断言一次')
-                    self.wait_for_text_visible('挑战失败', ElementSelector.standard_challenge_result_tip_loc)
-                self.click(ElementSelector.standard_keep_challenge_btn_loc)
+            self.__do_challenge_operation()
 
         self.switch_to_default_window()
         self.refresh()
         self.wait_for_text_visible('已完成', ElementSelector.homework_status_loc)
         self.wait_for_text_visible('优秀', ElementSelector.homework_quality_loc)
 
+    def subject_student_do_homework_simple(self, homework_name):
+        """
+        主题授课做作业
+
+        :param homework_name: 断言用作业名称
+        :return: None
+        """
+
+        try:
+            self.wait_for_element_visible(ElementSelector.go_to_code_btn_loc)
+        except NoSuchElementException:
+            print('未找到该作业,刷新后重试')
+            self.refresh()
+        except BaseException as e:
+            print(f'{e}作业列表异常')
+        finally:
+            self.__assert_equal(homework_name, ElementSelector.homework_name_loc)
+            self.click_and_jump(ElementSelector.go_to_code_btn_loc, 2, loading=True)
+
+        eval_id_list = self.parameter.get_eval_id()
+        eval_id = eval_id_list[0]
+        problem_id_list = self.parameter.get_problem_id_for_ui(eval_id)
+        n = len(problem_id_list)
+        self.__do_homework_operation(n, problem_id_list, subject=True)
+        self.click_button(ElementSelector.checkpoint_push_homework_btn_loc)
+        self.click_button(ElementSelector.checkpoint_push_confirm_btn_loc)
+        # 作业结果弹框操作
+        evaluation_list = ['太厉害了', '还不错哦', '有待提高', '再接再厉']
+        for v in evaluation_list:
+            try:
+                self.wait_for_text_visible(v, ElementSelector.result_tip_loc)
+                print(f'作业评价是{v}')
+            except ElementNotVisibleException:
+                print(f'作业评价不是 {v}')
+            except Exception as e:
+                print(f'出现未知异常：{e}')
+        try:
+            self.click_button(ElementSelector.emergency_challenge_btn_loc)
+            self.__do_challenge_operation(subject=True)
+        except NoSuchElementException as x:
+            print(x)
+        except ElementNotVisibleException as v:
+            print(v)
+        except BaseException as e:
+            print(f'{e}紧急挑战异常，有题目答案错误导致无法触发或紧急挑战做题操作异常，请查看日志')
+
     def student_do_homework_loop(self):
         """
         标准授课遍历做作业列表前3个作业
-
-        :param enable_assert: 是否检查
         :return: None
         """
 
@@ -489,12 +661,12 @@ class BaseTestCase(BaseCase):
             choice_problem_id_list = self.parameter.get_choice_problem_id_for_ui(eval_id)
             c_problem_list = [i for i, _ in choice_problem_id_list]
             c = len(c_problem_list)
-            self.do_homework_operation(c, c_problem_list, problem_type='选择')
+            self.__do_homework_operation(c, c_problem_list, problem_type='选择')
 
             problem_id_list = self.parameter.get_problem_id_for_ui(eval_id, traditional_teach=True)
             n = len(problem_id_list)
             s = n - a
-            self.do_homework_operation(s, problem_id_list, problem_type='操作')
+            self.__do_homework_operation(s, problem_id_list, problem_type='操作')
             self.click(
                 f'//span[contains(text(),"操作")]/parent::div/parent::div/following-sibling::div[{n}]')
             code_input = self.get_element(ElementSelector.code_view_loc)
@@ -541,7 +713,6 @@ class BaseTestCase(BaseCase):
         """
         高校版做作业操作
 
-        :param enable_assert: 是否检查
         :return: None
         """
         for a in range(1, 7):  # 依次做作业列表6个作业
@@ -598,7 +769,45 @@ class BaseTestCase(BaseCase):
             self.__assert_equal('已完成', ElementSelector.homework_status_loc)
             self.go_back()
 
-    def do_homework_operation(self, num, problem_id_list, problem_type=''):
+    def click_china_map(self):
+        """
+        点击主题授课中国地图s系列
+
+        :return: None
+        """
+        from selenium.common.exceptions import ElementNotVisibleException
+
+        try:
+            self.click_button(f'//div[@class="level"]'
+                              f'/div[{PointIdIndex.checkpoint_level_one_index}]/span/img')
+        except ElementNotVisibleException:
+            print('非第一次进入闯关授课，跳过大地图页面操作')
+        except IndexError:
+            print('非第一次进入闯关授课，跳过大地图页面操作')
+        except BaseException as e:
+            print(f'{e}中国地图点击异常')
+
+    def click_map_path(self):
+        """
+        点击主题授课地图路径知识点
+
+        :return:None
+        """
+        self.click_button(f'//div[@class="level"]/div[{PointIdIndex.checkpoint_level_two_index}]')
+
+    def __assert_add_course_tip(self, exp_tip, tip_loc, repeated_tip_confirm_loc):
+        try:
+            self.find_element(tip_loc)
+        except Exception:
+            print('已有其他教师在该班级发布这个课件，点击确定继续发布')
+            self.click(repeated_tip_confirm_loc)
+            self.__assert_equal(exp_tip, tip_loc)
+        except BaseException as e:
+            print(f'出现未知异常：{e}')
+        else:
+            self.__assert_equal(exp_tip, tip_loc)
+
+    def __do_homework_operation(self, num, problem_id_list, problem_type='', subject=False):
         """
         标准授课作答页面做作业操作题
         :param num: 题目数量
@@ -606,44 +815,135 @@ class BaseTestCase(BaseCase):
         :param problem_id_list: problem id 列表
         :return:
         """
-        if not problem_type:
-            raise Exception('problem_type不能为空，请输入“选择”或“操作”')
-        for i in range(1, num + 1):  # 依次点击题目列表的题，做题数量递减
-            try:
-                self.wait_for_element_visible(
-                    f'//span[contains(text(),"{problem_type}")]'
-                    f'/parent::div/parent::div/following-sibling::div[{i}]')
-            except Exception as e:
-                print('学生作业作答页面题目列表返回空列表', e)
-                self.refresh()
-            finally:
-                if self.wait:
-                    self.slow_click(f'//span[contains(text(),"{problem_type}")]'
-                                    f'/parent::div/parent::div/following-sibling::div[{i}]')
-
-            problem_id = problem_id_list[i - 1]  # 取出对应索引题目的problem_id
-            if '操作' == problem_type:
-                code = get_code(problem_id=problem_id, problem_name=None)  # 操作题查询代码
+        if subject:
+            for i in range(1, num + 1):
+                try:
+                    self.wait_for_element_visible(f'//div[@class="el-row"]/div[{i}]')
+                except Exception as e:
+                    print(f'{e}作业作答作业列表为空，刷新后重新点击')
+                    self.refresh()
+                finally:
+                    self.click_button(f'//div[@class="el-row"]/div[{i}]')
+                # DB中把code拿出来
+                problem_id = problem_id_list[i - 1]
+                code = get_code(problem_id=problem_id, problem_name=None)
                 code_input = self.get_element(ElementSelector.code_view_loc)
                 input_code(code, code_input)
 
-                self.slow_click(ElementSelector.save_run_btn_loc)
+                self.click_button(ElementSelector.checkpoint_save_run_btn_loc, loading=True)
                 try:
-                    self.wait_for_text_visible('评测通过', ElementSelector.pass_result_text_loc)
+                    self.wait_for_text_visible('评测通过',
+                                               ElementSelector.pass_result_text_loc)
+                except NoSuchElementException:
+                    print(f'DB题目{problem_id}答案错误导致，尝试评测未通过断言')
+                    self.wait_for_text_visible('评测有误',
+                                               ElementSelector.unpass_result_text_loc)
+                except Exception as a:
+                    print(f'{a}其他异常,不再尝试断言')
+        else:
+            if not problem_type:
+                raise Exception('problem_type不能为空，请输入“选择”或“操作”')
+            for i in range(1, num + 1):  # 依次点击题目列表的题，做题数量递减
+                try:
+                    self.wait_for_element_visible(
+                        f'//span[contains(text(),"{problem_type}")]'
+                        f'/parent::div/parent::div/following-sibling::div[{i}]')
                 except Exception as e:
-                    print(f'{e}DB答案错误导致{problem_id}题目评测异常')
-            elif '选择' == problem_type:
-                answer = get_choice(problem_id=problem_id, problem_name=None)  # 选择题查询答案
-                self.slow_click(f'//div[contains(text(),"{answer}")]/parent::span/preceding-sibling::span')
-            else:
-                raise Exception('problem_type输入错误，请输入“选择”或“操作”')
+                    print('学生作业作答页面题目列表返回空列表', e)
+                    self.refresh()
+                finally:
+                    self.click_button(f'//span[contains(text(),"{problem_type}")]'
+                                      f'/parent::div/parent::div/following-sibling::div[{i}]',
+                                      loading=True)
+
+                problem_id = problem_id_list[i - 1]  # 取出对应索引题目的problem_id
+                if '操作' == problem_type:
+                    code = get_code(problem_id=problem_id, problem_name=None)  # 操作题查询代码
+                    code_input = self.get_element(ElementSelector.code_view_loc)
+                    input_code(code, code_input)
+
+                    self.click_button(ElementSelector.save_run_btn_loc, loading=True)
+                    try:
+                        self.wait_for_text_visible('评测通过', ElementSelector.pass_result_text_loc)
+                    except Exception as e:
+                        print(f'{e}DB答案错误导致{problem_id}题目评测异常')
+                elif '选择' == problem_type:
+                    answer = get_choice(problem_id=problem_id, problem_name=None)  # 选择题查询答案
+                    self.click_button(f'//div[contains(text(),"{answer}")]/parent::span/preceding-sibling::span',
+                                      loading=True)
+                else:
+                    raise Exception('problem_type输入错误，请输入“选择”或“操作”')
+
+    def __do_challenge_operation(self, subject=False):
+        """
+        紧急挑战做题操作
+        :return: None
+        """
+        for i in range(5):
+            if subject:
+                if i == 0:
+                    problem_name = self.get_text(ElementSelector.enm_problem_name_loc)
+                else:
+                    problem_name = self.get_text(ElementSelector.enm_problem_name_loc_1)
+            else:  # 标准授课取出题目名称
+                problem_name_list = self.get_text(ElementSelector.standard_enm_problem_name_loc)
+                name_list = problem_name_list.split(' ')
+                problem_name = name_list[-1]
+            code = get_code(problem_id=None, problem_name=problem_name, challenge=True)
+            code_input = self.get_element(ElementSelector.code_view_loc)
+            input_code(code, code_input)
+            run_loc = ElementSelector.checkpoint_save_run_btn_loc \
+                if subject else ElementSelector.standard_challenge_run_btn_loc  # 保存并评测按钮
+            result_loc = ElementSelector.challenge_result_tip_loc \
+                if subject else ElementSelector.standard_challenge_result_tip_loc  # 评测结果
+            self.click_button(run_loc)
+            try:
+                self.__assert_equal('挑战成功', result_loc)
+            except ElementNotVisibleException:
+                print(f'题目"{problem_name}"答案错了，用挑战失败再断言一次')
+                self.__assert_equal('挑战失败', result_loc)
+            except Exception as e:
+                print(f'{e}挑战结果异常')
+            if i == 4:  # 主题授课从第5题开始点击 继续挑战 -> 换一题
+                if subject:
+                    for n in range(3):
+                        self.click_button(ElementSelector.keep_challenge_btn_loc)
+                        self.wait_for_text_visible(problem_name)
+                        self.click_button(ElementSelector.change_problem_btn_loc)
+                        problem_name = self.get_text(ElementSelector.enm_problem_name_loc_1)
+                        code = get_code(problem_id=None, problem_name=problem_name, challenge=True)
+                        code_input = self.get_element(ElementSelector.code_view_loc)
+                        input_code(code, code_input)
+
+                        self.click_button(ElementSelector.checkpoint_save_run_btn_loc)
+                        try:
+                            self.wait_for_text_visible('挑战成功', ElementSelector.challenge_result_tip_loc)
+                        except ElementNotVisibleException:
+                            print(f'题目"{problem_name}"答案错了，用挑战失败再断言一次')
+                            self.wait_for_text_visible('挑战失败', ElementSelector.challenge_result_tip_loc)
+                        except Exception as e:
+                            print(f'{e}挑战结果异常')
+            else:  # 点击保存并评测按钮之后的操作
+                # 标准授课的“继续挑战”和主题授课的“下一道题”按钮
+                next_btn_loc = ElementSelector.challenge_next_problem_btn_loc \
+                    if subject else ElementSelector.standard_keep_challenge_btn_loc
+                try:
+                    self.click_button(next_btn_loc)
+                except Exception as e:  # 主题授课挑战失败时点击继续跳转后点击换一题
+                    print(f'答案错误挑战失败导致{e},尝试点击继续挑战按钮并点击换一题')
+                    self.click_button(ElementSelector.keep_challenge_btn_loc)
+                    self.click_button(ElementSelector.change_problem_btn_loc)
+                try:
+                    self.wait_for_text_visible(problem_name)
+                except Exception as e:
+                    print(f'{e}做过的题不在题目列表中，题目列表异常')
 
     def __course_field_operation(self, code, exp_output, wrong=False):
         """
         查看课件精简试炼场操作
         :return:
         """
-        self.slow_click(ElementSelector.edit_btn_loc)
+        self.click_button(ElementSelector.edit_btn_loc, wait=True)
         code_input_element = self.get_element(ElementSelector.edit_cursor_loc)
         input_code(code, code_input_element)
         self.click(ElementSelector.course_run_code_btn_loc)
@@ -651,13 +951,29 @@ class BaseTestCase(BaseCase):
             self.wait_for_text_visible(exp_output, ElementSelector.text_output_area_loc)
         else:
             self.__assert_equal(exp_output, ElementSelector.text_output_area_loc)
-            self.slow_click(ElementSelector.pic_output_btn_loc)
+            self.click_button(ElementSelector.pic_output_btn_loc, loading=True)
             try:
                 self.wait_for_element_visible(ElementSelector.pic_output_area_loc)
             except BaseException as e:
                 print(f'{e},精简试炼场图形输出异常')
             finally:
                 self.click(ElementSelector.putback_btn_loc)
+
+    def __check_course_operation(self, btn):
+        if '课件' == btn:
+            try:
+                self.driver.switch_to.frame(self.driver.find_elements_by_tag_name('iframe')[0])
+                self.driver.switch_to.frame('wacframe')
+                page_num_text = self.get_text(ElementSelector.ppt_pages_num_loc)
+                page_text = page_num_text[11:]
+                num_text = page_text[:2]
+                page_num = int(num_text)
+                for s in range(page_num):
+                    self.slow_click(ElementSelector.ppt_next_btn_loc)
+            except Exception as e:
+                print(f'{e}PPT显示异常')
+            finally:
+                self.switch_to_default_content()
 
     def add_work(self, work_name, class_name, test_field=False, enable_assert=False):
         """
@@ -673,18 +989,18 @@ class BaseTestCase(BaseCase):
             pass
         else:
             self.update_text(ElementSelector.my_work_name_input_loc, new_value=work_name)
-            if self.wait:
+            if self.__wait_for_loading():
                 code_input_element = self.get_element(ElementSelector.add_work_cursor_loc)
                 code = turtle_code()
                 input_code(code, code_input_element)
             for a in [ElementSelector.add_work_picture_btn_loc, ElementSelector.add_author_picture_btn_loc]:
-                if self.wait:
+                if self.__wait_for_loading():
                     self.click(a)
                     upload_file_by_auto_it('jpg')
-        if self.wait:
-            self.click(ElementSelector.sel_class_loc)
+        if self.__wait_for_loading():
+            self.slow_click(ElementSelector.sel_class_loc)
             self.click(ElementSelector.first_class_loc)
-            self.slow_click(ElementSelector.sel_audit_teacher_loc)
+        self.click_button(ElementSelector.sel_audit_teacher_loc, wait=True)
         self.click_visible_elements(f'//span[text()="{class_name}"]')
         self.click(f'//span[text()="{Data().teacher_name_for_edu()}"]')
         self.click(ElementSelector.submit_audit_btn_loc)
@@ -700,9 +1016,8 @@ class BaseTestCase(BaseCase):
         :param enable_assert: 是否检查
         :return: None
         """
-        self.slow_click(ElementSelector.screening_tab_loc)
-        if self.wait:
-            self.slow_click(f'//div[text()="{work_name}"]')
+        self.click_button(ElementSelector.screening_tab_loc, wait=True)
+        self.click_button(f'//div[text()="{work_name}"]', loading=True)
         if '直接审核作品' == work_name:
             self.click(ElementSelector.direct_release_btn_loc)
             exp_tip = '发布成功'
@@ -728,12 +1043,11 @@ class BaseTestCase(BaseCase):
 
         :return: None
         """
-        if self.wait:
-            self.slow_click(ElementSelector.feedback_btn_loc, timeout=6)
+        self.click_button(ElementSelector.feedback_btn_loc, loading=True)
         self.add_text(ElementSelector.content_textarea_loc, text='意见反馈测试')
         self.click(ElementSelector.feedback_upload_pic_loc)
         upload_file_by_auto_it('jpg')
-        if self.wait:
+        if self.__wait_for_loading():
             self.click(ElementSelector.submit_btn_loc)
             self.__assert_equal('许愿信提交成功！', ElementSelector.succ_tip_loc)
 
@@ -743,9 +1057,8 @@ class BaseTestCase(BaseCase):
 
         :return: None
         """
-        if self.wait:
-            self.slow_click(ElementSelector.image_identify_tab_loc)
-            self.click(ElementSelector.upload_pic_loc)
+        self.click_button(ElementSelector.image_identify_tab_loc, loading=True)
+        self.click(ElementSelector.upload_pic_loc)
         upload_file_by_auto_it('jpg')
 
         self.__pic_image_identify_operation()
@@ -759,7 +1072,7 @@ class BaseTestCase(BaseCase):
             self.click(ElementSelector.generate_btn_loc)
             if tab == 1:
                 try:
-                    if self.wait:
+                    if self.__wait_for_loading():
                         self.wait_for_text_visible(word, ElementSelector.poetry_title_loc)
                 except BaseException as a:
                     print(f'{a}用失败提示再次断言')
@@ -778,7 +1091,7 @@ class BaseTestCase(BaseCase):
                     print(f'{e}创作春联异常')
             self.slow_click(ElementSelector.subject_word_loc)
             actual_word = None
-            if self.wait:
+            if self.__wait_for_loading():
                 actual_word = self.get_text(ElementSelector.subject_word_loc)
             if tab == 1:
                 self.wait_for_text_visible(actual_word, ElementSelector.poetry_title_loc)
@@ -801,17 +1114,17 @@ class BaseTestCase(BaseCase):
         fail_output = '上传图片无法识别'
         btn_text_list = ['人脸', '车牌', '图片标签']
         for t in btn_text_list:
-            if self.wait:
-                self.slow_click(f'//span[contains(text(),"{t}")]', timeout=1)
+            if self.__wait_for_loading():
+                self.click(f'//span[contains(text(),"{t}")]')
                 try:
                     if '人脸' == t:
-                        if self.wait:
+                        if self.__wait_for_loading():
                             self.wait_for_text_visible(face_output, selector=ElementSelector.output_text_loc)
                     elif '车牌' == t:
-                        if self.wait:
+                        if self.__wait_for_loading():
                             self.wait_for_text_visible(car_license_output, selector=ElementSelector.output_text_loc)
                     else:
-                        if self.wait:
+                        if self.__wait_for_loading():
                             self.wait_for_text_visible(pic_tag_output, selector=ElementSelector.output_text_loc)
                 except Exception as a:
                     print(f'{a}用失败提示再次断言')
@@ -864,8 +1177,8 @@ class BaseTestCase(BaseCase):
         :return:
         """
         self.wait_for_element_absent('//div[@class="el-loading-mask is-fullscreen"]')
-        time.sleep(1.5)
-        return self.assert_element_absent('//div[@class="el-loading-mask is-fullscreen"]')
+        return self.wait_for_element_absent('//div[@class="el-loading-mask is-fullscreen '
+                                            'el-loading-fade-leave-active el-loading-fade-leave-to"]')
 
     def __upload_file(self, input_element, file_type):
         """

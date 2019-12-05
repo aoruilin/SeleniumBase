@@ -17,10 +17,10 @@ class DoHomeworkSimple(BaseTestCase):
 
     def test_02(self):
         self.driver.get(self.url)
-        self.login.user_login(self.username, self.name, self.password, student_assert=True)
-        self.click.click_button(ElementSelector.checkpoint_course_loc)
-        self.click.click_button(ElementSelector.index_homework_btn_loc)
-        self.subject.student_do_homework_simple(homework_name=None, enable_assert=True)
+        self.login(self.username, self.name, self.password, student_assert=True)
+        self.click_button(ElementSelector.checkpoint_course_loc)
+        self.click_button(ElementSelector.index_homework_btn_loc)
+        self.student_do_homework_simple(homework_name=None)
 
 
 if __name__ == "__main__":
