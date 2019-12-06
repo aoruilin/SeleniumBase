@@ -167,7 +167,6 @@ class BaseTestCase(BaseCase):
         标准授课添加课件
 
         :param package_name: 添加的课件类型
-        :param enable_assert: 是否检查
         :return: None
         """
         self.click_button(ElementSelector.add_course_loc, loading=True)
@@ -251,7 +250,6 @@ class BaseTestCase(BaseCase):
         """
         标准授课添加课件错误操作
 
-        :param enable_assert: 是否检查
         :return: None
         """
 
@@ -282,7 +280,6 @@ class BaseTestCase(BaseCase):
         :param answer_config: 答案设置
         :param timing: 定时设置
         :param homework_name: 发布作业的名称
-        :param enable_assert: 是否检查
         :return: None
         """
         self.add_text(ElementSelector.homework_name_input_loc, text=homework_name)
@@ -352,7 +349,7 @@ class BaseTestCase(BaseCase):
         for a in self.answer_list:
             for t in range(2):
                 homework_name = f'答案{a}定时{t}'
-                self.click_button(ElementSelector.add_homework_btn_loc)
+                self.click_button(ElementSelector.add_homework_btn_loc, loading=True)
                 self.add_homework_simple(homework_name, a, timing=t)
 
     def subject_add_homework_loop(self):
@@ -374,22 +371,22 @@ class BaseTestCase(BaseCase):
             homework_name = f'{i}不输入'
             self.click_button(ElementSelector.add_homework_btn_loc, wait=True)
             if '名称' == i:
-                self.click(ElementSelector.choice_pointId_btn_loc)
-                self.click(ElementSelector.sel_know_loc)
+                self.click_button(ElementSelector.choice_pointId_btn_loc)
+                self.click_button(ElementSelector.sel_know_loc)
                 self.__choice_point()
                 self.__choice_problem_for_homework()
                 self.click_button(ElementSelector.choice_class_btn_loc, loading=True)
-                self.click(ElementSelector.public_homework_btn_loc)
+                self.click_button(ElementSelector.public_homework_btn_loc)
                 self.__assert_equal('请输入作业名称！', ElementSelector.fail_tip_loc)
             elif '知识点' == i:
                 self.add_text(ElementSelector.homework_name_input_loc, text=homework_name)
-                self.click(ElementSelector.choice_class_btn_loc)
-                self.click(ElementSelector.public_homework_btn_loc)
+                self.click_button(ElementSelector.choice_class_btn_loc)
+                self.click_button(ElementSelector.public_homework_btn_loc, loading=True)
                 self.__assert_equal('请通过知识点选出作业题目！', ElementSelector.fail_tip_loc)
             else:
                 self.add_text(ElementSelector.homework_name_input_loc, text=homework_name)
-                self.click(ElementSelector.choice_pointId_btn_loc)
-                self.click(ElementSelector.sel_know_loc)
+                self.click_button(ElementSelector.choice_pointId_btn_loc)
+                self.click_button(ElementSelector.sel_know_loc)
                 self.__choice_point()
                 self.__choice_problem_for_homework()
                 self.click(ElementSelector.public_homework_btn_loc)
@@ -532,7 +529,6 @@ class BaseTestCase(BaseCase):
         """
         高校版学生查看课件
         :param course_name:查看的课件名称
-        :param enable_assert: 是否检查
         :return: None
         """
         self.__assert_equal(course_name, ElementSelector.index_course_name_loc)
@@ -615,18 +611,7 @@ class BaseTestCase(BaseCase):
         problem_id_list = self.parameter.get_problem_id_for_ui(eval_id)
         n = len(problem_id_list)
         self.__do_homework_operation(n, problem_id_list, subject=True)
-        self.click_button(ElementSelector.checkpoint_push_homework_btn_loc)
-        self.click_button(ElementSelector.checkpoint_push_confirm_btn_loc)
-        # 作业结果弹框操作
-        evaluation_list = ['太厉害了', '还不错哦', '有待提高', '再接再厉']
-        for v in evaluation_list:
-            try:
-                self.wait_for_text_visible(v, ElementSelector.result_tip_loc)
-                print(f'作业评价是{v}')
-            except ElementNotVisibleException:
-                print(f'作业评价不是 {v}')
-            except Exception as e:
-                print(f'出现未知异常：{e}')
+        self.__subject_push_homework_operation()
         try:
             self.click_button(ElementSelector.emergency_challenge_btn_loc)
             self.__do_challenge_operation(subject=True)
@@ -667,15 +652,15 @@ class BaseTestCase(BaseCase):
             n = len(problem_id_list)
             s = n - a
             self.__do_homework_operation(s, problem_id_list, problem_type='操作')
-            self.click(
+            self.click_button(
                 f'//span[contains(text(),"操作")]/parent::div/parent::div/following-sibling::div[{n}]')
             code_input = self.get_element(ElementSelector.code_view_loc)
             wrong_answer = 'wrong_answer = "wrong"'
             code_input.send_keys(wrong_answer)
-            self.click(ElementSelector.save_run_btn_loc)
-            self.wait_for_text_visible('评测不通过', ElementSelector.unpass_result_text_loc)
-            self.click(ElementSelector.push_homework_btn_loc)
-            self.click(ElementSelector.confirm_btn_loc)
+            self.click_button(ElementSelector.save_run_btn_loc, loading=True)
+            self.wait_for_text_visible('评测有误', ElementSelector.unpass_result_text_loc)
+            self.click_button(ElementSelector.push_homework_btn_loc)
+            self.click_button(ElementSelector.confirm_btn_loc)
 
             do_num = s + c
             try:
@@ -708,6 +693,91 @@ class BaseTestCase(BaseCase):
             except Exception as e:
                 print(f'{e}作业完成状态和质量异常')
             self.go_back()
+
+    def subject_student_do_homework_loop(self):
+        """
+        主题授课遍历做作业列表前3个作业
+
+        :return: None
+        """
+        for a in range(1, 4):  # 依次做作业列表3个作业
+            try:
+                self.wait_for_element_visible(  # 作业去答题
+                    f'//div[@class="items-gird"]/div[{a}]/div[2]/div[2]')
+            except ElementNotVisibleException:
+                print('作业列表为空，刷新页面')
+                self.refresh()
+            except BaseException as e:
+                print(f'{e}作业列表异常')
+            finally:
+                self.click_button(  # 点击作业去答题
+                    f'//div[@class="items-gird"]/div[{a}]/div[2]/div[2]')
+
+            self.switch_to_window(a)  # 切换新弹出的table
+            problem_name_elem_list = self.driver.find_elements_by_xpath(ElementSelector.problem_list_name_loc)
+            problem_name_list = [p.text for p in problem_name_elem_list]
+            eval_id_list = self.parameter.get_eval_id()
+            eval_id = eval_id_list[a - 1]
+            problem_id_list = self.parameter.get_problem_id_for_ui(eval_id)
+            n = len(problem_id_list)
+            s = n - a
+            self.__do_homework_operation(s, problem_id_list, subject=True)
+            self.click_button(f'//div[@class="el-row"]/div[{n}]')
+            code_input = self.get_element(ElementSelector.code_view_loc)
+            wrong_answer = 'wrong_answer = "wrong"'
+            code_input.send_keys(wrong_answer)
+            self.click_button(ElementSelector.checkpoint_save_run_btn_loc)
+            self.wait_for_text_visible('评测有误', ElementSelector.unpass_result_text_loc)
+            # self.click_button(ElementSelector.checkpoint_confirm_btn_loc)
+            self.__subject_push_homework_operation()
+            # 作业结果弹框操作
+            if a == 3:
+                self.click_button(ElementSelector.wrong_redo_btn_loc)
+                problem_elem_list = self.driver.find_elements(ElementSelector.problem_list_loc)
+                n = len(problem_elem_list)
+                for w in range(1, n + 1):
+                    try:
+                        self.wait_for_element_visible(ElementSelector.wrong_problem_name_loc)
+                    except Exception as e:
+                        print(f'{e}作业作答作业列表为空，刷新后重新点击')
+                        self.refresh()
+                    finally:
+                        wrong_problem_name_num = self.get_text(ElementSelector.wrong_problem_name_loc)
+                        wrong_problem_name_list = wrong_problem_name_num.split('\n')
+                        wrong_problem_name = wrong_problem_name_list[1]  # 取出第一个题目的名称文本
+                        try:
+                            assert (wrong_problem_name in problem_name_list, '这个错题不是这个作业的题')
+                        except Exception as e:
+                            print(f'{e}错题统计题目列表异常')
+                        problem_name = self.get_text(ElementSelector.problem_name_loc)
+                    code = get_code(problem_id=None, problem_name=problem_name, challenge=True)
+                    code_input = self.get_element(ElementSelector.code_view_loc)
+                    input_code(code, code_input)
+                    self.click_button(ElementSelector.checkpoint_save_run_btn_loc, loading=True)
+                    try:
+                        self.wait_for_text_visible('评测通过', ElementSelector.pass_result_text_loc)
+                    except ElementNotVisibleException:
+                        print(f'{problem_name}DB题目答案错误，尝试评测未通过断言')
+                        self.wait_for_text_visible('评测有误', ElementSelector.unpass_result_text_loc)
+                    except Exception as e:
+                        print(f'{e}其他错误,不再尝试断言')
+                    # self.click_button(ElementSelector.checkpoint_confirm_btn_loc)
+                self.__subject_push_homework_operation()
+
+                try:
+                    self.click_button(ElementSelector.emergency_challenge_btn_loc)
+                    self.__do_challenge_operation(subject=True)
+                except Exception as e:
+                    print(f'{e}紧急挑战异常，有题目答案错误导致无法触发或紧急挑战做题操作异常，请查看日志')
+                self.driver.close()
+                self.switch_to_window(a - 1)
+                self.refresh()
+                self.click_button(  # 点击作业名称
+                    f'//div[@class="items-gird"]/div[{a}]/div[2]/div[1]')
+            else:
+                self.click_button(ElementSelector.analysis_btn_loc)
+            self.wait_for_text_visible('已完成', ElementSelector.checkpoint_homework_status_loc)
+            self.click_button(ElementSelector.return_homework_btn_loc)
 
     def student_do_homework_for_teach(self):
         """
@@ -744,7 +814,7 @@ class BaseTestCase(BaseCase):
             code_input = self.get_element(ElementSelector.uni_teach_code_view_loc)
             wrong_answer = 'wrong_answer = "wrong"'
             code_input.send_keys(wrong_answer)
-            self.click(ElementSelector.save_run_btn_loc)
+            self.click_button(ElementSelector.save_run_btn_loc, loading=True)
             try:
                 self.wait_for_text_visible('不通过', ElementSelector.unpass_result_text_loc)
             except Exception as e:
@@ -937,6 +1007,20 @@ class BaseTestCase(BaseCase):
                     self.wait_for_text_visible(problem_name)
                 except Exception as e:
                     print(f'{e}做过的题不在题目列表中，题目列表异常')
+
+    def __subject_push_homework_operation(self):
+        self.click_button(ElementSelector.checkpoint_push_homework_btn_loc)
+        self.click_button(ElementSelector.checkpoint_push_confirm_btn_loc)
+        # 作业结果弹框操作
+        evaluation_list = ['太厉害了', '还不错哦', '有待提高', '再接再厉']
+        for v in evaluation_list:
+            try:
+                self.wait_for_text_visible(v, ElementSelector.result_tip_loc)
+                print(f'作业评价是{v}')
+            except ElementNotVisibleException:
+                print(f'作业评价不是 {v}')
+            except Exception as e:
+                print(f'出现未知异常：{e}')
 
     def __course_field_operation(self, code, exp_output, wrong=False):
         """
