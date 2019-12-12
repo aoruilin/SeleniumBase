@@ -1,6 +1,8 @@
+import unittest
+
 from ui_auto.base.data import Data
 from ui_auto.page_object.element_loc import ElementSelector
-from ui_auto.page_operation import BaseTestCase
+from ui_auto.page_object.page_operation import BaseTestCase
 
 
 class DoHomework(BaseTestCase):
@@ -21,10 +23,10 @@ class DoHomework(BaseTestCase):
     def test_do_homework_loop_02(self):
         self.login(self.username_student, self.student_name, self.password, student_assert=True)
         self.click_button(ElementSelector.checkpoint_course_loc)
-        self.click_button(ElementSelector.index_homework_btn_loc)
-        self.student_do_homework_loop()
+        self.click_button(ElementSelector.index_homework_btn_loc, loading=True)
+        self.subject_student_do_homework_loop()
 
 
-# if __name__ == "__main__":
-#     # import sys;sys.argv = ['', 'Test.testName']
-#     unittest.main()
+if __name__ == "__main__":
+    # import sys;sys.argv = ['', 'Test.testName']
+    unittest.main()

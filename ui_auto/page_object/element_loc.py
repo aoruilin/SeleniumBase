@@ -61,7 +61,14 @@ class ElementSelector:
     """日期筛选、搜索功能"""
     start_course_loc = '//span[text()="上课啦"]'  # '上课啦按钮'
     ctsk_btn_loc = '//div[contains(text(),"标准授课")]'  # '传统授课按钮'
-    date_search_input_loc = '//input[@class="el-range-input"]'  # '日期筛选输入框'
+    student_homework_date_search_input_loc = '//div[@class="homework-filter clearfix"]' \
+                                             '/div[3]/div/div/input[1]'  # 学生作业日期筛选输入框
+    teacher_homework_date_search_input_loc = '//div[@class="homework-filter clearfix"]' \
+                                             '/div[2]/div/div/input[1]'  # 教师作业日期筛选输入框
+    student_course_date_search_input_loc = '//div[@class="course-filter clearfix"]' \
+                                           '/div[3]/div/div/input[1]'  # 学生课件日期筛选输入框
+    teacher_course_date_search_input_loc = '//div[@class="course-filter clearfix"]' \
+                                           '/div[2]/div/div/input[1]'  # 教师课件日期筛选输入框
     today_loc = '//td[@class="available today"]'  # '日期筛选今天'
     today_end_loc = '//td[@class="available today in-range start-date end-date"]'  # '日期筛选今天结束'
     tomorrow_loc = '//td[@class="available today"]/following-sibling::td'  # '日期筛选明天'
@@ -138,7 +145,9 @@ class ElementSelector:
     add_btn_loc = '//div[@class="add-course-submit-gird"]/button'  # '添加按钮'
     repeated_tip_confirm_loc = '//div[contains(text(),"确定")]'  # '重复提示确定按钮'
     succ_tip_loc = '//p[@class="el-message__content"]'  # '添加成功提示'
-    back_btn_loc = '//span[text()="返回"]'  # '弹窗返回按钮'
+    go_add_homework_btn_loc = '//span[contains(text(),"发布作业")]'  # 去发布作业按钮
+    go_on_btn_loc = '//span[contains(text(),"继续")]'  # 弹窗继续添加按钮
+    standard_course_crumb_loc = '//div[@class="el-breadcrumb"]/span[1]/span[1]'  # 标准授课面包屑
     course_name_loc = '//div[@class="course-container-gird"]/ul/li[1]/div/div/div[2]/div/div'  # '课程名称'
     wrapper_elem = '//div[@class="el-scrollbar__wrap"]'
 
@@ -166,6 +175,7 @@ class ElementSelector:
     pic_output_btn_loc = '//div[contains(text(),"图形")]'  # '图形输出区按钮'
     pic_output_area_loc = '//div[@class="gird"]/img'  # '图形输出'
     course_run_code_btn_loc = '//span[contains(text(),"运行")]'  # '运行代码按钮'
+    iframe_loc = '//div[@class="courseware-content-ware"]/iframe'  # 第一层iframe
 
     """主题授课查看课件"""
     first_go_to_checkpoint_btn = \
@@ -402,7 +412,7 @@ class ElementSelector:
 
     """资源管理"""
     resource_manage_tab_loc = '//li[contains(text(),"资源")]'  # '资源管理tab'
-    resource_type_sel_loc = '//div[@class="el-select el-select--medium"]/div[1]/span/span'  # '资源类型下拉框'
+    resource_type_sel_loc = '//div[@class="el-select el-select--medium"]/div[1]/span'  # '资源类型下拉框'
     school_resource_btn_loc = '//span[contains(text(),"校本")]'  # '校本资源选项'
     school_resource_tab_loc = '//div[@class="goclass-menu-gird"]/ul/li[2]'  # '校本资源tab'
     want_publish_btn_loc = '//span[text()="我要上传"]'  # '我要上传按钮'
@@ -411,8 +421,8 @@ class ElementSelector:
     course_describe_loc = '//div[@class="el-textarea el-input--medium el-input--suffix"]/textarea'  # '课件描述'
     upload_file_btn_loc = \
         '//div[@class="add-class-bg-gird"]/div[2]/div[5]/div[2]/div/div/div/div[1]/span'  # '上传课件'
-    upload_file_btns_loc = '//span[contains(text()#"上传文件")]'  # '所有上传课件按钮'
-    continue_to_upload_loc = '//span[contains(text()#"继续上传")]'  # '所有继续上传按钮'
+    upload_file_btns_loc = '//span[contains(text(),"上传文件")]'  # '所有上传课件按钮'
+    continue_to_upload_loc = '//span[contains(text(),"继续上传")]'  # '所有继续上传按钮'
     visibility_sel_loc = '//div[text()="可见性"]/parent::div/div[2]/div/div[1]'  # '可见性选择'
     publish_btn_loc = '//span[text()="发布"]'  # '发布按钮'
     # succ_tip_loc = '//h2[@class="dia-header"]'#'发布成功提示框'

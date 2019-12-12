@@ -12,10 +12,10 @@ from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 
-from base.data import EmailData
-from common.get_cwd import get_absolute_path
-from common.file_operation import zip_dir
-from interface.base.HTMLTestRunner import HTMLTestRunner
+from ui_auto.base.data import EmailData
+from ui_auto.common.get_cwd import get_absolute_path
+from ui_auto.common.file_operation import zip_dir
+from ui_auto.base.HTMLTestRunner import HTMLTestRunner
 from unittest.suite import TestSuite
 from ui_auto.testcase.main_process.edu_main_process import TestMainProcess
 from ui_auto.testcase.course.packages_course import TestPackageCourse
@@ -34,7 +34,7 @@ from ui_auto.testcase.main_process.error_check import TestErrorCheck
 scheduler = BlockingScheduler()
 
 
-@scheduler.scheduled_job('cron', hour='23', minute='27', second='0')
+@scheduler.scheduled_job('cron', hour='23', minute='0', second='0')
 def do_test():
     print(f'当前时间：{datetime.datetime.now()}')
     project_cwd = get_absolute_path('testcase')
@@ -93,7 +93,7 @@ def do_test():
         msg.attach(text)
 
         file_path = f'{project_cwd.as_posix()}\\testsuits\\reports'
-        zip_path = f'{get_absolute_path("dingdangcode_autotest").parent}\\reports.zip'
+        zip_path = f'{get_absolute_path("ui_auto")}\\testcase\\testsuits\\reports.zip'
         zip_dir(file_path, zip_path)
         with open(zip_path, 'rb') as f:
             attach = MIMEBase('application', 'octet-stream')

@@ -1,5 +1,4 @@
-from base.data import Data
-from ui_auto.page_operation import BaseTestCase
+from ui_auto.page_object.page_operation import BaseTestCase
 
 
 class UserLoginWrong(BaseTestCase):

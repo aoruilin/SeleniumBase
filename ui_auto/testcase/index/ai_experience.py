@@ -1,5 +1,7 @@
+import unittest
+
 from ui_auto.base.data import Data
-from ui_auto.page_operation import BaseTestCase
+from ui_auto.page_object.page_operation import BaseTestCase
 from ui_auto.page_object.element_loc import ElementSelector
 
 
@@ -16,4 +18,4 @@ class TestAIExperience(BaseTestCase):
 
 
 if __name__ == "__main__":
-    TestAIExperience().test_01()
+    unittest.main()

@@ -87,3 +87,6 @@ class ParameterForOthers:
         # problem_id_list = list(filter(lambda x: is_not(x, None), all_problem_id_list))
 
         return problem_id_list
+
+
+print(ParameterForOthers(identity='teacher').get_class_list())

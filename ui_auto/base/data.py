@@ -28,7 +28,7 @@ class Data:
         return ip_for_edu
 
     def api_ip_for_edu(self):
-        ip_for_edu = 'https://api.dingdangcode.com/edu'\
+        ip_for_edu = 'https://eduapi.dingdangcode.com'\
             if self.production else 'http://192.168.0.160:8095'
 
         return ip_for_edu
@@ -140,7 +140,7 @@ class PointIdIndex:
     level_three_index = 1
 
     checkpoint_level_one_index = 1
-    checkpoint_level_two_index = 2
+    checkpoint_level_two_index = 3
     checkpoint_level_three_index = 0
 
 

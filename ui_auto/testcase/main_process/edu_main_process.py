@@ -4,9 +4,11 @@ Last Update on 2019年5月8日
 
 @author: 敖瑞麟
 """
+import unittest
+
 from ui_auto.base.data import Data
 from ui_auto.page_object.element_loc import ElementSelector
-from ui_auto.page_operation import BaseTestCase
+from ui_auto.page_object.page_operation import BaseTestCase
 
 
 class TestMainProcess(BaseTestCase):
@@ -73,5 +75,4 @@ class TestMainProcess(BaseTestCase):
 
 
 if __name__ == "__main__":
-    TestMainProcess().test_MainProcess_01()
-    TestMainProcess().test_MainProcess_02()
+    unittest.main()

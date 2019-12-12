@@ -1,5 +1,7 @@
+import unittest
+
 from ui_auto.base.data import Data
-from ui_auto.page_operation import BaseTestCase
+from ui_auto.page_object.page_operation import BaseTestCase
 
 
 class TestWishBox(BaseTestCase):
@@ -14,4 +16,4 @@ class TestWishBox(BaseTestCase):
 
 
 if __name__ == "__main__":
-    TestWishBox().test_wish_box()
+    unittest.main()
