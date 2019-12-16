@@ -4,10 +4,12 @@ import os
 
 
 def get_log_path(file_path, name_path):
-    tmp_path = name_path.replace('.', '\\')
+    file_name = str.split(name_path, '.')
+    me_name = file_name[-1]
+    tmp_path = me_name.replace('.', '\\')
     pos = file_path.find(tmp_path)
     project_path = file_path[:pos]
-    name_list = str.split(name_path, '.')
+    name_list = str.split(me_name, '.')
     file_name = name_list.pop()
     file_time = time.strftime("%Y%m%d%H%M%S")
     log_name = f'{file_name}_{file_time}.txt'

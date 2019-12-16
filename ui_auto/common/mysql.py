@@ -45,4 +45,4 @@ def execute_sql(sql, problem_id, problem_name, challenge):
 
 
 # print(get_code(problem_id=None, problem_name='字符串连接', challenge=True))
-# print(get_choice(problem_id=137, problem_name=None, challenge=False))
+# print(get_choice(problem_id=136, problem_name=None, challenge=False))

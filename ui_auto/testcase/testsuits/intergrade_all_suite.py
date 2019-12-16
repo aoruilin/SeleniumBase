@@ -1,5 +1,4 @@
 import datetime
-import os
 import smtplib
 import time
 
@@ -8,8 +7,6 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.utils import formataddr
-from email.mime.application import MIMEApplication
-from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 
 from ui_auto.base.data import EmailData
@@ -17,19 +14,19 @@ from ui_auto.common.get_cwd import get_absolute_path
 from ui_auto.common.file_operation import zip_dir
 from ui_auto.base.HTMLTestRunner import HTMLTestRunner
 from unittest.suite import TestSuite
-from ui_auto.testcase.main_process.edu_main_process import TestMainProcess
-from ui_auto.testcase.course.packages_course import TestPackageCourse
-from ui_auto.testcase.homework.add_homework_loop import AddHomeworkLoop
-from ui_auto.testcase.homework.edu_do_homework_loop import DoHomework
-from ui_auto.testcase.test_field.test_field_operation import TestFieldCase
-from ui_auto.testcase.test_field.add_draft import TestAddDraft
-from ui_auto.testcase.creation_space.my_creation_work import TestMyCreation
-from ui_auto.testcase.creation_space.test_field_work import WorksHall
-from ui_auto.testcase.main_process.user_login_wrong import UserLoginWrong
-from ui_auto.testcase.teach_management.add_resources import AddResourcesCase
-from ui_auto.testcase.index.ai_experience import TestAIExperience
-from ui_auto.testcase.index.wish_box import TestWishBox
-from ui_auto.testcase.main_process.error_check import TestErrorCheck
+from ui_auto.testcase.edu_main_process import TestMainProcess
+from ui_auto.testcase.packages_course import TestPackageCourse
+from ui_auto.testcase.add_homework_loop import AddHomeworkLoop
+from ui_auto.testcase.edu_do_homework_loop import DoHomework
+from ui_auto.testcase.test_field_operation import TestFieldCase
+from ui_auto.testcase.add_draft import TestAddDraft
+from ui_auto.testcase.my_creation_work import TestMyCreation
+from ui_auto.testcase.test_field_work import WorksHall
+from ui_auto.testcase.user_login_wrong import UserLoginWrong
+from ui_auto.testcase.add_resources import AddResourcesCase
+from ui_auto.testcase.ai_experience import TestAIExperience
+from ui_auto.testcase.wish_box import TestWishBox
+from ui_auto.testcase.error_check import TestErrorCheck
 
 scheduler = BlockingScheduler()
 

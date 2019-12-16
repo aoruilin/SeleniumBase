@@ -1,6 +1,7 @@
 ## <img src="https://cdn2.hubspot.net/hubfs/100006/images/super_square_logo_3a.png" title="SeleniumBase" height="32"> Console Scripts
 
 SeleniumBase console scripts help you get things done more easily, such as installing web drivers, creating a test directory with necessary configuration files, converting old Webdriver unittest scripts into SeleniumBase code, and using the Selenium Grid.
+SeleniumBase控制台脚本可以帮助您更轻松地完成任务，比如安装web驱动程序、创建带有必要配置文件的测试目录、将旧的Webdriver unittest脚本转换成SeleniumBase代码，以及使用Selenium网格。
 
 For running tests from the command line, [use **pytest** with SeleniumBase](https://github.com/seleniumbase/SeleniumBase/blob/master/help_docs/customizing_test_runs.md).
 
@@ -36,6 +37,11 @@ The new folder contains default config files,
 sample tests for helping new users get started, and
 Python boilerplates for setting up customized
 test frameworks.
+为运行SeleniumBase脚本创建一个新文件夹。
+新文件夹包含默认的配置文件，
+帮助新用户入门的示例测试
+用于自定义设置的Python样板文件
+测试框架。
 
 ### convert
 

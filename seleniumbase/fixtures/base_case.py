@@ -81,6 +81,7 @@ class BaseCase(unittest.TestCase):
         self.driver = None
         self.environment = None
         self.env = None  # Add a shortened version of self.environment
+        self.step_log_path = None
         self.__last_url_of_delayed_assert = "data:,"
         self.__last_page_load_url = "data:,"
         self.__last_page_screenshot = None
