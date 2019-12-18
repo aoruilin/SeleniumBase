@@ -227,7 +227,7 @@ class ElementSelector:
     homework_to_do_loc = \
         '//div[@class="homework-container-gird"]/ul/li[1]/div/div/div/div[1]/div[1]/div', '作业列表中第一个作业'
     view_code_btn_loc = '//div[@class="view-cls"]/div/div[1]/div/a[1]', '去作答按钮'
-    problem_list_loc = '//div[@class="data-back-single-title fl"]', '题目列表'
+    problem_list_loc = '//div[@class="data-back-single-title fl"]'  # , '题目列表'
     problem_id_loc = '//div[@class="codeview-left-title-gird"]/span', '题号文本'
     answer_btn_loc = '//div[@class="el-tabs__nav is-top"]/div[2]', '参考答案按钮'
     answer_tab_code_loc = '//div[@class="tab-views"]/div[2]/div/div/textarea', '参考答案区域光标'
@@ -343,9 +343,11 @@ class ElementSelector:
     """素材库"""
     tools_box_loc = '//span[contains(text(),"工具箱")]', '工具箱'
     material_lib_loc = '//div[contains(text(),"素材库")]', '素材库'
-    my_material_loc = '//div[contains(text(),"我的素材")]', '我的素材'
-    upload_material_btn_loc = '//span[contains(text(),"上传")]/parent::div/div/div/i', '上传素材按钮'
-    edit_name_btn_loc = '//div[@class="my-meterial-container"]/div[1]/div[1]/div[2]/i', '编辑名称按钮'
+    add_classify_btn = '.my-meterial-add-btn', '我的素材添加分类按钮'
+    classify_name_input = '//div[@class="my-meterial-list"]/div[2]/div/input', '添加素材名称输入框'
+    confirm_classify_btn = '//div[@class="my-meterial-list"]/div[2]/span[1]', '添加素材确定按钮'
+    upload_material_btn_loc = '//div[contains(text(),"上传")]', '上传素材按钮'
+    edit_name_btn_loc = '//div[@class="my-meterial-container"]/div[1]/div[1]/div[1]/div[2]/div[2]/div', '编辑名称按钮'
     delete_material_btn_loc = '//div[@class="my-meterial-container"]/div[1]/div[1]/div[1]/div[2]/i', '删除素材按钮'
     material_name_input_loc = '//div[@class="el-message-box__content"]/div/div[1]/input', '素材名称输入框'
     upload_confirm_btn_loc = '//div[@class="el-message-box__btns"]/button[2]', '确定按钮'

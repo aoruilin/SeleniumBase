@@ -15,6 +15,7 @@ from ui_auto.page_object.page_operation import BaseTestCase
 class TestMainProcess(BaseTestCase):
     file_name = __file__
     name = __name__
+    # step_log_path = get_log_path(file_name, name)
 
     url = Data().ip_for_edu()
     username_manager = Data().manager_username_for_edu()

@@ -120,6 +120,11 @@ class BaseTestCase(BaseCase):
 
         return self.get_element(selector)
 
+    def take_attribute(self, selector, msg=None, attribute=None):
+        log(self.step_log_path, f'获取元素{msg}的属性{attribute}的值')
+
+        return self.get_attribute(selector, attribute)
+
     def element_visible(self, selector, msg=None):
         log(self.step_log_path, f'等待 {msg} 可见')
 
@@ -133,7 +138,7 @@ class BaseTestCase(BaseCase):
     def login(self, username, name, password, teacher_assert=False, student_assert=False):
         # self.maximize_window()
         self.set_window_size(1250, 1035)
-        self.open(self.url_for_edu)
+        self.open_the(self.url_for_edu)
         self.change_text(*ElementSelector.username_input_loc, text=username)
         self.change_text(*ElementSelector.password_input_loc, text=password)
         self.click_button(*ElementSelector.save_login_loc)
@@ -146,7 +151,7 @@ class BaseTestCase(BaseCase):
             self.__assert_equal(name, ElementSelector.index_student_name_loc)
 
     def login_for_uni_teach(self, username, name, password, teacher_assert=False, student_assert=False):
-        self.open(self.url_for_uni)
+        self.open_the(self.url_for_uni)
         self.change_text(*ElementSelector.username_input_loc, text=username)
         self.change_text(*ElementSelector.password_input_loc, text=password)
         self.click_button(*ElementSelector.save_login_loc)
@@ -192,7 +197,7 @@ class BaseTestCase(BaseCase):
             self.click_button(
                 f'//div[@class="el-cascader-panel"]'
                 f'/div[1]/div[1]/ul/li[{PointIdIndex.checkpoint_level_one_index}]',
-                wait=True, msg=f'S{PointIdIndex.checkpoint_level_one_index}'
+                wait=True, msg=f'S{PointIdIndex.checkpoint_level_one_index - 1}'
             )
             self.click_button(
                 f'//div[@class="el-cascader-panel"]'
@@ -203,7 +208,7 @@ class BaseTestCase(BaseCase):
             self.click_button(
                 f'//div[@class="el-cascader-panel"]'
                 f'/div[1]/div[1]/ul/li[{PointIdIndex.level_one_index}]',
-                wait=True, msg=f'S{PointIdIndex.level_one_index}'
+                wait=True, msg=f'S{PointIdIndex.level_one_index - 1}'
             )
             self.click_button(
                 f'//div[@class="el-cascader-panel"]/div[2]/div[1]/ul/li[{PointIdIndex.level_two_index}]',
@@ -306,7 +311,8 @@ class BaseTestCase(BaseCase):
         course_name_list = []
         for name in self.teaching_package_list:
             self.click_button(*ElementSelector.add_checkpoint_course_loc, loading=True)
-            self.click_button(*ElementSelector.choice_checkpoint_loc, loading=True)
+            self.click_button(*ElementSelector.choice_checkpoint_loc,
+                              loading=True, wait=True)
             self.__choice_point(subject=True)
             check_point_course_name = self.subject_add_course_simple(name)
             course_name_list.append(check_point_course_name)
@@ -457,15 +463,15 @@ class BaseTestCase(BaseCase):
                 self.click_button(*ElementSelector.sel_know_loc)
                 self.__choice_point()
                 self.__choice_problem_for_homework()
-                self.click_button(*ElementSelector.public_homework_btn_loc)
-                self.assert_equal('请选择您要发往的班级！', ElementSelector.fail_tip_loc)
+                self.click_button(*ElementSelector.public_homework_btn_loc, loading=True)
+                self.__assert_equal('请选择您要发往的班级！', ElementSelector.fail_tip_loc)
             self.go_back()
 
         time_list = ['定时', '截止']
         for t in time_list:
             for n in range(0, 2):
                 homework_name = f'输入错误{t}时间'
-                self.click_button(*ElementSelector.add_homework_btn_loc)
+                self.click_button(*ElementSelector.add_homework_btn_loc, loading=True)
                 self.send_text(*ElementSelector.homework_name_input_loc, text=homework_name)
                 self.click_button(*ElementSelector.choice_pointId_btn_loc)
                 self.click_button(*ElementSelector.sel_know_loc)
@@ -826,7 +832,7 @@ class BaseTestCase(BaseCase):
             finally:
                 self.click_button(  # 点击作业去答题
                     f'//div[@class="items-gird"]/div[{a}]/div[2]/div[2]',
-                    msg=f'第{a}个作业的去答题按钮'
+                    msg=f'第{a}个作业的去答题按钮', wait=True, loading=True
                 )
 
             self.switch_to_window(a)  # 切换新弹出的table
@@ -849,7 +855,7 @@ class BaseTestCase(BaseCase):
             # 作业结果弹框操作
             if a == 3:
                 self.click_button(*ElementSelector.wrong_redo_btn_loc)
-                problem_elem_list = self.driver.find_elements(*ElementSelector.problem_list_loc)
+                problem_elem_list = self.driver.find_elements_by_xpath(ElementSelector.problem_list_loc)
                 n = len(problem_elem_list)
                 for w in range(1, n + 1):
                     try:
@@ -1005,18 +1011,18 @@ class BaseTestCase(BaseCase):
             search_loc = ElementSelector.student_course_date_search_input_loc \
                 if student else ElementSelector.teacher_course_date_search_input_loc
         self.click_button(*search_loc, loading=True)
-        self.click_button(*ElementSelector.today_loc)
-        self.click_button(*ElementSelector.today_end_loc)
+        self.click_button(*ElementSelector.today_loc, wait=True)
+        self.click_button(*ElementSelector.today_end_loc, wait=True)
         try:
             self.wait_text(name)
         except ElementNotVisibleException:
             print(f'没有搜索到{name}')
 
         self.refresh()
-        self.click_button(*search_loc)
-        self.click_button(*ElementSelector.today_loc)
+        self.click_button(*search_loc, loading=True)
+        self.click_button(*ElementSelector.today_loc, wait=True)
         try:
-            self.click_button(*ElementSelector.tomorrow_end_loc)
+            self.click_button(*ElementSelector.tomorrow_end_loc, wait=True)
         except Exception as e:
             print(f'{e}这周最后一天，改为选择下周第一天')
             self.click_button(*ElementSelector.next_week_end_loc)
@@ -1026,17 +1032,17 @@ class BaseTestCase(BaseCase):
             print(f'没有搜索到{name}')
 
         self.refresh()
-        self.click_button(*search_loc)
+        self.click_button(*search_loc, loading=True)
         for s in range(2):
             try:
-                self.click_button(*ElementSelector.tomorrow_loc)
+                self.click_button(*ElementSelector.tomorrow_loc, wait=True)
             except Exception as e:
                 print(f'{e}这周最后一天，改为选择下周第一天')
                 self.click_button(*ElementSelector.next_week_loc)
         try:
-            self.find_element(*ElementSelector.first_course_loc)
+            self.element_visible(*ElementSelector.first_course_loc)
             try:
-                self.find_element(*ElementSelector.first_homework_loc)
+                self.element_visible(*ElementSelector.first_homework_loc)
             except Exception as e1:
                 print(f'{e1},筛选日期为明天，没有筛选出资源，此用例PASS')
                 pass
@@ -1083,8 +1089,9 @@ class BaseTestCase(BaseCase):
                 try:
                     self.element_visible(f'//div[@class="el-row"]/div[{i}]',
                                          msg=f'题目列表第{i}道题')
+                    self.take_element(*ElementSelector.code_view_loc)
                 except Exception as e:
-                    print(f'{e}作业作答作业列表为空，刷新后重新点击')
+                    print(f'{e}作业作答题目列表或代码输入区为空，刷新后重新点击')
                     self.refresh()
                 finally:
                     self.click_button(f'//div[@class="el-row"]/div[{i}]',
@@ -1258,7 +1265,7 @@ class BaseTestCase(BaseCase):
                 input_code(code, code_input_element)
             for a in [ElementSelector.add_work_picture_btn_loc, ElementSelector.add_author_picture_btn_loc]:
                 if self.__wait_for_loading():
-                    self.click(a)
+                    self.click_button(*a)
                     upload_file_by_auto_it('jpg')
         self.click_button(*ElementSelector.sel_class_loc, loading=True)
         self.click_button(*ElementSelector.first_class_loc)
@@ -1425,7 +1432,7 @@ class BaseTestCase(BaseCase):
         teacher_position_elem = add_teacher_input_list[2]
         teacher_position_elem.send_keys('tester')
         self.click_button(*ElementSelector.confirm_btn_loc)
-        self.assert_equal('添加成功', ElementSelector.success_tip_loc)
+        self.__assert_equal('添加成功', ElementSelector.success_tip_loc)
         self.click_button(*ElementSelector.return_management_btn_loc)
 
         # 创建行政班
@@ -1439,7 +1446,7 @@ class BaseTestCase(BaseCase):
         manage_teacher_elem.click()
         self.click_button(*ElementSelector.sel_teacher_loc)  # 管理老师下拉框选择第1个老师
         self.click_button(*ElementSelector.confirm_btn_loc)
-        self.assert_equal('添加成功', ElementSelector.success_tip_loc)
+        self.__assert_equal('添加成功', ElementSelector.success_tip_loc)
         self.click_button(*ElementSelector.return_management_btn_loc)
 
         # 行政班创建学生账号
@@ -1456,7 +1463,7 @@ class BaseTestCase(BaseCase):
         student_gender_elem = choice(student_gender_input_list)  # 随机选择1个性别
         student_gender_elem.click()
         self.click_button(*ElementSelector.confirm_btn_loc)
-        self.assert_equal('添加成功', ElementSelector.success_tip_loc)
+        self.__assert_equal('添加成功', ElementSelector.success_tip_loc)
         self.click_button(*ElementSelector.return_management_btn_loc)
 
         # 创建课程班
@@ -1502,7 +1509,7 @@ class BaseTestCase(BaseCase):
             self.click_button(f'//span[text()="{visibility}"]', msg=visibility)
 
             self.send_text(
-                ElementSelector.resource_name_input_loc,
+                *ElementSelector.resource_name_input_loc,
                 text=resource_name)
 
             resource_img_list = self.driver.find_elements_by_xpath(
@@ -1510,7 +1517,7 @@ class BaseTestCase(BaseCase):
             resource_img_elem = choice(resource_img_list)
             resource_img_elem.click()
             self.send_text(
-                ElementSelector.course_describe_loc,
+                *ElementSelector.course_describe_loc,
                 text=resource_name)
 
             format_list = ['ppt', 'video', 'word', 'doc']
@@ -1532,7 +1539,7 @@ class BaseTestCase(BaseCase):
                     upload_file_by_auto_it(f)
                 i += 1
 
-            '''
+            """
             #win32gui文件上传
             upload_btns = self.driver.find_elements(*ElementSelector.upload_file_btns_loc, 
             tag=False, loading=True)
@@ -1546,8 +1553,7 @@ class BaseTestCase(BaseCase):
             win32gui.SendMessage(edit, win32con.WM_SETTEXT, None, 'E:\\测试文件\\ppt\\ppt1.pptx')
             win32gui.SendMessage(dialog, win32con.WM_COMMAND, 1, button)
             time.sleep(1)
-            '''
-            '''
+
             #上帝之眼文件上传
             path = os.path.dirname(os.getcwd())
             j_path = get_default_jvm_path()
@@ -1566,7 +1572,7 @@ class BaseTestCase(BaseCase):
             screen.click(open_path)
             time.sleep(2)
             jpype.shutdownJVM()
-            '''
+            """
 
             self.click_button(*ElementSelector.publish_btn_loc, loading=True)
             self.wait_text('添加成功')
@@ -1580,12 +1586,9 @@ class BaseTestCase(BaseCase):
         """
         for n in range(0, 10):
             self.click_and_jump(1, *ElementSelector.test_field_btn_loc)
-            if 0 == n:
-                self.send_text(*ElementSelector.draft_name_input_loc, text=n)
-            else:
-                self.change_text(*ElementSelector.draft_name_input_loc, text=n)
-            self.click_button(*ElementSelector.save_btn_loc)
-            self.click_button(*ElementSelector.confirm_btn_loc)
+            self.change_text(*ElementSelector.draft_name_input_loc, text=n)
+            self.click_button(*ElementSelector.save_btn_loc, loading=True)
+            self.click_button(*ElementSelector.confirm_save_btn_loc)
             self.driver.close()
             self.switch_to_window(0)
 
@@ -1667,7 +1670,7 @@ class BaseTestCase(BaseCase):
         self.click_button(*ElementSelector.first_draft_loc)
         self.click_button(*ElementSelector.run_code_btn_loc)
         try:
-            opened_draft_name = self.get_attribute(*ElementSelector.draft_name_input_loc, 'value')
+            opened_draft_name = self.take_attribute(*ElementSelector.draft_name_input_loc, 'value')
             self.assert_equal(opened_draft_name, draft_name, '文本框中草稿名称与打开草稿名称不符')
         except Exception as e:
             print(f'{e}文本框中草稿名称异常')
@@ -1695,7 +1698,7 @@ class BaseTestCase(BaseCase):
         except Exception as e:
             print(f'{e}3D建模异常，没有输出')
         self.change_text(*ElementSelector.draft_name_input_loc, text='3D建模测试')
-        self.click_button(*ElementSelector.save_btn_loc)
+        self.click_button(*ElementSelector.save_btn_loc, loading=True)
         self.click_button(*ElementSelector.save_confirm_btn_loc)
 
     def robot(self):
@@ -1769,8 +1772,10 @@ class BaseTestCase(BaseCase):
         self.switch_to_window(1)
         self.click_button(*ElementSelector.tools_box_loc)
         self.click_button(*ElementSelector.material_lib_loc)
-        self.click_button(*ElementSelector.my_material_loc)
-        self.click_button(*ElementSelector.upload_material_btn_loc)
+        self.click_button(*ElementSelector.add_classify_btn)
+        self.send_text(*ElementSelector.classify_name_input, text='分类测试')
+        self.click_button(*ElementSelector.confirm_classify_btn)
+        self.click_button(*ElementSelector.upload_material_btn_loc, loading=True)
         upload_file_by_auto_it('jpg')
         try:
             self.__assert_equal('上传成功!', ElementSelector.succ_tip_loc)
