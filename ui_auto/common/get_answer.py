@@ -89,4 +89,4 @@ class ParameterForOthers:
         return problem_id_list
 
 
-print(ParameterForOthers(identity='teacher').get_class_list())
+# print(ParameterForOthers(identity='teacher').get_class_list())

@@ -139,6 +139,7 @@ class ElementSelector:
     choice_cla = '//div[text()="发布班级"]', '发布班级按钮'
     choice_all = '//span[text()="全选"]', '全选按钮'
     choice_class_btn_loc = '//div[@class="class-select-container-gird"]/ul/li[1]', '选择第1个班级'
+    del_class_btn_loc = '//div[@class="item-tags"]/div/span/i', '删除已选班级按钮'
     add_publish_btn = '//div[@class="set-course-bgc"]/div/div[2]/label/span/span', '添加并发布按钮'
     add_btn_loc = '//div[@class="add-course-submit-gird"]/button', '添加按钮'
     repeated_tip_confirm_loc = '//div[contains(text(),"确定")]', '重复提示确定按钮'
@@ -207,7 +208,7 @@ class ElementSelector:
     """主题授课发布作业"""
     course_close_btn_loc = '//span[@class="zs-dialog__closer"]', '课件列表关闭按钮'
     checkpoint_homework_name_input_loc = '//div[text()="作业名称"]/parent::div/div[2]/div/input', '作业名称输入框'
-    checkpoint_choice_problem_btn_loc = '//span[text()=" 选题"]', '选题按钮'
+    checkpoint_choice_problem_btn_loc = '//span[text()="选题"]', '选题按钮'
     checkpoint_choice_problem_loc = '', '选择题'
     checkpoint_operation_problem_loc = '', '操作题'
     checkpoint_choice_all_btn_loc = '//span[text()="全选"]/parent::label/span[1]', '全选按钮'
@@ -219,6 +220,7 @@ class ElementSelector:
     checkpoint_end_time_input_loc = '//div[text()="截止提交时间"]/parent::div/div[2]/div/input', '截止时间输入框'
     checkpoint_homework_list_name = '//div[@class="items-gird"]/div[1]/div[1]/div[1]/div[1]', '闯关作业列表第一个作业'
     checkpoint_all_homework_name = '//div[@class="title fl"]', '作业列表所有作业名称'
+    checkpoint_public_homework_btn_loc = '//div[@class="zs-dialog__footer"]/p/button[2]', '主题作业发布按钮'
 
     # succ_tip_loc = '//p[@class="el-message__content"]'#'添加成功提示'
     fail_tip_loc = '//div[@class="el-message el-message--error is-center"]/p', '添加失败提示'

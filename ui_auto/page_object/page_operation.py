@@ -222,7 +222,7 @@ class BaseTestCase(BaseCase):
     def __choice_problem_for_homework(self):
         self.click_button(*ElementSelector.choice_problem_loc)
         self.click_button(*ElementSelector.choice_all_btn_loc)
-        self.click_button(*ElementSelector.operation_problem_loc)
+        self.click_button(*ElementSelector.operation_problem_loc, wait=True)
         self.click_button(*ElementSelector.choice_all_btn_loc)
         self.click_button(*ElementSelector.confirm_publish_btn_loc)
 
@@ -253,8 +253,8 @@ class BaseTestCase(BaseCase):
         else:
             self.click_button(*ElementSelector.choice_course_btn_loc)
         self.click_button(*ElementSelector.choice_class_btn_loc, loading=True)
-        self.click_button(*ElementSelector.add_publish_btn)
-        self.click_button(*ElementSelector.add_btn_loc)
+        self.click_button(*ElementSelector.add_publish_btn, wait=True)
+        self.click_button(*ElementSelector.add_btn_loc, wait=True)
         self.__assert_add_course_tip('成功添加课件！', ElementSelector.succ_tip_loc,
                                      ElementSelector.repeated_tip_confirm_loc)
         self.click_button(*ElementSelector.go_on_btn_loc)
@@ -275,10 +275,10 @@ class BaseTestCase(BaseCase):
         self.click_button(f'//span[text()="{package_name}"]/parent::label/span[1]',
                           loading=True, msg=f' {package_name}')  # 授课包选择
         self.click_button(*ElementSelector.checkpoint_choice_btn_loc)
-        self.click_button(*ElementSelector.checkpoint_choice_class_btn_loc,
+        self.click_button(*ElementSelector.checkpoint_add_publish_btn,
+                          wait=True)
+        self.click_button(*ElementSelector.checkpoint_publish_btn_loc,
                           loading=True, wait=True)
-        self.click_button(*ElementSelector.checkpoint_add_publish_btn)
-        self.click_button(*ElementSelector.checkpoint_publish_btn_loc)
         self.__assert_add_course_tip('发布课件成功', ElementSelector.succ_tip_loc,
                                      ElementSelector.repeated_tip_confirm_loc)
         check_point_course_name = self.take_text(*ElementSelector.check_point_course_name_loc) \
@@ -310,7 +310,8 @@ class BaseTestCase(BaseCase):
         """
         course_name_list = []
         for name in self.teaching_package_list:
-            self.click_button(*ElementSelector.add_checkpoint_course_loc, loading=True)
+            self.click_button(*ElementSelector.add_checkpoint_course_loc,
+                              loading=True, wait=True)
             self.click_button(*ElementSelector.choice_checkpoint_loc,
                               loading=True, wait=True)
             self.__choice_point(subject=True)
@@ -335,14 +336,15 @@ class BaseTestCase(BaseCase):
 
         # 不选择班级
         self.refresh()
-        self.click_button(*ElementSelector.selKnow_loc)
+        self.click_button(*ElementSelector.selKnow_loc, wait=True)
         self.__choice_point()
         try:
             self.click_button(*ElementSelector.choice_course_btn_loc)
         except Exception:
-            self.click_button(*ElementSelector.selKnow_loc)
+            self.click_button(*ElementSelector.selKnow_loc, wait=True)
             self.click_button(*ElementSelector.choice_course_btn_loc)
-        self.click_button(*ElementSelector.add_publish_btn)
+        self.click_button(*ElementSelector.del_class_btn_loc, loading=True)
+        self.click_button(*ElementSelector.add_publish_btn, wait=True)
         self.click_button(*ElementSelector.add_btn_loc)
         self.__assert_equal('请选择您要发往的班级！', ElementSelector.fail_tip_loc)
 
@@ -391,12 +393,11 @@ class BaseTestCase(BaseCase):
         :return: None
         """
 
-        self.send_text(*ElementSelector.checkpoint_homework_name_input_loc, text=homework_name)
+        self.change_text(*ElementSelector.checkpoint_homework_name_input_loc, text=homework_name)
         self.click_button(*ElementSelector.checkpoint_choice_problem_btn_loc, loading=True)
         self.click_button(*ElementSelector.checkpoint_choice_all_btn_loc)
         self.click_button(*ElementSelector.checkpoint_confirm_problem_btn_loc)
-        self.click_button(*ElementSelector.checkpoint_choice_class_btn_loc, loading=True)
-        self.click_button(*ElementSelector.checkpoint_show_answer_loc)
+        self.click_button(*ElementSelector.checkpoint_show_answer_loc, loading=True)
         self.click_button(f'//span[text()="{answer_config}"]/parent::li', msg=answer_config)
 
         if 1 == timing:
@@ -410,7 +411,7 @@ class BaseTestCase(BaseCase):
                          self.__input_time())
         self.send_text(*ElementSelector.checkpoint_end_time_input_loc,
                        Keys.ENTER)
-        self.click_button(*ElementSelector.public_homework_btn_loc)
+        self.click_button(*ElementSelector.checkpoint_public_homework_btn_loc)
         self.__assert_equal('发布成功！', ElementSelector.succ_tip_loc)
         self.wait_text(homework_name)
 
@@ -423,15 +424,18 @@ class BaseTestCase(BaseCase):
         for a in self.answer_list:
             for t in range(2):
                 homework_name = f'答案{a}定时{t}'
-                self.click_button(*ElementSelector.add_homework_btn_loc, loading=True)
+                self.click_button(*ElementSelector.add_homework_btn_loc,
+                                  loading=True, wait=True)
                 self.add_homework_simple(homework_name, a, timing=t)
 
     def subject_add_homework_loop(self):
         for a in self.subject_answer_list:
             for t in range(0, 2):
                 homework_name = f'答案{a}定时{t}'
-                self.click_button(*ElementSelector.add_checkpoint_homework_loc, loading=True)
-                self.click_button(*ElementSelector.choice_checkpoint_loc, loading=True)
+                self.click_button(*ElementSelector.add_checkpoint_homework_loc,
+                                  loading=True, wait=True)
+                self.click_button(*ElementSelector.choice_checkpoint_loc,
+                                  loading=True, wait=True)
                 self.__choice_point(subject=True)
                 self.subject_add_homework_simple(homework_name, a, t)
 
@@ -445,11 +449,15 @@ class BaseTestCase(BaseCase):
             homework_name = f'{i}不输入'
             self.click_button(*ElementSelector.add_homework_btn_loc, wait=True)
             if '名称' == i:
-                self.click_button(*ElementSelector.choice_pointId_btn_loc)
-                self.click_button(*ElementSelector.sel_know_loc)
+                self.click_button(*ElementSelector.choice_pointId_btn_loc,
+                                  loading=True, wait=True)
+                self.click_button(*ElementSelector.sel_know_loc, wait=True)
                 self.__choice_point()
                 self.__choice_problem_for_homework()
                 self.click_button(*ElementSelector.choice_class_btn_loc, loading=True)
+                input_loc, _ = ElementSelector.homework_name_input_loc
+                self.find_element(input_loc).send_keys(Keys.CONTROL, 'a')
+                self.send_text(*ElementSelector.homework_name_input_loc, text=Keys.BACKSPACE)
                 self.click_button(*ElementSelector.public_homework_btn_loc)
                 self.__assert_equal('请输入作业名称！', ElementSelector.fail_tip_loc)
             elif '知识点' == i:
@@ -459,11 +467,13 @@ class BaseTestCase(BaseCase):
                 self.__assert_equal('请通过知识点选出作业题目！', ElementSelector.fail_tip_loc)
             else:
                 self.send_text(*ElementSelector.homework_name_input_loc, text=homework_name)
-                self.click_button(*ElementSelector.choice_pointId_btn_loc)
-                self.click_button(*ElementSelector.sel_know_loc)
+                self.click_button(*ElementSelector.choice_pointId_btn_loc,
+                                  loading=True, wait=True)
+                self.click_button(*ElementSelector.sel_know_loc, wait=True)
                 self.__choice_point()
                 self.__choice_problem_for_homework()
-                self.click_button(*ElementSelector.public_homework_btn_loc, loading=True)
+                self.click_button(*ElementSelector.del_class_btn_loc, loading=True)
+                self.click_button(*ElementSelector.public_homework_btn_loc)
                 self.__assert_equal('请选择您要发往的班级！', ElementSelector.fail_tip_loc)
             self.go_back()
 
@@ -471,10 +481,11 @@ class BaseTestCase(BaseCase):
         for t in time_list:
             for n in range(0, 2):
                 homework_name = f'输入错误{t}时间'
-                self.click_button(*ElementSelector.add_homework_btn_loc, loading=True)
+                self.click_button(*ElementSelector.add_homework_btn_loc,
+                                  loading=True, wait=True)
                 self.send_text(*ElementSelector.homework_name_input_loc, text=homework_name)
-                self.click_button(*ElementSelector.choice_pointId_btn_loc)
-                self.click_button(*ElementSelector.sel_know_loc)
+                self.click_button(*ElementSelector.choice_pointId_btn_loc, wait=True)
+                self.click_button(*ElementSelector.sel_know_loc, wait=True)
                 self.__choice_point()
                 self.__choice_problem_for_homework()
                 self.click_button(*ElementSelector.choice_class_btn_loc, loading=True)
@@ -1004,7 +1015,7 @@ class BaseTestCase(BaseCase):
         """
         search_loc = None
         if '作业' == page:
-            self.click_button(*ElementSelector.homework_btn_loc)
+            self.click_button(*ElementSelector.homework_btn_loc, wait=True)
             search_loc = ElementSelector.student_homework_date_search_input_loc \
                 if student else ElementSelector.teacher_homework_date_search_input_loc
         if '课件' == page:
@@ -1665,7 +1676,7 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         self.switch_to_window(1)
-        self.click_button(*ElementSelector.my_draft_btn_loc)
+        self.click_button(*ElementSelector.my_draft_btn_loc, loading=True)
         draft_name = self.take_text(*ElementSelector.first_draft_loc)
         self.click_button(*ElementSelector.first_draft_loc)
         self.click_button(*ElementSelector.run_code_btn_loc)
@@ -1679,6 +1690,14 @@ class BaseTestCase(BaseCase):
         except Exception as e:
             print(f'{e}运行失败，输出错误')
 
+    def jieba(self):
+        """
+        试炼场jieba
+        :return:
+        """
+        self.switch_to_window(1)
+
+
     def three_dimensional(self):
         """
         试炼场3D建模
@@ -1686,7 +1705,7 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         self.switch_to_window(1)
-        self.click_button(*ElementSelector.type_choose_loc)
+        self.click_button(*ElementSelector.type_choose_loc, loading=True)
         self.click_button(*ElementSelector.ck_type_loc)
         code = three_dimensional_code()
         code_input_element = self.take_element(*ElementSelector.ace_text_input_loc)
@@ -1708,7 +1727,7 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         self.switch_to_window(1)
-        self.click_button(*ElementSelector.type_choose_loc)
+        self.click_button(*ElementSelector.type_choose_loc, loading=True)
         self.click_button(*ElementSelector.ck_type_loc)
         self.click_button(*ElementSelector.robot_config_btn_loc)
         self.hover_on_element(*ElementSelector.robot_box_loc)
@@ -1770,7 +1789,7 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         self.switch_to_window(1)
-        self.click_button(*ElementSelector.tools_box_loc)
+        self.click_button(*ElementSelector.tools_box_loc, loading=True)
         self.click_button(*ElementSelector.material_lib_loc)
         self.click_button(*ElementSelector.add_classify_btn)
         self.send_text(*ElementSelector.classify_name_input, text='分类测试')
@@ -1869,7 +1888,7 @@ class BaseTestCase(BaseCase):
             self.wait_for_element_absent(
                 '.el-loading-parent--relative'
             )
-            time.sleep(0.2)
+            time.sleep(0.25)
 
         return self.wait_for_element_absent(
             '//div[@class="el-loading-mask is-fullscreen"]'

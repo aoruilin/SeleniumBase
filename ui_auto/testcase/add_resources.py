@@ -20,10 +20,12 @@ class AddResourcesCase(BaseTestCase):
         self.login(self.username_teacher, self.teacher_name, self.password,
                    teacher_assert=True)
         self.click_button(*ElementSelector.teach_management_btn_loc)
-        self.click_button(*ElementSelector.resource_manage_tab_loc)
+        self.click_button(*ElementSelector.resource_manage_tab_loc,
+                          loading=True)
         self.click_button(*ElementSelector.resource_type_sel_loc,
                           loading=False, wait=True)
-        self.click_button(*ElementSelector.school_resource_btn_loc)
+        self.click_button(*ElementSelector.school_resource_btn_loc,
+                          wait=True)
         self.add_resources()
 
 

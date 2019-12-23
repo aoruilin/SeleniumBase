@@ -6,7 +6,7 @@ from ui_auto.page_object.element_loc import ElementSelector
 from ui_auto.page_object.page_operation import BaseTestCase
 
 
-class AddHomeworkLoop(BaseTestCase):
+class HomeworkLoop(BaseTestCase):
     file_name = __file__
     name = __name__
 

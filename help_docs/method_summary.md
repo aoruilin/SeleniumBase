@@ -1,9 +1,10 @@
 [<img src="https://cdn2.hubspot.net/hubfs/100006/images/SeleniumBaseText_F.png" title="SeleniumBase" align="center" height="38">](https://github.com/seleniumbase/SeleniumBase/blob/master/README.md)
 ## Method Summary Overview
 
-Here's a summary of SeleniumBase method definitions, which are defined in [base_case.py](https://github.com/seleniumbase/SeleniumBase/blob/master/seleniumbase/fixtures/base_case.py)
+Here's a summary of SeleniumBase method definitions, which are defined in 下面是对SeleniumBase方法定义的总结，这些定义在[base_case.py](https://github.com/seleniumbase/SeleniumBase/blob/master/seleniumbase/fixtures/base_case.py)
 
 For backwards compatibility, older versions of method names have remained to keep old scripts working. *(Ex: wait_for_element_visible was later shortened to wait_for_element and then to find_element.)*
+为了向后兼容，旧版本的方法名仍然保持旧脚本的工作。*(例如:wait_for_element_visible后来缩短为wait_for_element，然后缩短为find_element.)*
 
 ```python
 self.open(url)

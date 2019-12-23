@@ -16,7 +16,7 @@ from ui_auto.base.HTMLTestRunner import HTMLTestRunner
 from unittest.suite import TestSuite
 from ui_auto.testcase.edu_main_process import TestMainProcess
 from ui_auto.testcase.packages_course import TestPackageCourse
-from ui_auto.testcase.homework_loop import AddHomeworkLoop
+from ui_auto.testcase.homework_loop import HomeworkLoop
 from ui_auto.testcase.edu_do_homework_loop import DoHomework
 from ui_auto.testcase.test_field_operation import TestFieldCase
 from ui_auto.testcase.add_draft import TestAddDraft
@@ -43,10 +43,10 @@ def do_test():
     test03 = AddResourcesCase('test_add_resources')
     test04 = TestPackageCourse('test_package_course_01')
     test05 = TestPackageCourse('test_package_course_02')
-    test06 = AddHomeworkLoop('test_add_homework_loop_01')
+    test06 = HomeworkLoop('test_add_homework_loop_01')
     test07 = DoHomework('test_do_homework_loop_01')
-    test08 = AddHomeworkLoop('test_add_homework_loop_02')
-    test09 = DoHomework('test_do_homework_loop_02')
+    test08 = HomeworkLoop('test_homework_loop_01')
+    test09 = DoHomework('test_homework_loop_02')
     test10 = TestAddDraft('test_save_draft_loop')
     test11 = TestFieldCase('test_01')
     test12 = TestFieldCase('test_02')
