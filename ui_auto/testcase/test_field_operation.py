@@ -7,8 +7,8 @@ from ui_auto.page_object.page_operation import BaseTestCase
 
 
 class TestFieldCase(BaseTestCase):
-    # file_name = __file__
-    # name = __name__
+    file_name = __file__
+    name = __name__
     step_log_path = get_log_path(__file__, __name__)
 
     url = Data().ip_for_edu()
@@ -53,12 +53,12 @@ class TestFieldCase(BaseTestCase):
 
     def test_06(self):
         """素材库"""
-        # self.step_log_path = get_log_path(self.file_name, self.name)
-        self.login(self.teacher_username, self.teacher_name, self.password, teacher_assert=True)
+        self.step_log_path = get_log_path(self.file_name, self.name)
+        self.login(self.student_username, self.student_name, self.password, student_assert=True)
         self.click_and_jump(1, *ElementSelector.test_field_btn_loc)
         self.upload_material()
-        self.edit_material_name(Data().material_name)
-        self.delete_material()
+        # self.edit_material_name(Data().material_name)
+        # self.delete_material()
 
     def test_07(self):
         """机器人"""

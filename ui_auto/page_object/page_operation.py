@@ -239,7 +239,7 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         self.click_button(*ElementSelector.add_course_loc,
-                          loading=True, wait=True)
+                          loading=True)
         self.click_button(f'//span[text()="{package_name}"]/parent::label/span[1]',
                           loading=True, wait=True, msg=f' {package_name}')  # 授课包选择
         if '叮当资源' == package_name:
@@ -253,10 +253,10 @@ class BaseTestCase(BaseCase):
         else:
             self.click_button(*ElementSelector.choice_course_btn_loc)
         self.click_button(*ElementSelector.choice_class_btn_loc, loading=True)
-        self.click_button(*ElementSelector.add_publish_btn, wait=True)
-        self.click_button(*ElementSelector.add_btn_loc, wait=True)
+        self.click_button(*ElementSelector.add_publish_btn)
+        self.click_button(*ElementSelector.add_btn_loc)
         self.__assert_add_course_tip('成功添加课件！', ElementSelector.succ_tip_loc,
-                                     ElementSelector.repeated_tip_confirm_loc)
+                                     ElementSelector.confirm_btn_contais_text)
         self.click_button(*ElementSelector.go_on_btn_loc)
         self.click_button(*ElementSelector.standard_course_crumb_loc)
         course_name = self.take_text(*ElementSelector.course_name_loc)
@@ -280,7 +280,7 @@ class BaseTestCase(BaseCase):
         self.click_button(*ElementSelector.checkpoint_publish_btn_loc,
                           loading=True, wait=True)
         self.__assert_add_course_tip('发布课件成功', ElementSelector.succ_tip_loc,
-                                     ElementSelector.repeated_tip_confirm_loc)
+                                     ElementSelector.confirm_btn_contais_text)
         check_point_course_name = self.take_text(*ElementSelector.check_point_course_name_loc) \
             if discover else self.take_text(*ElementSelector.first_course_name_loc)
         if discover:
@@ -543,7 +543,7 @@ class BaseTestCase(BaseCase):
             try:
                 self.element_visible(*ElementSelector.pic_output_area_loc)
             except BaseException as e:
-                print(f'{e},精简试炼场图形输出异常')
+                log(self.step_log_path, f'{e},精简试炼场图形输出异常')
             finally:
                 self.click_button(*ElementSelector.putback_btn_loc)
 
@@ -570,7 +570,7 @@ class BaseTestCase(BaseCase):
                         msg=btn
                     )
             except Exception as e:
-                print(f'{e}缺少资源')
+                log(self.step_log_path, f'{e}缺少资源')
             self.__check_course_operation(btn)
 
     def subject_student_check_course_simple(self, course_name, discover=False):
@@ -607,9 +607,9 @@ class BaseTestCase(BaseCase):
                             msg='课件下的ppt'
                         )
             except ElementNotVisibleException:
-                print(f'没有{btn}资源')
+                log(self.step_log_path, f'没有{btn}资源')
             except Exception as e:
-                print(f'{e}课件资源异常')
+                log(self.step_log_path, f'{e}课件资源异常')
             self.__check_course_operation(btn)
         self.driver.close()
         self.switch_to_default_window()
@@ -673,7 +673,7 @@ class BaseTestCase(BaseCase):
         try:
             self.element_visible(*ElementSelector.homework_to_do_loc)
         except Exception as e:
-            print(f'{e}学生端作业列表返回空列表')
+            log(self.step_log_path, f'{e}学生端作业列表返回空列表')
             self.refresh()
         finally:
             self.__assert_equal(homework_name, ElementSelector.homework_to_do_loc)
@@ -698,7 +698,7 @@ class BaseTestCase(BaseCase):
         try:
             self.click_button(*ElementSelector.standard_emergency_challenge_btn_loc)
         except Exception:
-            print('没有出现紧急挑战按钮，请检查题目是否全部正确')
+            log(self.step_log_path, '没有出现紧急挑战按钮，请检查题目是否全部正确')
         else:
             self.__do_challenge_operation()
 
@@ -718,10 +718,10 @@ class BaseTestCase(BaseCase):
         try:
             self.element_visible(*ElementSelector.go_to_code_btn_loc)
         except NoSuchElementException:
-            print('未找到该作业,刷新后重试')
+            log(self.step_log_path, '未找到该作业,刷新后重试')
             self.refresh()
         except BaseException as e:
-            print(f'{e}作业列表异常')
+            log(self.step_log_path, f'{e}作业列表异常')
         finally:
             self.__assert_equal(homework_name, ElementSelector.homework_name_loc)
             self.click_and_jump(2, *ElementSelector.go_to_code_btn_loc, loading=True)
@@ -735,11 +735,12 @@ class BaseTestCase(BaseCase):
         try:
             self.click_button(*ElementSelector.emergency_challenge_btn_loc)
         except NoSuchElementException as x:
-            print(x)
+            log(self.step_log_path, x)
         except ElementNotVisibleException as v:
-            print(v)
+            log(self.step_log_path, v)
         except BaseException as e:
-            print(f'{e}紧急挑战异常，有题目答案错误导致无法触发或紧急挑战做题操作异常，请查看日志')
+            log(self.step_log_path,
+                f'{e}紧急挑战异常，有题目答案错误导致无法触发或紧急挑战做题操作异常，请查看日志')
         else:
             self.__do_challenge_operation(subject=True)
 
@@ -754,7 +755,7 @@ class BaseTestCase(BaseCase):
             try:
                 self.element_visible(homework_name_sel, msg=f'第{a}个作业')
             except Exception as e:
-                print(f'{e}作业列表为空，刷新页面')
+                log(self.step_log_path, f'{e}作业列表为空，刷新页面')
                 self.refresh()
             finally:
                 self.click_button(homework_name_sel, msg=f'第{a}个作业')
@@ -804,7 +805,7 @@ class BaseTestCase(BaseCase):
                     complete_num = num[0]
                     assert (complete_num == str(do_num + 1))
             except Exception as e:
-                print(f'{e}作业完成状态和质量异常')
+                log(self.step_log_path, f'{e}作业完成状态和质量异常')
             self.click_button(homework_name_sel, msg=f'第{a}个作业')  # 点击作业名称
             try:
                 correct_rate = int((do_num / (n + c)) * 100)
@@ -820,7 +821,7 @@ class BaseTestCase(BaseCase):
                 self.__assert_equal(exp_homework_quality, ElementSelector.homework_quality_loc)
                 self.__assert_equal('已完成', ElementSelector.homework_status_loc)
             except Exception as e:
-                print(f'{e}作业完成状态和质量异常')
+                log(self.step_log_path, f'{e}作业完成状态和质量异常')
             self.go_back()
 
     def subject_student_do_homework_loop(self):
@@ -836,10 +837,10 @@ class BaseTestCase(BaseCase):
                     msg=f'第{a}个作业'
                 )
             except ElementNotVisibleException:
-                print('作业列表为空，刷新页面')
+                log(self.step_log_path, '作业列表为空，刷新页面')
                 self.refresh()
             except BaseException as e:
-                print(f'{e}作业列表异常')
+                log(self.step_log_path, f'{e}作业列表异常')
             finally:
                 self.click_button(  # 点击作业去答题
                     f'//div[@class="items-gird"]/div[{a}]/div[2]/div[2]',
@@ -872,7 +873,7 @@ class BaseTestCase(BaseCase):
                     try:
                         self.element_visible(*ElementSelector.wrong_problem_name_loc)
                     except Exception as e:
-                        print(f'{e}作业作答作业列表为空，刷新后重新点击')
+                        log(self.step_log_path, f'{e}作业作答作业列表为空，刷新后重新点击')
                         self.refresh()
                     finally:
                         wrong_problem_name_num = self.take_text(*ElementSelector.wrong_problem_name_loc)
@@ -881,7 +882,7 @@ class BaseTestCase(BaseCase):
                         try:
                             assert wrong_problem_name in problem_name_list, '这个错题不是这个作业的题'
                         except Exception as e:
-                            print(f'{e}错题统计题目列表异常')
+                            log(self.step_log_path, f'{e}错题统计题目列表异常')
                         problem_name = self.take_text(*ElementSelector.problem_name_loc)
                     code = get_code(problem_id=None, problem_name=problem_name, challenge=True)
                     code_input = self.take_element(*ElementSelector.code_view_loc)
@@ -890,10 +891,10 @@ class BaseTestCase(BaseCase):
                     try:
                         self.wait_text('评测通过', *ElementSelector.pass_result_text_loc)
                     except ElementNotVisibleException:
-                        print(f'{problem_name}DB题目答案错误，尝试评测未通过断言')
+                        log(self.step_log_path, f'{problem_name}DB题目答案错误，尝试评测未通过断言')
                         self.wait_text('评测有误', *ElementSelector.unpass_result_text_loc)
                     except Exception as e:
-                        print(f'{e}其他错误,不再尝试断言')
+                        log(self.step_log_path, f'{e}其他错误,不再尝试断言')
                     # self.click_button(*ElementSelector.checkpoint_confirm_btn_loc)
                 self.__subject_push_homework_operation()
 
@@ -901,7 +902,8 @@ class BaseTestCase(BaseCase):
                     self.click_button(*ElementSelector.emergency_challenge_btn_loc)
                     self.__do_challenge_operation(subject=True)
                 except Exception as e:
-                    print(f'{e}紧急挑战异常，有题目答案错误导致无法触发或紧急挑战做题操作异常，请查看日志')
+                    log(self.step_log_path,
+                        f'{e}紧急挑战异常，有题目答案错误导致无法触发或紧急挑战做题操作异常，请查看日志')
                 self.driver.close()
                 self.switch_to_window(a - 1)
                 self.refresh()
@@ -942,7 +944,7 @@ class BaseTestCase(BaseCase):
                 try:
                     self.wait_text('通过', *ElementSelector.uni_teach_result_text_loc)
                 except Exception as e:
-                    print(f'{e}题目运行结果异常')
+                    log(self.step_log_path, f'{e}题目运行结果异常')
             problem_list[n - 1].click()
             code_input = self.take_element(*ElementSelector.uni_teach_code_view_loc)
             wrong_answer = 'wrong_answer = "wrong"'
@@ -951,7 +953,7 @@ class BaseTestCase(BaseCase):
             try:
                 self.wait_text('不通过', *ElementSelector.unpass_result_text_loc)
             except Exception as e:
-                print(f'{e}错误答案运行结果异常')
+                log(self.step_log_path, f'{e}错误答案运行结果异常')
             self.click_button(*ElementSelector.push_homework_btn_loc)
             self.click_button(*ElementSelector.confirm_btn_loc)
             self.__assert_equal('已完成', f'//div[@class="homework-container-gird"]'
@@ -987,11 +989,11 @@ class BaseTestCase(BaseCase):
                 msg=f'第{PointIdIndex.checkpoint_level_one_index}个系列'
             )
         except ElementNotVisibleException:
-            print('非第一次进入闯关授课，跳过大地图页面操作')
+            log(self.step_log_path, '非第一次进入闯关授课，跳过大地图页面操作')
         except IndexError:
-            print('非第一次进入闯关授课，跳过大地图页面操作')
+            log(self.step_log_path, '非第一次进入闯关授课，跳过大地图页面操作')
         except BaseException as e:
-            print(f'{e}中国地图点击异常')
+            log(self.step_log_path, f'{e}中国地图点击异常')
 
     def click_map_path(self):
         """
@@ -1001,7 +1003,7 @@ class BaseTestCase(BaseCase):
         """
         self.click_button(
             f'//div[@class="level"]/div[{PointIdIndex.checkpoint_level_two_index}]',
-            msg=f'第{PointIdIndex.checkpoint_level_two_index}个知识点'
+            msg=f'第{PointIdIndex.checkpoint_level_two_index}个知识点', wait=True
         )
 
     def date_selection(self, page, name, student=False):
@@ -1027,7 +1029,7 @@ class BaseTestCase(BaseCase):
         try:
             self.wait_text(name)
         except ElementNotVisibleException:
-            print(f'没有搜索到{name}')
+            log(self.step_log_path, f'没有搜索到{name}')
 
         self.refresh()
         self.click_button(*search_loc, loading=True)
@@ -1035,12 +1037,12 @@ class BaseTestCase(BaseCase):
         try:
             self.click_button(*ElementSelector.tomorrow_end_loc, wait=True)
         except Exception as e:
-            print(f'{e}这周最后一天，改为选择下周第一天')
+            log(self.step_log_path, f'{e}这周最后一天，改为选择下周第一天')
             self.click_button(*ElementSelector.next_week_end_loc)
         try:
             self.wait_text(name)
         except ElementNotVisibleException:
-            print(f'没有搜索到{name}')
+            log(self.step_log_path, f'没有搜索到{name}')
 
         self.refresh()
         self.click_button(*search_loc, loading=True)
@@ -1048,17 +1050,17 @@ class BaseTestCase(BaseCase):
             try:
                 self.click_button(*ElementSelector.tomorrow_loc, wait=True)
             except Exception as e:
-                print(f'{e}这周最后一天，改为选择下周第一天')
+                log(self.step_log_path, f'{e}这周最后一天，改为选择下周第一天')
                 self.click_button(*ElementSelector.next_week_loc)
         try:
             self.element_visible(*ElementSelector.first_course_loc)
             try:
                 self.element_visible(*ElementSelector.first_homework_loc)
             except Exception as e1:
-                print(f'{e1},筛选日期为明天，没有筛选出资源，此用例PASS')
+                log(self.step_log_path, f'{e1},筛选日期为明天，没有筛选出资源，此用例PASS')
                 pass
         except Exception as e:
-            print(f'{e},筛选日期为明天，没有筛选出资源，此用例PASS')
+            log(self.step_log_path, f'{e},筛选日期为明天，没有筛选出资源，此用例PASS')
         self.refresh()
 
     def search_input(self, name):
@@ -1073,17 +1075,17 @@ class BaseTestCase(BaseCase):
         try:
             self.wait_text(name)
         except Exception as e:
-            print(f'"{e}没有搜索到指定的资源，搜索异常')
+            log(self.step_log_path, f'"{e}没有搜索到指定的资源，搜索异常')
 
     def __assert_add_course_tip(self, exp_tip, tip_loc, repeated_tip_confirm_loc):
         try:
-            self.element_visible(*tip_loc)
+            self.__assert_equal(exp_tip, tip_loc)
         except Exception:
-            print('已有其他教师在该班级发布这个课件，点击确定继续发布')
+            log(self.step_log_path, '已有其他教师在该班级发布这个课件，点击确定继续发布')
             self.click_button(*repeated_tip_confirm_loc)
             self.__assert_equal(exp_tip, tip_loc)
         except BaseException as e:
-            print(f'出现未知异常：{e}')
+            log(self.step_log_path, f'出现未知异常：{e}')
         else:
             self.__assert_equal(exp_tip, tip_loc)
 
@@ -1102,7 +1104,7 @@ class BaseTestCase(BaseCase):
                                          msg=f'题目列表第{i}道题')
                     self.take_element(*ElementSelector.code_view_loc)
                 except Exception as e:
-                    print(f'{e}作业作答题目列表或代码输入区为空，刷新后重新点击')
+                    log(self.step_log_path, f'{e}作业作答题目列表或代码输入区为空，刷新后重新点击')
                     self.refresh()
                 finally:
                     self.click_button(f'//div[@class="el-row"]/div[{i}]',
@@ -1120,11 +1122,11 @@ class BaseTestCase(BaseCase):
                     self.wait_text('评测通过',
                                    *ElementSelector.pass_result_text_loc)
                 except NoSuchElementException:
-                    print(f'DB题目{problem_id}答案错误导致，尝试评测未通过断言')
+                    log(self.step_log_path, f'DB题目{problem_id}答案错误导致，尝试评测未通过断言')
                     self.wait_text('评测有误',
                                    *ElementSelector.unpass_result_text_loc)
                 except Exception as a:
-                    print(f'{a}其他异常,不再尝试断言')
+                    log(self.step_log_path, f'{a}其他异常,不再尝试断言')
         else:
             if not problem_type:
                 raise Exception('problem_type不能为空，请输入“选择”或“操作”')
@@ -1135,7 +1137,7 @@ class BaseTestCase(BaseCase):
                         f'/parent::div/parent::div/following-sibling::div[{i}]',
                         msg=f'{problem_type} 题目列表第{i}道题')
                 except Exception as e:
-                    print('学生作业作答页面题目列表返回空列表', e)
+                    log(self.step_log_path, '学生作业作答页面题目列表返回空列表', e)
                     self.refresh()
                 finally:
                     self.click_button(f'//span[contains(text(),"{problem_type}")]'
@@ -1153,7 +1155,7 @@ class BaseTestCase(BaseCase):
                     try:
                         self.wait_text('评测通过', *ElementSelector.pass_result_text_loc)
                     except Exception as e:
-                        print(f'{e}DB答案错误导致{problem_id}题目评测异常')
+                        log(self.step_log_path, f'{e}DB答案错误导致{problem_id}题目评测异常')
                 elif '选择' == problem_type:
                     answer = get_choice(problem_id=problem_id, problem_name=None)  # 选择题查询答案
                     self.click_button(f'//div[contains(text(),"{answer}")]/parent::span/preceding-sibling::span',
@@ -1187,12 +1189,12 @@ class BaseTestCase(BaseCase):
             try:
                 self.__assert_equal('挑战成功', result_loc)
             except ElementNotVisibleException:
-                print(f'题目"{problem_name}"答案错了，用挑战失败再断言一次')
+                log(self.step_log_path, f'题目"{problem_name}"答案错了，用挑战失败再断言一次')
                 self.__assert_equal('挑战失败', result_loc)
             except Exception as e:
-                print(f'{e}挑战结果异常')
-            if i == 4:  # 主题授课从第5题开始点击 继续挑战 -> 换一题
-                if subject:
+                log(self.step_log_path, f'{e}挑战结果异常')
+            if i == 4:
+                if subject:  # 主题授课从第5题开始点击 继续挑战 -> 换一题
                     for n in range(3):
                         self.click_button(*ElementSelector.keep_challenge_btn_loc)
                         self.wait_text(problem_name)
@@ -1206,10 +1208,10 @@ class BaseTestCase(BaseCase):
                         try:
                             self.wait_text('挑战成功', *ElementSelector.challenge_result_tip_loc)
                         except ElementNotVisibleException:
-                            print(f'题目"{problem_name}"答案错了，用挑战失败再断言一次')
+                            log(self.step_log_path, f'题目"{problem_name}"答案错了，用挑战失败再断言一次')
                             self.wait_text('挑战失败', *ElementSelector.challenge_result_tip_loc)
                         except Exception as e:
-                            print(f'{e}挑战结果异常')
+                            log(self.step_log_path, f'{e}挑战结果异常')
             else:  # 点击保存并评测按钮之后的操作
                 # 标准授课的“继续挑战”和主题授课的“下一道题”按钮
                 next_btn_loc = ElementSelector.challenge_next_problem_btn_loc \
@@ -1217,27 +1219,28 @@ class BaseTestCase(BaseCase):
                 try:
                     self.click_button(*next_btn_loc)
                 except Exception as e:  # 主题授课挑战失败时点击继续跳转后点击换一题
-                    print(f'答案错误挑战失败导致{e},尝试点击继续挑战按钮并点击换一题')
+                    log(self.step_log_path,
+                        f'答案错误挑战失败导致{e},尝试点击继续挑战按钮并点击换一题')
                     self.click_button(*ElementSelector.keep_challenge_btn_loc)
                     self.click_button(*ElementSelector.change_problem_btn_loc)
                 try:
                     self.wait_text(problem_name)
                 except Exception as e:
-                    print(f'{e}做过的题不在题目列表中，题目列表异常')
+                    log(self.step_log_path, f'{e}做过的题不在题目列表中，题目列表异常')
 
     def __subject_push_homework_operation(self):
         self.click_button(*ElementSelector.checkpoint_push_homework_btn_loc)
         self.click_button(*ElementSelector.checkpoint_push_confirm_btn_loc)
         # 作业结果弹框操作
-        evaluation_list = ['太厉害了', '还不错哦', '有待提高', '再接再厉']
-        for v in evaluation_list:
-            try:
-                self.wait_text(v, *ElementSelector.result_tip_loc)
-                print(f'作业评价是{v}')
-            except ElementNotVisibleException:
-                print(f'作业评价不是 {v}')
-            except Exception as e:
-                print(f'出现未知异常：{e}')
+        evaluation_set = {'太厉害了', '还不错哦', '有待提高', '再接再厉'}
+        try:
+            result_set = {self.take_text(*ElementSelector.result_tip_loc)}
+            if result_set < evaluation_set:
+                log(self.step_log_path, f'作业评价是{result_set}')
+        except ElementNotVisibleException:
+            log(self.step_log_path, '主题授课作业评价异常，找不到作业评价元素')
+        except Exception as e:
+            log(self.step_log_path, f'出现未知异常：{e}')
 
     def __check_course_operation(self, btn):
         if '课件' == btn:
@@ -1253,39 +1256,25 @@ class BaseTestCase(BaseCase):
                 for s in range(page_num):
                     self.slow_click(*ElementSelector.ppt_next_btn_loc)
             except Exception as e:
-                print(f'{e}PPT显示异常')
+                log(self.step_log_path, f'{e}PPT显示异常')
             finally:
                 self.switch_to_default_content()
 
-    def add_work(self, work_name, class_name, test_field=False):
+    def add_work(self, work_name, test_field=False):
         """
-        学生作品提交审核
+        学生作品发布
 
-        :param work_name: 提交的作品名称
-        :param class_name: 班级名称
+        :param work_name: 发布的作品名称
         :param test_field: 是否从试炼场进入
         :return: None
         """
-        if test_field:
-            pass
-        else:
+        if self.__wait_for_loading():
             self.change_text(*ElementSelector.my_work_name_input_loc, text=work_name)
-            if self.__wait_for_loading():
-                code_input_element = self.take_element(*ElementSelector.add_work_cursor_loc)
-                code = turtle_code()
-                input_code(code, code_input_element)
-            for a in [ElementSelector.add_work_picture_btn_loc, ElementSelector.add_author_picture_btn_loc]:
-                if self.__wait_for_loading():
-                    self.click_button(*a)
-                    upload_file_by_auto_it('jpg')
-        self.click_button(*ElementSelector.sel_class_loc, loading=True)
-        self.click_button(*ElementSelector.first_class_loc)
-        self.click_button(*ElementSelector.sel_audit_teacher_loc, loading=True)
-        self.click_visible_elements(f'//span[text()="{class_name}"]')
-        self.click_button(f'//span[text()="{Data().teacher_name_for_edu()}"]',
-                          msg=Data().teacher_name_for_edu())
-        self.click_button(*ElementSelector.submit_audit_btn_loc)
-        exp_tip = '恭喜你，已提交教师进行审核！'
+        if test_field:
+            self.click_button(*ElementSelector.confirm_btn_equal_text)
+        else:
+            self.click_button(*ElementSelector.confirm_btn_contais_text)
+        exp_tip = '发布成功'
         self.wait_text(exp_tip, *ElementSelector.succ_tip_loc)
 
     def audit_work(self, work_name):
@@ -1313,7 +1302,7 @@ class BaseTestCase(BaseCase):
         try:
             self.wait_text(work_name)
         except Exception as e:
-            print(f'{e}作品被驳回，不在作品大厅中，此用例PASS')
+            log(self.step_log_path, f'{e}作品被驳回，不在作品大厅中，此用例PASS')
 
     def wish_box(self):
         """
@@ -1354,20 +1343,20 @@ class BaseTestCase(BaseCase):
                     if self.__wait_for_loading():
                         self.wait_text(word, *ElementSelector.poetry_title_loc)
                 except BaseException as a:
-                    print(f'{a}用失败提示再次断言')
+                    log(self.step_log_path, f'{a}用失败提示再次断言')
                     try:
                         self.wait_text('我还在学习', *ElementSelector.succ_tip_loc)
                     except BaseException as e:
-                        print(f'{e}创作诗句异常')
+                        log(self.step_log_path, f'{e}创作诗句异常')
             else:
                 try:
                     actual_title = self.take_text(*ElementSelector.couples_title_loc)
                     if all([actual_title]):
                         pass
                     else:
-                        print('异常：春联标题没有文本')
+                        log(self.step_log_path, '异常：春联标题没有文本')
                 except BaseException as e:
-                    print(f'{e}创作春联异常')
+                    log(self.step_log_path, f'{e}创作春联异常')
             self.slow_click(*ElementSelector.subject_word_loc)
             actual_word = None
             if self.__wait_for_loading():
@@ -1382,9 +1371,9 @@ class BaseTestCase(BaseCase):
                         for a in actual_word:
                             assert (a in c_list)
                     else:
-                        print('异常：没有春联文本')
+                        log(self.step_log_path, '异常：没有春联文本')
                 except BaseException as e:
-                    print(f'{e}创作春联异常')
+                    log(self.step_log_path, f'{e}创作春联异常')
 
     def __pic_image_identify_operation(self):
         face_output = '年龄：'
@@ -1407,11 +1396,11 @@ class BaseTestCase(BaseCase):
                         if self.__wait_for_loading():
                             self.wait_text(pic_tag_output, *ElementSelector.output_text_loc)
                 except Exception as a:
-                    print(f'{a}用失败提示再次断言')
+                    log(self.step_log_path, f'{a}用失败提示再次断言')
                     try:
                         self.wait_text(fail_output, *ElementSelector.output_text_loc)
                     except Exception as e:
-                        print(f'{e}图片识别异常')
+                        log(self.step_log_path, f'{e}图片识别异常')
 
     def add_account_class(self, username_teacher, teacher_name, username_student, student_name, admin_class_name,
                           pro_class_name):
@@ -1571,7 +1560,7 @@ class BaseTestCase(BaseCase):
             jvm_path = r'C:\Program Files (x86)\Java\jdk1.8.0_151\jre\bin\client\jvm.dll'
             #jvm_path = r"C:\Program Files\Java\jdk1.8.0_191\jre\bin\server\jvm.dll"
             jar_path = '-Djava.class.path=' + path + r'\base\libs\sikulixapi.jar'
-            print(j_path, jar_path)
+            log(self.step_log_path, j_path, jar_path)
             jpype.startJVM(j_path, jar_path)
             Screen = jpype.JClass('org.sikuli.script.Screen')
             screen = Screen()
@@ -1626,15 +1615,15 @@ class BaseTestCase(BaseCase):
             except Exception as e:
                 try:
                     out_text = self.take_text(*ElementSelector.text_out_area_loc)
-                    print(f'报错为{out_text}')
+                    log(self.step_log_path, f'报错为{out_text}')
                 except Exception as a:
-                    print(f'{a}文本输出定位失败')
-                print(f'{e}pygame代码运行失败，试炼场pygame异常')
+                    log(self.step_log_path, f'{a}文本输出定位失败')
+                log(self.step_log_path, f'{e}pygame代码运行失败，试炼场pygame异常')
         else:
             try:
                 self.wait_text('abc', *ElementSelector.text_out_area_loc)
             except Exception as e:
-                print(e)
+                log(self.step_log_path, e)
         self.change_text(*ElementSelector.draft_name_input_loc, text=f'{model}测试')
         self.click_button(*ElementSelector.save_btn_loc)
         self.click_button(*ElementSelector.save_confirm_btn_loc)
@@ -1663,7 +1652,7 @@ class BaseTestCase(BaseCase):
         try:
             self.__assert_equal(output, ElementSelector.text_out_area_loc)
         except Exception as e:
-            print(f'{e}运行失败，输出错误')
+            log(self.step_log_path, f'{e}运行失败，输出错误')
         self.change_text(*ElementSelector.draft_name_input_loc, text=draft_name)
         self.click_button(*ElementSelector.save_btn_loc)
         self.click_button(*ElementSelector.save_confirm_btn_loc)
@@ -1684,11 +1673,11 @@ class BaseTestCase(BaseCase):
             opened_draft_name = self.take_attribute(*ElementSelector.draft_name_input_loc, 'value')
             self.assert_equal(opened_draft_name, draft_name, '文本框中草稿名称与打开草稿名称不符')
         except Exception as e:
-            print(f'{e}文本框中草稿名称异常')
+            log(self.step_log_path, f'{e}文本框中草稿名称异常')
         try:
             self.__assert_equal(output, ElementSelector.text_out_area_loc)
         except Exception as e:
-            print(f'{e}运行失败，输出错误')
+            log(self.step_log_path, f'{e}运行失败，输出错误')
 
     def jieba(self):
         """
@@ -1696,7 +1685,6 @@ class BaseTestCase(BaseCase):
         :return:
         """
         self.switch_to_window(1)
-
 
     def three_dimensional(self):
         """
@@ -1715,7 +1703,7 @@ class BaseTestCase(BaseCase):
         try:
             self.element_visible(*ElementSelector.ck_type_output_loc)
         except Exception as e:
-            print(f'{e}3D建模异常，没有输出')
+            log(self.step_log_path, f'{e}3D建模异常，没有输出')
         self.change_text(*ElementSelector.draft_name_input_loc, text='3D建模测试')
         self.click_button(*ElementSelector.save_btn_loc, loading=True)
         self.click_button(*ElementSelector.save_confirm_btn_loc)
@@ -1735,7 +1723,7 @@ class BaseTestCase(BaseCase):
         try:
             self.__assert_equal('恭喜你，连接成功！', ElementSelector.succ_tip_loc)
         except Exception as e:
-            print(f'{e}连接机器人异常')
+            log(self.step_log_path, f'{e}连接机器人异常')
         self.click_button(*ElementSelector.close_robot_config_btn_loc)
         code = robot_code()
         code_input_element = self.take_element(*ElementSelector.ace_text_input_loc)
@@ -1745,7 +1733,7 @@ class BaseTestCase(BaseCase):
         try:
             self.element_visible(*ElementSelector.robot_img_loc)
         except Exception as e:
-            print(f'{e}机器人图像异常')
+            log(self.step_log_path, f'{e}机器人图像异常')
 
     def check_error(self):
         """
@@ -1777,10 +1765,10 @@ class BaseTestCase(BaseCase):
         try:
             self.wait_text('abc', *ElementSelector.text_out_area_loc)
         except ElementNotVisibleException:
-            print('试炼场代码运行异常')
-        self.click_button(*ElementSelector.submit_work_btn_loc, loading=True)
-
-        self.switch_to_window(2)
+            log(self.step_log_path, '试炼场代码运行异常')
+        self.click_button(*ElementSelector.save_btn_loc)
+        self.click_button(*ElementSelector.confirm_save_btn_loc)
+        self.click_button(*ElementSelector.submit_work_btn_loc)
 
     def upload_material(self):
         """
@@ -1789,8 +1777,9 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         self.switch_to_window(1)
-        self.click_button(*ElementSelector.tools_box_loc, loading=True)
-        self.click_button(*ElementSelector.material_lib_loc)
+        if self.__wait_for_loading():
+            self.hover_and_click(ElementSelector.tools_box_loc,
+                                 ElementSelector.material_lib_loc)
         self.click_button(*ElementSelector.add_classify_btn)
         self.send_text(*ElementSelector.classify_name_input, text='分类测试')
         self.click_button(*ElementSelector.confirm_classify_btn)
@@ -1799,7 +1788,7 @@ class BaseTestCase(BaseCase):
         try:
             self.__assert_equal('上传成功!', ElementSelector.succ_tip_loc)
         except Exception as e:
-            print(f'{e}上传素材异常')
+            log(self.step_log_path, f'{e}上传素材异常')
 
     def edit_material_name(self, material_name):
         """
@@ -1808,14 +1797,21 @@ class BaseTestCase(BaseCase):
         :param material_name: 编辑的名称
         :return: None
         """
-        self.hover_on_element(*ElementSelector.material_name_loc)
+        from selenium.webdriver.common.action_chains import ActionChains
+        from selenium.webdriver.common.by import By
+
+        e = self.driver.find_element(By.XPATH, ElementSelector.material_name_loc)
+        self.driver.w3c = False  # 框架的hover_on_element问题未得到解决，暂用此方法
+        ActionChains(self.driver).move_to_element(e).perform()
         self.click_button(*ElementSelector.edit_name_btn_loc)
-        self.send_text(*ElementSelector.material_name_input_loc, text=material_name)
+        time.sleep(1)
+        self.change_text(*ElementSelector.material_name_input_loc, text=material_name)
+        self.click_button('.button', loading=True)
         self.click_button(*ElementSelector.upload_confirm_btn_loc)
         try:
             self.wait_text(material_name, *ElementSelector.material_name_loc)
         except Exception as e:
-            print(f'{e}编辑素材名称异常')
+            log(self.step_log_path, f'{e}编辑素材名称异常')
 
     def delete_material(self):
         """
@@ -1828,7 +1824,7 @@ class BaseTestCase(BaseCase):
         try:
             self.__assert_equal('删除素材成功', ElementSelector.succ_tip_loc)
         except Exception as e:
-            print(f'{e}删除素材异常')
+            log(self.step_log_path, f'{e}删除素材异常')
 
     def __input_code(self, code, code_input):
         self.send_text(code_input, text=(Keys.CONTROL, 'a'))
@@ -1918,8 +1914,10 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         actual_text = self.take_text(*text_loc)
-        print(f'期望： "{text}", 实际： "{actual_text}"')
+        log(self.step_log_path, f'期望： "{text}", 实际： "{actual_text}"')
         try:
             self.assert_equal(text, actual_text)
+        except AssertionError:
+            log(self.step_log_path, f'{text}断言异常，与期望不符,')
         except Exception as e:
-            print(f'{text}断言异常，与期望不符,', e)
+            log(self.step_log_path, str(e))

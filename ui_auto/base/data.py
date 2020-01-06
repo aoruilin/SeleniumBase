@@ -1,16 +1,14 @@
-production = True
+production = False
 
 
 class Data:
     """ip信息"""
 
     homework_name = '作业流程自动测试'
-    direct_release_work_name = '直接审核作品'
-    detailed_review_work_name = '详细审核通过作品'
-    reject_work_name = '驳回作品'
+    work_name = '测试作品'
     test_field_file_name = 'hey'
     test_field_output = 'Hello World!'
-    material_name = 'test'
+    material_name = 'test1'
     password_for_edu = '123456'
 
     password_for_uniTeach = '123456'

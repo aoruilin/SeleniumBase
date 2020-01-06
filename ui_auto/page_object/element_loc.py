@@ -2,6 +2,11 @@ from selenium.webdriver.common.by import By
 
 
 class ElementSelector:
+    """公共定位器"""
+    confirm_btn_contais_text = '//div[contains(text(),"确定")]', '确定按钮'
+    confirm_btn_equal_text = '//div[text()="确定"]', '确定按钮'
+    succ_tip_loc = '//p[@class="el-message__content"]', '成功提示'
+
     """页面遮罩层"""
     loading_mask_loc = '//div[@class="el-loading-mask is-fullscreen"]'
 
@@ -142,8 +147,6 @@ class ElementSelector:
     del_class_btn_loc = '//div[@class="item-tags"]/div/span/i', '删除已选班级按钮'
     add_publish_btn = '//div[@class="set-course-bgc"]/div/div[2]/label/span/span', '添加并发布按钮'
     add_btn_loc = '//div[@class="add-course-submit-gird"]/button', '添加按钮'
-    repeated_tip_confirm_loc = '//div[contains(text(),"确定")]', '重复提示确定按钮'
-    succ_tip_loc = '//p[@class="el-message__content"]', '添加成功提示'
     go_add_homework_btn_loc = '//span[contains(text(),"发布作业")]', '去发布作业按钮'
     go_on_btn_loc = '//span[contains(text(),"继续")]', '弹窗继续添加按钮'
     standard_course_crumb_loc = '//div[@class="el-breadcrumb"]/span[1]/span[1]', '标准授课面包屑'
@@ -343,22 +346,29 @@ class ElementSelector:
     work_name_input_loc = '//div[@class="el-input el-input--medium"]/input', '作品发布名称输入框'
 
     """素材库"""
-    tools_box_loc = '//span[contains(text(),"工具箱")]', '工具箱'
-    material_lib_loc = '//div[contains(text(),"素材库")]', '素材库'
+    tools_box_loc = 'div.head-right > div:nth-of-type(2) > div > span > i:nth-of-type(2)'  # , '工具箱'
+    material_lib_loc = '.zsi1.iconfont.iconpractic_icon_source'  # , '素材库'
     add_classify_btn = '.my-meterial-add-btn', '我的素材添加分类按钮'
     classify_name_input = '//div[@class="my-meterial-list"]/div[2]/div/input', '添加素材名称输入框'
     confirm_classify_btn = '//div[@class="my-meterial-list"]/div[2]/span[1]', '添加素材确定按钮'
     upload_material_btn_loc = '//div[contains(text(),"上传")]', '上传素材按钮'
-    edit_name_btn_loc = '//div[@class="my-meterial-container"]/div[1]/div[1]/div[1]/div[2]/div[2]/div', '编辑名称按钮'
+    edit_name_btn_loc = '//div[@class="my-meterial-container"]/div/div/div[1]/div[2]/div[1]/i', '编辑名称按钮'
     delete_material_btn_loc = '//div[@class="my-meterial-container"]/div[1]/div[1]/div[1]/div[2]/i', '删除素材按钮'
-    material_name_input_loc = '//div[@class="el-message-box__content"]/div/div[1]/input', '素材名称输入框'
+    material_name_input_loc = '//div[@class="el-row"]/div[1]/div[1]/div[2]/div[2]/div/input', '素材名称输入框'
     upload_confirm_btn_loc = '//div[@class="el-message-box__btns"]/button[2]', '确定按钮'
-    material_name_loc = '//div[@class="my-meterial-container"]/div[1]/div[1]/div[2]/div', '素材名称'
+    material_img_loc = 'div.my-meterial-container > div > div:nth-of-type(1) > div:nth-of-type(1) > ' \
+                       'div:nth-of-type(1) > div'  # 素材图片
+    material_name_loc = '//div[@class="my-meterial-container"]/div/div/div[1]/div[2]'  # , '素材名称'
+    classify_handle_loc = '.handle-meterial-type'  # 素材分类操作
 
     """创作空间学生提交作品"""
+    my_draft_tab_loc = '', '我的草稿tab'
+    draft_btn_loc = '//div[text()="草稿"]', '草稿按钮'
+    publish_draft_btn_loc = '//div[@class="el-row"]/div[1]/div/div/div[1]/div/div[3]/div[2]/span', '草稿发布按钮'
     my_works_tab_loc = '//li[contains(text(),"我的作品")]', '我的作品tab'
     public_work_btn_loc = '//span[contains(text(),"发布")]', '发布作品按钮'
-    my_work_name_input_loc = '//label[contains(text(),"标题")]/parent::div/div/div[1]/div/div/input', '作品名称输入框'
+    my_work_name_input_loc = '//label[contains(text(),"作品名称")]/parent::div/div/div/input', '作品名称输入框'
+    work_introduction_input_loc = '//label[contains(text(),"作品简介")]/parent::div/div/div/textarea', '作品简介输入框'
     add_work_cursor_loc = '//textarea[@class="ace_text-input"]', '发布作品编辑器游标'
     add_work_picture_btn_loc = '//form[@class="el-form el-form--label-left"]' \
                                '/div[4]/div/div/div/div/div[1]/div', '添加作品图示按钮'

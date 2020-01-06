@@ -1180,6 +1180,7 @@ class BaseCase(unittest.TestCase):
             selector, by=by, timeout=settings.SMALL_TIMEOUT)
         self.__demo_mode_highlight_if_active(selector, by)
         self.scroll_to(selector, by=by)
+        # self.driver.w3c = False
         time.sleep(0.05)  # Settle down from scrolling before hovering
         return page_actions.hover_on_element(self.driver, selector)
 
