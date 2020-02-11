@@ -666,7 +666,6 @@ class BaseTestCase(BaseCase):
     def student_do_homework_simple(self, homework_name):
         """
         标准授课做作业
-
         :param homework_name: 断言用作业名称
         :return: None
         """
@@ -705,16 +704,14 @@ class BaseTestCase(BaseCase):
         self.switch_to_default_window()
         self.refresh()
         self.wait_text('已完成', *ElementSelector.homework_status_loc)
-        self.wait_text('优秀', *ElementSelector.homework_quality_loc)
+        self.wait_text('完美', *ElementSelector.homework_quality_loc)
 
     def subject_student_do_homework_simple(self, homework_name):
         """
         主题授课做作业
-
         :param homework_name: 断言用作业名称
         :return: None
         """
-
         try:
             self.element_visible(*ElementSelector.go_to_code_btn_loc)
         except NoSuchElementException:
@@ -809,7 +806,9 @@ class BaseTestCase(BaseCase):
             self.click_button(homework_name_sel, msg=f'第{a}个作业')  # 点击作业名称
             try:
                 correct_rate = int((do_num / (n + c)) * 100)
-                if 100 >= correct_rate >= 85:
+                if correct_rate == 100:
+                    exp_homework_quality = '完美'
+                elif 99 >= correct_rate >= 85:
                     exp_homework_quality = '优秀'
                 elif 85 > correct_rate >= 70:
                     exp_homework_quality = '良好'
