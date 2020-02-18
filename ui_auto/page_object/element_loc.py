@@ -224,6 +224,7 @@ class ElementSelector:
     checkpoint_homework_list_name = '//div[@class="items-gird"]/div[1]/div[1]/div[1]/div[1]', '闯关作业列表第一个作业'
     checkpoint_all_homework_name = '//div[@class="title fl"]', '作业列表所有作业名称'
     checkpoint_public_homework_btn_loc = '//div[@class="zs-dialog__footer"]/p/button[2]', '主题作业发布按钮'
+    checkpoint_next_btn_loc = '//div[@class="next-cls btn-cls"]/div', '翻页按钮'
 
     # succ_tip_loc = '//p[@class="el-message__content"]'#'添加成功提示'
     fail_tip_loc = '//div[@class="el-message el-message--error is-center"]/p', '添加失败提示'
@@ -328,7 +329,7 @@ class ElementSelector:
     add_file_confirm_btn_loc = '//div[@class="el-dialog dialogFile"]/div[3]/div/button[2]', '创建文件确定按钮'
     main_file_tab_loc = '//span[contains(text(),"main")]', 'main文件tab'
     head_file_loc = '//div[@class="file-choose"]/div/span', '顶部文件按钮'
-    my_draft_btn_loc = '//div[contains(text(),"我的草稿")]', '我的草稿'
+    my_draft_btn_loc = '//div[@class="my-draft"]', '草稿'
     first_draft_loc = '//div[@class="draft-content"]/div[1]/div[1]/div[1]', '打开草稿列表第一个草稿名称'
     type_choose_loc = '//div[@class="type-choose"]/div/span', '编辑模式选择'
 

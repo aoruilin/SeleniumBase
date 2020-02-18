@@ -223,7 +223,7 @@ class BaseTestCase(BaseCase):
         self.click_button(*ElementSelector.choice_problem_loc)
         self.click_button(*ElementSelector.choice_all_btn_loc)
         self.click_button(*ElementSelector.operation_problem_loc, wait=True)
-        self.click_button(*ElementSelector.choice_all_btn_loc)
+        self.click_button(*ElementSelector.choice_all_btn_loc, wait=True)
         self.click_button(*ElementSelector.confirm_publish_btn_loc)
 
     teaching_package_list = ['叮当资源', '校本资源', '我的资源']
@@ -274,7 +274,8 @@ class BaseTestCase(BaseCase):
 
         self.click_button(f'//span[text()="{package_name}"]/parent::label/span[1]',
                           loading=True, msg=f' {package_name}')  # 授课包选择
-        self.click_button(*ElementSelector.checkpoint_choice_btn_loc)
+        self.click_button(*ElementSelector.checkpoint_choice_btn_loc,
+                          loading=True)
         self.click_button(*ElementSelector.checkpoint_add_publish_btn,
                           wait=True)
         self.click_button(*ElementSelector.checkpoint_publish_btn_loc,
@@ -395,7 +396,7 @@ class BaseTestCase(BaseCase):
 
         self.change_text(*ElementSelector.checkpoint_homework_name_input_loc, text=homework_name)
         self.click_button(*ElementSelector.checkpoint_choice_problem_btn_loc, loading=True)
-        self.click_button(*ElementSelector.checkpoint_choice_all_btn_loc)
+        self.click_button(*ElementSelector.checkpoint_choice_all_btn_loc, wait=True)
         self.click_button(*ElementSelector.checkpoint_confirm_problem_btn_loc)
         self.click_button(*ElementSelector.checkpoint_show_answer_loc, loading=True)
         self.click_button(f'//span[text()="{answer_config}"]/parent::li', msg=answer_config)
@@ -413,7 +414,13 @@ class BaseTestCase(BaseCase):
                        Keys.ENTER)
         self.click_button(*ElementSelector.checkpoint_public_homework_btn_loc)
         self.__assert_equal('发布成功！', ElementSelector.succ_tip_loc)
-        self.wait_text(homework_name)
+        try:
+            self.wait_text(homework_name)
+        except ElementNotVisibleException:
+            while True:
+                self.click_button(*ElementSelector.checkpoint_next_btn_loc)
+                if self.wait_text(homework_name):
+                    break
 
     def add_homework_loop(self):
         """
@@ -855,7 +862,8 @@ class BaseTestCase(BaseCase):
             n = len(problem_id_list)
             s = n - a
             self.__do_homework_operation(s, problem_id_list, subject=True)
-            self.click_button(f'//div[@class="el-row"]/div[{n}]', msg=f'第{n}道题')
+            self.click_button(f'//div[@class="el-row"]/div[{n}]', msg=f'第{n}道题',
+                              loading=True)
             code_input = self.take_element(*ElementSelector.code_view_loc)
             wrong_answer = 'wrong_answer = "wrong"'
             code_input.send_keys(wrong_answer)
@@ -985,7 +993,8 @@ class BaseTestCase(BaseCase):
             self.click_button(
                 f'//div[@class="level"]'
                 f'/div[{PointIdIndex.checkpoint_level_one_index}]/span/img',
-                msg=f'第{PointIdIndex.checkpoint_level_one_index}个系列'
+                msg=f'第{PointIdIndex.checkpoint_level_one_index}个系列',
+                loading=True
             )
         except ElementNotVisibleException:
             log(self.step_log_path, '非第一次进入闯关授课，跳过大地图页面操作')
@@ -1107,7 +1116,8 @@ class BaseTestCase(BaseCase):
                     self.refresh()
                 finally:
                     self.click_button(f'//div[@class="el-row"]/div[{i}]',
-                                      msg=f'题目列表第{i}道题')
+                                      msg=f'题目列表第{i}道题',
+                                      wait=True)
                 # DB中把code拿出来
                 problem_id = problem_id_list[i - 1]
                 code = get_code(problem_id=problem_id, problem_name=None)
@@ -1228,7 +1238,8 @@ class BaseTestCase(BaseCase):
                     log(self.step_log_path, f'{e}做过的题不在题目列表中，题目列表异常')
 
     def __subject_push_homework_operation(self):
-        self.click_button(*ElementSelector.checkpoint_push_homework_btn_loc)
+        self.click_button(*ElementSelector.checkpoint_push_homework_btn_loc,
+                          loading=True)
         self.click_button(*ElementSelector.checkpoint_push_confirm_btn_loc)
         # 作业结果弹框操作
         evaluation_set = {'太厉害了', '还不错哦', '有待提高', '再接再厉'}
@@ -1273,8 +1284,8 @@ class BaseTestCase(BaseCase):
             self.click_button(*ElementSelector.confirm_btn_equal_text)
         else:
             self.click_button(*ElementSelector.confirm_btn_contais_text)
-        exp_tip = '发布成功'
-        self.wait_text(exp_tip, *ElementSelector.succ_tip_loc)
+        if self.__wait_for_loading():
+            self.wait_text('发布成功，可在作品大厅进行查看', *ElementSelector.succ_tip_loc)
 
     def audit_work(self, work_name):
         """

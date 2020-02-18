@@ -89,4 +89,4 @@ class ParameterForOthers:
         return problem_id_list
 
 
-# print(ParameterForOthers(identity='student').get_eval_id(traditional_teach=True))
+# print(ParameterForOthers(identity='student').get_problem_id_for_ui(120348, traditional_teach=False))

@@ -32,8 +32,8 @@ def get_choice(problem_id, problem_name, challenge=False):
 
 
 def execute_sql(sql, problem_id, problem_name, challenge):
-    db = pymysql.connect('192.168.0.160', 'root', 'zsyl@db', 'pt_edu')
-    # db = pymysql.connect('cdb-qmt1sbt0.cd.tencentcdb.com', 'root', 'zsyl@2020', 'pt_edu')
+    # db = pymysql.connect('192.168.0.160', 'root', 'zsyl@db', 'pt_edu')
+    db = pymysql.connect('cdb-qmt1sbt0.cd.tencentcdb.com', 'root', 'zsyl@2020', 'pt_edu', 10069)
     cursor = db.cursor()
     if challenge:
         cursor.execute(sql, (problem_name,))

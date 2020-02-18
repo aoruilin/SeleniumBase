@@ -134,11 +134,11 @@ class UnPw(Data):
 class PointIdIndex:
     # 知识点索引
     level_one_index = 2
-    level_two_index = 2
+    level_two_index = 3
     level_three_index = 1
 
     checkpoint_level_one_index = 1
-    checkpoint_level_two_index = 3
+    checkpoint_level_two_index = 4
     checkpoint_level_three_index = 0
 
 
