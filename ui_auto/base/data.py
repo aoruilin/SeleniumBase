@@ -1,4 +1,4 @@
-production = False
+production = True
 
 
 class Data:
@@ -26,6 +26,7 @@ class Data:
         return ip_for_edu
 
     def api_ip_for_edu(self):
+        # https://api.dingdangcode.com/ddc-edu
         ip_for_edu = 'https://eduapi.dingdangcode.com'\
             if self.production else 'http://192.168.0.160:8081/ddc-edu'
 

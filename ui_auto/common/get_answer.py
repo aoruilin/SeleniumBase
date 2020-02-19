@@ -34,8 +34,15 @@ class ParameterForOthers:
         data['password'] = password
         t = requests.session()
         login_ret = t.post(url=url, headers=self.headers, json=data)
-        token = login_ret.json()['data']['token']
-        self.headers['token'] = token
+        data_ret = login_ret.json()
+        try:
+            token = data_ret['data']['token']
+        except TypeError:
+            print(f'接口/pc/login报错，返回{data_ret["msg"]}')
+        except KeyError:
+            print(login_ret)
+        else:
+            self.headers['token'] = token
 
     def get_class_list(self, get_all=False):
         """
@@ -81,12 +88,16 @@ class ParameterForOthers:
             url = f'{self.ip}/pc/gate/homework/student/homeworkEvalRecord/multi?pageNum=1&pageSize=120&evalId={eval_id}'
         response = requests.get(url=url, headers=self.headers)
         data_ret = response.json()
-        data_list = data_ret['data']
-        all_problem_id_list = [p['problemId'] for p in data_list]
-        problem_id_list = [r for r in all_problem_id_list if r is not None]
-        # problem_id_list = list(filter(lambda x: is_not(x, None), all_problem_id_list))
-
-        return problem_id_list
+        try:
+            data_list = data_ret['data']
+            all_problem_id_list = [p['problemId'] for p in data_list]
+            problem_id_list = [r for r in all_problem_id_list if r is not None]
+            # problem_id_list = list(filter(lambda x: is_not(x, None), all_problem_id_list))
+            return problem_id_list
+        except TypeError:
+            print(f'接口homeworkEvalRecord报错，返回{data_ret["msg"]}')
+        except KeyError:
+            print(data_ret)
 
 
 # print(ParameterForOthers(identity='student').get_problem_id_for_ui(120348, traditional_teach=False))
