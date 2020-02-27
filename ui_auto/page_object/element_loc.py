@@ -322,6 +322,7 @@ class ElementSelector:
     homework_detail_push_homework_btn_loc = '//div[text()="提交全部作业"]', '提交作业按钮'  # 待定
     homework_detail_push_homework_confirm_btn_loc = '//div[text()="确定"]', '确定按钮'  # 待定(如果与课程相同则去掉)
 
+    """紧急挑战待定"""
     standard_emergency_challenge_btn_loc = '//span[contains(text(),"紧急")]', '紧急挑战按钮'
     standard_enm_problem_name_loc = '//div[@class="content-position-header"]/span', '紧急挑战题目名称'
     standard_enm_problem_name_loc_1 = '//div[@class="codeview-title"]/span[2]', '紧急挑战后续做题的题目名称'
