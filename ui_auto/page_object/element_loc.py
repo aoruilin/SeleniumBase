@@ -14,19 +14,19 @@ class ElementSelector:
     all_loc = '//body', '页面所有元素'
 
     """登录页面"""
-    username_input_loc = '//input[@name="username"]', '用户名输入框'
-    password_input_loc = '//input[@name="password"]', '密码输入框'
-    save_login_loc = '//span[@class="el-checkbox__inner"]', '保存登录信息选项'
-    login_btn_loc = '//span[text()="登录"]', '登录按钮'
+    username_input_loc = '//input[@name="username"]', '用户名输入框'  # 待定
+    password_input_loc = '//input[@name="password"]', '密码输入框'  # 待定
+    save_login_loc = '//span[@class="el-checkbox__inner"]', '记住密码'  # 待定
+    login_btn_loc = '//span[text()="登录"]', '登录按钮'  # 待定
     uni_teach_login_btn_loc = '//span[contains(text(),"登录")]/parent::button', '教学版登录按钮'
 
     class_manage_text_loc = '//div[@class="model-tips-word"]', '班级管理文本'
 
-    wrong_login_tip_loc = '//div[@class="el-message el-message--error is-center"]/p', '登录错误提示'
+    wrong_login_tip_loc = '//div[@class="el-message el-message--error is-center"]/p', '登录错误提示'  # 待定
     wrong_username_tip_loc = \
-        '//form[@class="el-form login-form el-form--label-left"]/div[1]/div/div[2]', '用户名错误提示'
+        '//form[@class="el-form login-form el-form--label-left"]/div[1]/div/div[2]', '用户名错误提示'  # 待定
     wrong_password_tip_loc = \
-        '//form[@class="el-form login-form el-form--label-left"]/div[2]/div/div[3]', '密码错误提示'
+        '//form[@class="el-form login-form el-form--label-left"]/div[2]/div/div[3]', '密码错误提示'  # 待定
 
     """导航栏"""
     bar_index_loc = '', '首页'  # 待定
@@ -64,6 +64,7 @@ class ElementSelector:
 
     """头像下拉选项"""
     index_portrait_loc = '', '头像'  # 待定
+    index_portrait_name_loc = '', '头像下拉框用户名称'  # 待定
     index_portrait_msg_loc = '', '消息'  # 待定
     index_portrait_setup_loc = '', '设置'  # 待定
     index_portrait_knowledge_base_loc = '', '知识库'  # 待定
@@ -81,10 +82,6 @@ class ElementSelector:
     index_portrait_msg_list_unread_loc = '', '消息列表未读'  # 待定
     index_portrait_msg_detail_return_loc = '', '消息详情返回'  # 待定
 
-    head_portrait_loc = '//div[@class="navbar-container"]/div/div[2]/div[2]/div', '头像'
-    logout_btn_loc = '//span[text()="退出"]', '退出按钮'
-    edu_text_loc = '//div[@class="new-logobox"]/div[2]/span', '首页教育版文本'
-
     """首页添加课件和作业"""
     index_keep_teach_loc = '', '继续上课'  # 待定
     index_add_homework_btn_loc = '//span[text()="发布作业"]', '首页发布作业按钮'  # 待定
@@ -95,6 +92,8 @@ class ElementSelector:
 
     """首页最近作业"""
     index_homework_more_loc = '', '最近作业更多'  # 待定
+    teacher_index_homework_name_loc = '', '教师首页最近作业列表作业名称'  # 待定
+    student_index_homework_name_loc = '', '学生首页最近作业列表作业名称'  # 待定
     student_index_homework_go_finish_loc = '', '学生最近作业去完成'  # 待定
     index_homework_look_loc = '', '最近作业查看'  # 待定
 
@@ -102,7 +101,7 @@ class ElementSelector:
     #     '//div[@class="home-stu-course-container clearfix"]/div[1]/div/div/div[1]', \
     #     '学生端首页最新课程课程名称'  # .home-stu-course-container.clearfix>div:nth-of-type(1)>div>div>div
 
-    """首页计划授课"""
+    """首页我的课程"""
     index_course_more_loc = '', '课程更多'  # 待定
     index_course_loc = '', '首页课件卡片'  # 待定
 
@@ -178,8 +177,6 @@ class ElementSelector:
     course_list_operation_edit_course_loc = '', '课程列表操作编辑'  # 待定
     course_list_operation_delete_course_loc = '', '课程列表操作删除'  # 待定
 
-    homework_btn_loc = '//div[@class="goclass-menu-gird"]/ul/li[2]', '课件列表顶部作业按钮'
-
     """添加课程"""
     add_course_choose_course_loc = '', '选择课程'  # 待定
     add_course_choose_class_loc = '', '发布班级'  # 待定
@@ -238,12 +235,12 @@ class ElementSelector:
 
     course_detail_choose_chap_loc = '', '选择章节'  # 待定
     course_detail_choose_section_loc = '', '选择小节'  # 待定
-    course_detail_start_course_loc = '', '开始上课'  # 待定
-    course_detail_add_personal_resource_loc = '', '添加个人资源'  # 待定
+    course_detail_full_screen_course_loc = '', '全屏授课'  # 待定
 
     course_detail_start_course_edit_btn_loc = '//div[@class="trigger-editer-icon"]', '精简试炼场弹出开关'  # 待定
+    course_detail_start_course_edit_cross_btn_loc = '', '精简试炼场横向模式'  # 待定
     course_detail_start_course_putback_btn_loc = '//span[contains(text(),"收起")]', '精简试炼场收起开关'  # 待定
-    course_detail_start_course_edit_cursor_loc = '//div[@class=" ace_editor ace-cobalt ace_dark"]/textarea',\
+    course_detail_start_course_edit_cursor_loc = '//div[@class=" ace_editor ace-cobalt ace_dark"]/textarea', \
                                                  '精简试炼场游标'  # 待定
     course_detail_start_course_text_output_btn_loc = '//div[contains(text()#"文本")]', '文本输出区按钮'  # 待定
     course_detail_start_course_text_output_area_loc = '//div[@class="simple-output-item"]', '文本输出'  # 待定
@@ -275,7 +272,6 @@ class ElementSelector:
     homework_list_operation_edit_loc = '', '重新编辑'  # 待定
     homework_list_operation_edit_keep_choose_problem_loc = '', '重新编辑继续选取题目'  # 待定
     homework_list_operation_edit_confirm_edit_loc = '', '重新编辑确认修改'  # 待定
-    homework_list_operation_public_to_another_class_loc = '', '发布到其他班级'  # 待定
     homework_list_operation_replacement_loc = '', '补发作业'  # 待定
     homework_list_operation_delete_loc = '', '删除'  # 待定
     homework_list_problem_analysis_loc = '', '题目分析'  # 待定
@@ -291,19 +287,21 @@ class ElementSelector:
 
     """发布作业"""
     add_homework_homework_name_input_loc = '//div[@class="container-box-item-0"]/div/input', '作业名称输入框'  # 待定
-    add_homework_choice_pointId_loc = '//div[@class="container-box-item-1"]/button', '选取知识点按钮'  # 待定
-    add_homework_choice_pointId_sel_know_loc = '//div[@class="dialog-inner-input clearfix"]/div[2]/div/div/span/span',\
-                                               '选择知识点'  # 待定
+    add_homework_choice_point_id_loc = '//div[@class="container-box-item-1"]/button', '选取知识点按钮'  # 待定
+    add_homework_choice_point_id_sel_know_loc = '//div[@class="dialog-inner-input clearfix"]/div[2]/div/div/span/span', \
+                                                '选择知识点'  # 待定
     add_homework_choice_problem_loc = '//span[contains(text(),"选择")]', '选择题'  # 待定
     add_homework_operation_problem_loc = '//span[contains(text(),"操作")]', '操作题'  # 待定
     add_homework_choice_all_problem_loc = '//div[@class="check-box"]/label/span[1]/span', '全选按钮'  # 待定
     add_homework_choice_first_problem_loc = '//div[@class="el-row"]/div[1]/label/span[1]/span', '选题列表第一道题'  # 待定
     add_homework_confirm_problem_loc = '//div[@class="el-dialog__footer"]/span/button', '确定按钮'  # 待定
     add_homework_show_answer_loc = '//div[contains(text(),"参考答案")]/parent::div/div[2]/div/input', '显示参考答案下拉框'  # 待定
+    add_homework_show_diff_loc = '', '显示难度'  # 待定
+    add_homework_not_show_diff_loc = '', '不显示难度'  # 待定
     add_homework_end_time_input_loc = '//div[contains(text(),"截止时间")]/parent::div/div[2]/input', '截止时间输入'  # 待定
     add_homework_public_answer_loc = '//span[text()="立即公布"]/parent::li', '公布答案'  # 待定
     add_homework_timing_btn_loc = '//div[contains(text(),"定时发布")]/parent::div/div[2]/span', '定时发布按钮'  # 待定
-    add_homework_timing_input_loc = '//div[contains(text(),"定时发布")]/parent::div/parent::div/div[4]/div[2]/input',\
+    add_homework_timing_input_loc = '//div[contains(text(),"定时发布")]/parent::div/parent::div/div[4]/div[2]/input', \
                                     '定时时间输入'  # 待定
     add_homework_choose_homework_class_loc = '', '发布班级'  # 待定(如果和发布课程相同则去掉)
     add_homework_public_homework_btn_loc = '//span[text()="发布"]/parent::button', '立即发布'  # 待定
@@ -317,6 +315,8 @@ class ElementSelector:
     homework_detail_code_view_loc = '//div[@id="ueditor"]/textarea', '作答IDE光标'  # 待定
     homework_detail_run_code_loc = '', '运行'  # 待定
     homework_detail_save_run_btn_loc = '//div[contains(text(),"保存并评测")]', '保存并运行按钮'  # 待定
+    homework_detail_choice_pass_result_text_loc = '', '选择题回答正确'  # 待定
+    homework_detail_choice_unpass_result_text_loc = '', '选择题回答错误'  # 待定
     homework_detail_pass_result_text_loc = '//div[@class="result-text fl is-right"]', '评测通过文本'  # 待定
     homework_detail_unpass_result_text_loc = '//div[@class="result-text fl is-error"]', '评测不通过文本'  # 待定
     homework_detail_push_homework_btn_loc = '//div[text()="提交全部作业"]', '提交作业按钮'  # 待定

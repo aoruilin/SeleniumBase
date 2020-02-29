@@ -10,13 +10,11 @@ class TestAIExperience(BaseTestCase):
     file_name = __file__
     name = __name__
 
-    username = Data().teacher_username_for_edu()
-    teacher_name = Data().teacher_name_for_edu()
-    password = Data().password_for_edu
+    teacher_data = Data().teacher_data()
 
     def test_01(self):
         self.step_log_path = get_log_path(self.file_name, self.name)
-        self.login(self.username, self.teacher_name, self.password, teacher_assert=True)
+        self.login(**self.teacher_data, teacher_assert=True)
         self.click_and_jump(1, *ElementSelector.ai_experience_loc)
         self.ai_experience()
 

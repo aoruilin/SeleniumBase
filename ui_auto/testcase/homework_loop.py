@@ -10,7 +10,9 @@ class HomeworkLoop(BaseTestCase):
     file_name = __file__
     name = __name__
 
-    url = Data().ip_for_edu()
+    d = Data()
+    teacher_data = d.teacher_data()
+    student_data = d.student_data()
     username = Data().teacher_username_for_edu()
     password = Data().password_for_edu
     username_student = Data().student_username_for_edu()
@@ -19,7 +21,7 @@ class HomeworkLoop(BaseTestCase):
 
     def test_homework_loop_01(self):
         self.step_log_path = get_log_path(self.file_name, self.name)
-        self.login(self.username, self.teacher_name, self.password, teacher_assert=True)
+        self.login(**self.teacher_data, teacher_assert=True)
         self.click_button(*ElementSelector.standard_course_btn_loc)
         self.click_button(*ElementSelector.homework_btn_loc)
         self.add_homework_loop()
@@ -27,7 +29,7 @@ class HomeworkLoop(BaseTestCase):
         self.date_selection('作业', Data().homework_name)
         self.search_input(Data().homework_name)
         self.get_new_driver()
-        self.login(self.username_student, self.student_name, self.password, student_assert=True)
+        self.login(**self.student_data, student_assert=True)
         self.click_button(*ElementSelector.standard_course_btn_loc)
         self.click_button(*ElementSelector.homework_btn_loc)
         self.student_do_homework_loop()
@@ -36,12 +38,12 @@ class HomeworkLoop(BaseTestCase):
 
     def test_homework_loop_02(self):
         self.step_log_path = get_log_path(self.file_name, self.name)
-        self.login(self.username, self.teacher_name, self.password, teacher_assert=True)
+        self.login(**self.teacher_data, teacher_assert=True)
         self.click_button(*ElementSelector.checkpoint_course_loc)
         self.click_button(*ElementSelector.index_homework_btn_loc, loading=True)
         self.subject_add_homework_loop()
         self.get_new_driver()
-        self.login(self.username_student, self.student_name, self.password, student_assert=True)
+        self.login(**self.student_data, student_assert=True)
         self.click_button(*ElementSelector.checkpoint_course_loc)
         self.click_button(*ElementSelector.index_homework_btn_loc, loading=True, wait=True)
         self.subject_student_do_homework_loop()
