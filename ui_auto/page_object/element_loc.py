@@ -29,13 +29,13 @@ class ElementSelector:
         '//form[@class="el-form login-form el-form--label-left"]/div[2]/div/div[3]', '密码错误提示'  # 待定
 
     """导航栏"""
-    bar_index_loc = '', '首页'  # 待定
-    bar_course_loc = '', '课程'  # 待定
-    bar_homework_loc = '', '作业'  # 待定
-    bar_creative_space_loc = '//span[contains(text(),"创作空间")]', '创作空间'  # 待定
-    bar_study_analysis_loc = '', '学情分析'  # 待定
-    bar_teach_center_loc = '//span[contains(text(),"教学")]', '教学中心'  # 待定
-    bar_test_field_loc = '//span[contains(text(),"试炼场")]', '进入试炼场'  # 待定
+    bar_index_loc = '//span[contains(text(), "首页")]', '首页'
+    bar_course_loc = '//span[text()="课程"]', '课程'
+    bar_homework_loc = '//span[text()="作业"]', '作业'
+    bar_creative_space_loc = '//span[contains(text(),"创作空间")]', '创作空间'
+    bar_study_analysis_loc = '//span[contains(text(),"学情分析")]', '学情分析'
+    bar_teach_center_loc = '//span[contains(text(),"教学中心")]', '教学中心'
+    bar_test_field_loc = '//span[contains(text(),"进入试炼场")]', '进入试炼场'
 
     standard_course_btn_loc = '//span[contains(text(),"标准")]', '标准授课按钮'
     checkpoint_course_loc = '//span[contains(text(),"主题")]', '主题授课按钮'
@@ -83,16 +83,13 @@ class ElementSelector:
     index_portrait_msg_detail_return_loc = '', '消息详情返回'  # 待定
 
     """首页添加课件和作业"""
-    index_keep_teach_loc = '', '继续上课'  # 待定
-    index_add_homework_btn_loc = '//span[text()="发布作业"]', '首页发布作业按钮'  # 待定
-    index_course_resource_loc = '', '课程资源'  # 待定
-
-    # standard_mode_btn_loc = '//div[@class="course-hw"]/div[1]', '标准授课发布课件作业按钮'  # div[class="cou-hw-bg"]
-    # subject_mode_btn_loc = '//div[@class="course-hw"]/div[2]', '主题授课发布课件作业按钮'  # div[class="cou-hw-bg cou-hw-bg1"]
+    index_keep_teach_loc = '//span[contains(text(),"继续上课")]', '继续上课'
+    index_add_homework_btn_loc = '//span[contains(text(),"继续上课")]/ancestor::ul/li[2]/div', '首页发布作业按钮'
+    index_course_resource_loc = '//span[contains(text(),"课程资源")]', '课程资源'
 
     """首页最近作业"""
-    index_homework_more_loc = '', '最近作业更多'  # 待定
-    teacher_index_homework_name_loc = '', '教师首页最近作业列表作业名称'  # 待定
+    index_homework_more_loc = '//div[contains(text(),"最近作业")]/parent::div/div[2]/a/span', '最近作业更多'
+    teacher_index_homework_name_loc = '//div[@class="ant-table-content"]/descendant::td[1]', '教师首页最近作业列表作业名称'
     student_index_homework_name_loc = '', '学生首页最近作业列表作业名称'  # 待定
     student_index_homework_go_finish_loc = '', '学生最近作业去完成'  # 待定
     index_homework_look_loc = '', '最近作业查看'  # 待定
@@ -182,13 +179,15 @@ class ElementSelector:
     add_course_choose_class_loc = '', '发布班级'  # 待定
     add_course_choose_first_course_loc = '', '选择下拉框第一个课程'  # 待定
     add_course_choose_first_class_loc = '', '选择下拉框第一个班级'  # 待定
+    add_course_delete_first_class_loc = '', '删除列表第一个班级'  # 待定
     add_course_preview_course_loc = '', '预览课程'  # 待定
     add_course_course_plan_switch_loc = '', '计划授课开关'  # 待定
     add_course_course_plan_choose_date_loc = '', '计划授课日期选择'  # 待定
     add_course_publish_course_loc = '', '发布课程按钮'  # 待定
     add_course_cancel_course_loc = '', '发布课程取消按钮'  # 待定
     add_course_publish_course_success_tip_loc = '', '发布课程成功文本'  # 待定
-    add_course_publish_course_success_confirm_loc = '', '发布课程成功确定'  # 待定
+    add_course_publish_course_window_confirm_loc = '', '发布课程弹窗确定'  # 待定
+    add_course_publish_course_fail_tip_loc = '', '发布课程失败文本'  # 待定
 
     first_course_in_list_loc = \
         '//div[@class="course-container-gird"]/ul/li[1]/div/div/div[2]/div[1]/div', '课件列表第一个课件'
@@ -294,6 +293,7 @@ class ElementSelector:
     add_homework_operation_problem_loc = '//span[contains(text(),"操作")]', '操作题'  # 待定
     add_homework_choice_all_problem_loc = '//div[@class="check-box"]/label/span[1]/span', '全选按钮'  # 待定
     add_homework_choice_first_problem_loc = '//div[@class="el-row"]/div[1]/label/span[1]/span', '选题列表第一道题'  # 待定
+
     add_homework_confirm_problem_loc = '//div[@class="el-dialog__footer"]/span/button', '确定按钮'  # 待定
     add_homework_show_answer_loc = '//div[contains(text(),"参考答案")]/parent::div/div[2]/div/input', '显示参考答案下拉框'  # 待定
     add_homework_show_diff_loc = '', '显示难度'  # 待定
@@ -304,9 +304,12 @@ class ElementSelector:
     add_homework_timing_input_loc = '//div[contains(text(),"定时发布")]/parent::div/parent::div/div[4]/div[2]/input', \
                                     '定时时间输入'  # 待定
     add_homework_choose_homework_class_loc = '', '发布班级'  # 待定(如果和发布课程相同则去掉)
+    add_homework_choose_first_class_loc = '', '发布班级选择第一个班级'  # 待定(如果和发布课程相同则去掉)
+    add_homework_delete_first_class_loc = '', '发布班级删除第一个班级'  # 待定(如果和发布课程相同则去掉)
     add_homework_public_homework_btn_loc = '//span[text()="发布"]/parent::button', '立即发布'  # 待定
     add_homework_cancel_homework_loc = '', '发布作业取消按钮'  # 待定(如果和发布课程相同则去掉)
     add_homework_success_tip_loc = '', '发布作业成功提示'  # 待定(如果和发布课程相同则去掉)
+    add_homework_publish_fail_tip_loc = '', '发布作业失败提示'  # 待定(如果和发布课程相同则去掉)
     add_homework_success_confirm_loc = '', '发布作业成功确定'  # 待定(如果和发布课程相同则去掉)
 
     """作业详情"""
@@ -492,102 +495,3 @@ class ElementSelector:
     publish_btn_loc = '//span[text()="发布"]', '发布按钮'
     # succ_tip_loc = '//h2[@class="dia-header"]'#'发布成功提示框'
     back_button_loc = '//div[@class="dia-back"]', '提示框返回按钮'
-
-    """主题授课首页"""
-    start_discover_btn_loc = '//span[contains(text(),"探索")]', '探索按钮'
-    index_course_btn_loc = '//span[text()="课程"]', '首页课程按钮'
-    index_homework_btn_loc = '//span[text()="作业"]', '闯关首页作业按钮'
-
-    """主题授课中国地图"""
-    map_s1_btn_loc = '//div[@class="level"]/div/span/img', '中国地图所有系列'
-
-    """主题授课地图路径"""
-    path_btn_loc = '//div[@class="level"]/div', '路径点'
-
-    """主题授课关卡内按钮"""
-    watch_course_btn_loc = '//span[text()="看课件"]', '看课件按钮'
-    watch_homework_btn_loc = '//span[text()="看作业"]', '看作业按钮'
-    kj_add_checkpoint_course_loc = '//div[@class="kj-img"]', '关卡内课件详情添加课件按钮'
-
-    """主题授课作业列表"""
-    add_checkpoint_homework_loc = '//span[text()="发布作业"]', '发布作业按钮'
-
-    """主题授课课件列表"""
-    add_checkpoint_course_loc = '//span[text()="发布课件"]', '发布课件按钮'
-    first_course_name_loc = '//div[@class="dia-container clearfix"]/div[1]/div/div/div[2]', '第一个课件名称'
-
-    """主题授课选择关卡"""
-    choice_checkpoint_loc = '//div[text()="选择关卡"]/parent::div/div[2]/div/div[1]/span', '选择关卡'
-
-    """主题授课添加课件"""
-    checkpoint_choice_btn_loc = '//div[@class="item-card-center"]/ul/li[1]/div/div[4]/label/span[1]', '选择按钮'
-    checkpoint_choice_class_btn_loc = '//div[text()="发布班级"]/parent::div/div[2]/div/label[1]/span[1]', '第一个班级'
-    checkpoint_add_publish_btn = \
-        '//div[@class="zs-dialog__wrapper"]/div/div[5]/div[2]/div/label[1]/span[1]', '添加并发布按钮'
-    checkpoint_publish_btn_loc = '//span[text()="发布"]', '发布按钮'
-    # check_point_course_name_loc = '//div[@class="dia-container clearfix"]/div[1]/div/div/div[2]'#'列表课件名称'
-    check_point_course_name_loc = '//h1[@class="deco-header elli_1"]', '详情课件名称'
-
-    """主题授课查看课件"""
-    first_go_to_checkpoint_btn = \
-        '//div[@class="dia-container clearfix"]/div[1]/div/div/div[6]/div[2]', '前往关卡按钮'
-
-    back_to_map_btn_loc = '//div[@class="backHome flex flex-pack-end"]/a[1]', '返回到中国地图'
-    sub_course_back_btn_loc = '//div[@class="backHome flex flex-pack-end"]/a[2]', '返回按钮'
-    back_to_home_btn_loc = '//div[@class="backHome flex flex-pack-end"]/a[3]', '返回闯关授课主页'
-    checkpoint_course_name_loc = '//h1[@class="deco-header elli_1"]', '课件名称'
-    first_in_course_loc = '//div[@class="el-tree zs-tree-node"]/div[1]/div[1]/div', '查看课件页面课件列表第一个'
-
-    """主题授课发布作业"""
-    course_close_btn_loc = '//span[@class="zs-dialog__closer"]', '课件列表关闭按钮'
-    checkpoint_homework_name_input_loc = '//div[text()="作业名称"]/parent::div/div[2]/div/input', '作业名称输入框'
-    checkpoint_choice_problem_btn_loc = '//span[text()="选题"]', '选题按钮'
-    checkpoint_choice_problem_loc = '', '选择题'
-    checkpoint_operation_problem_loc = '', '操作题'
-    checkpoint_choice_all_btn_loc = '//span[text()="全选"]/parent::label/span[1]', '全选按钮'
-    checkpoint_confirm_problem_btn_loc = '//div[text()="确定"]', '选题确定按钮'
-    checkpoint_show_answer_loc = '//div[text()="参考答案"]/parent::div/div[2]/div/div/span', '参考答案下拉框'
-    checkpoint_public_answer_loc = '//span[text()="显示"]/parent::li', '显示答案选项'
-    checkpoint_timing_btn_loc = '//div[text()="定时发布"]/parent::div/div[2]/div/div/span', '定时发布按钮'
-    checkpoint_timing_input_loc = '//div[text()="定时发布"]/parent::div/div[2]/div[2]/div/input', '定时时间输入'
-    checkpoint_end_time_input_loc = '//div[text()="截止提交时间"]/parent::div/div[2]/div/input', '截止时间输入框'
-    checkpoint_homework_list_name = '//div[@class="items-gird"]/div[1]/div[1]/div[1]/div[1]', '闯关作业列表第一个作业'
-    checkpoint_all_homework_name = '//div[@class="title fl"]', '作业列表所有作业名称'
-    checkpoint_public_homework_btn_loc = '//div[@class="zs-dialog__footer"]/p/button[2]', '主题作业发布按钮'
-    checkpoint_next_btn_loc = '//div[@class="next-cls btn-cls"]/div', '翻页按钮'
-
-    # succ_tip_loc = '//p[@class="el-message__content"]'#'添加成功提示'
-    fail_tip_loc = '//div[@class="el-message el-message--error is-center"]/p', '添加失败提示'
-
-    """主题授课做作业"""
-    go_to_code_btn_loc = '//div[contains(text(),"去答题")]', '去答题按钮'
-    homework_name_loc = '//div[@class="items-gird"]/div[1]/div[1]/div[1]/div[1]', '作业列表第一个作业名称'
-    homework_analysis_btn_loc = '//div[@class="items-gird"]/div[1]/div[2]/div', '第一个作业的作业分析按钮'
-    checkpoint_view_code_btn_loc = '//div[@class="container-body"]/div[1]/div[4]', '去作答按钮'
-    checkpoint_problem_list_btn_loc = \
-        '//div[@class="codeview-bg clearfix main-content"]/div[2]/div[1]/button', '题目列表按钮'
-    checkpoint_save_run_btn_loc = '//span[text()="保存并评测"]', '保存并运行按钮'
-    checkpoint_confirm_btn_loc = '//span[text()="确定"]', '运行结果弹框确定按钮'
-    checkpoint_push_homework_btn_loc = '//span[text()="提交全部作业"]', '提交作业按钮'
-    checkpoint_push_confirm_btn_loc = '//div[text()="确定"]', '确定提交按钮'
-    result_tip_loc = \
-        '//div[text()="作业分析"]/parent::div/parent::div/parent::div/parent::div/div[4]/span', '作业结果提示'
-    analysis_btn_loc = '//div[text()="作业分析"]', '作业分析按钮'
-    wrong_redo_btn_loc = '//div[contains(text(),"错题重做")]', '错题重做按钮'
-    problem_list_name_loc = '//div[@class="el-row"]/div/div/div[2]'  # , '题目列表的名称'
-    problem_name_loc_1 = '//div[@class="codeview-title"]/span[2]', '后续做题的题目名称'
-    wrong_problem_name_loc = '//div[@class="el-row"]/div[1]', '错题重做题目列表第一个题'
-    problem_name_loc = '//div[@class="codeview-title"]/span/span[2]', '页面顶部题目名称'
-    checkpoint_homework_status_loc = '//div[@class="content-nav-header clearfix"]/div[1]/div[4]', '作业状态'
-    close_btn_loc = '//span[@class="zs-dialog__closer"]', '关闭按钮'
-    return_homework_btn_loc = '//span[text()="返回作业"]', '返回作业按钮'
-
-    emergency_challenge_btn_loc = '//div[contains(text(),"紧急挑战")]', '紧急挑战按钮'
-    enm_problem_name_loc = '//div[@class="codeview-title"]/span', '紧急挑战题目名称'
-    enm_problem_name_loc_1 = '//div[@class="codeview-title"]/span[2]', '紧急挑战后续做题的题目名称'
-    challenge_result_tip_loc = '//div[text()="继续挑战"]' \
-                               '/parent::div/parent::div/parent::div/parent::div/div[3]/span', '紧急挑战结果提示'
-    challenge_next_problem_btn_loc = '//div[text()="继续挑战"]/parent::div/div[2]', '下一道题按钮'
-    keep_challenge_btn_loc = '//div[text()="继续挑战"]', '继续跳转按钮'
-    problem_name_list_loc = '//div[@class="data-back-single-title fl"]', '题目列表名称'
-    change_problem_btn_loc = '//span[contains(text(),"换一题")]', '换一题按钮'
