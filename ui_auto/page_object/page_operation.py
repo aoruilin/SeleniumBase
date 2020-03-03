@@ -143,6 +143,22 @@ class BaseTestCase(BaseCase):
 
         return self.wait_for_element_not_visible(selector)
 
+    def elements_list(self, selector, msg=None, loading=False):
+        """
+        复数定位器返回元素列表
+        :param selector: 定位器
+        :param msg: 日志信息
+        :param loading: 是否等待遮罩
+        :return:
+        """
+        if loading:
+            if self.__wait_for_loading():
+                log(self.step_log_path, f'等待遮罩层隐藏')
+                log(self.step_log_path, f'查找所有的{msg}')
+                return self.find_elements(selector)
+        else:
+            return self.find_elements(selector)
+
     def login(self, username, password, name):
         # self.maximize_window()
         self.set_window_size(1250, 1035)
@@ -247,12 +263,12 @@ class BaseTestCase(BaseCase):
         # 预览课程页面操作，后期添加
         self.driver.close()
         self.switch_window(0)
-        self.click_button(*ElementSelector.add_course_choose_class_loc, loading=True)
-        self.click_button(*ElementSelector.add_course_choose_first_class_loc)
         self.click_button(*ElementSelector.add_course_course_plan_switch_loc)
         self.day_of_week = self.__choose_course_plan()
         # 计划授课选择日期
         self.click_button(*ElementSelector.add_course_course_plan_choose_date_loc)  # 后面会在此处改成具体定位器，将day_of_week带入
+        self.click_button(*ElementSelector.add_course_choose_class_loc, loading=True)
+        self.click_button(*ElementSelector.add_course_choose_first_class_loc)
         self.click_button(*ElementSelector.add_course_publish_course_loc)
         self.__assert_add_course_tip('发布成功！', ElementSelector.succ_tip_loc,
                                      '发布失败')  # 失败提示暂定发布失败，等高保真
@@ -489,14 +505,46 @@ class BaseTestCase(BaseCase):
                 finally:
                     self.click_button(*ElementSelector.course_detail_start_course_putback_btn_loc)
 
-    def student_check_course_simple(self, course_name):  # 操作待定，后续可增加按每个小节查看
+    def check_course_simple(self, course_name, teacher=False):  # 操作待定，后续可增加按每个小节查看
         """
         学生查看课程
         :param course_name: 查看的课件名称
+        :param teacher: 是否教师查看
         :return: None
         """
-        self.course_field_operation(turtle_code(), 'abc')
+        # 选择章节，可考虑复数定位元素列表->遍历列表点击每个小节
+        chap_elem_list = self.elements_list(*ElementSelector.course_detail_choose_chap_loc, loading=True)  # 章节知识点
+        sec_elem_list = self.elements_list(*ElementSelector.course_detail_choose_section_loc)  # 小节知识点
+        for chap_elem in chap_elem_list:
+            chap_elem.click()
+            for sec_elem in sec_elem_list:
+                sec_elem.click()
+                self.__check_course_operation(course_name)
+                full_screen_loc = ElementSelector.course_detail_full_screen_course_loc \
+                    if teacher else ElementSelector.course_detail_start_study_course_loc
+                self.click_button(*full_screen_loc)
+                self.course_field_operation(turtle_code(), 'abc')
+                self.__check_course_operation(course_name)
 
+    def student_check_course_loop(self):
+        """
+        学生端遍历查看列表前3个课件
+
+        :return: None
+        """
+        for c in range(1, 4):
+            course_name_sel = f'//div[@class="course-container-gird"]/ul/li[{c}]/div/div/div[2]/div[1]/div'
+            course_name = self.take_text(course_name_sel, msg=f'第{c}个课件')
+            self.click_button(course_name_sel)  # 点击课程名称进入课程详情页面
+            self.check_course_simple(course_name)
+            self.click_button(*ElementSelector.crumbs_loc)
+
+    def __check_course_operation(self, course_name):
+        """
+        课程详情选择资源操作
+        :param course_name: 课程名称
+        :return:
+        """
         btn_list = ['课件', '视频', '讲义']
         for btn in btn_list:
             try:
@@ -511,22 +559,29 @@ class BaseTestCase(BaseCase):
                         f'//p[text()="{btn}"]/parent::div/parent::div/parent::div/div[2]',
                         msg=btn
                     )
-            except Exception as e:
-                log(self.step_log_path, f'{e}缺少资源')
-            self.__check_course_operation(btn)
+            except ElementNotVisibleException:
+                log(self.step_log_path, '缺少资源')
+            self.__ppt_operation(btn)
 
-    def student_check_course_loop(self):
-        """
-        学生端遍历查看列表前3个课件
-
-        :return: None
-        """
-        for c in range(1, 4):
-            course_name_sel = f'//div[@class="course-container-gird"]/ul/li[{c}]/div/div/div[2]/div[1]/div'
-            course_name = self.take_text(course_name_sel, msg=f'第{c}个课件')
-            self.click_button(course_name_sel)  # 点击课程名称进入课程详情页面
-            self.student_check_course_simple(course_name)
-            self.click_button(*ElementSelector.crumbs_loc)
+    def __ppt_operation(self, btn):
+        if '课件' == btn:
+            try:
+                frame_elem = self.take_element(*ElementSelector.course_detail_start_course_iframe_loc)
+                self.switch_to_frame(frame_elem)
+                self.switch_to_frame('wacframe')
+                time.sleep(1)
+                if self.__wait_for_loading():
+                    self.element_visible(*ElementSelector.course_detail_ppt_pages_num_loc)
+                    page_num_text = self.take_text(*ElementSelector.course_detail_ppt_pages_num_loc)
+                    page_text = page_num_text[11:]
+                    num_text = page_text[:2]
+                    page_num = int(num_text)
+                    for s in range(page_num):
+                        self.slow_click(*ElementSelector.course_detail_ppt_next_btn_loc)
+            except ElementNotVisibleException:
+                raise log(self.step_log_path, 'PPT显示异常')
+            finally:
+                self.switch_to_default_content()
 
     # def uni_teach_student_check_course(self, course_name):
     #     """
@@ -628,8 +683,8 @@ class BaseTestCase(BaseCase):
             self.click_button(*ElementSelector.homework_detail_push_homework_btn_loc)
             self.click_button(*ElementSelector.homework_detail_push_homework_confirm_btn_loc)
 
-            do_num = s + choice_p_num   # 做对题目总数
-            all_num = choice_p_num + opera_p_num    # 所有题目总数
+            do_num = s + choice_p_num  # 做对题目总数
+            all_num = choice_p_num + opera_p_num  # 所有题目总数
             try:
                 self.__assert_equal(
                     f'{do_num}/{all_num}',
@@ -910,24 +965,6 @@ class BaseTestCase(BaseCase):
     #                 self.wait_text(problem_name)
     #             except Exception as e:
     #                 log(self.step_log_path, f'{e}做过的题不在题目列表中，题目列表异常')
-
-    def __check_course_operation(self, btn):
-        if '课件' == btn:
-            try:
-                frame_elem = self.take_element(*ElementSelector.course_detail_start_course_iframe_loc)
-                self.switch_to_frame(frame_elem)
-                self.switch_to_frame('wacframe')
-                time.sleep(1)
-                page_num_text = self.take_text(*ElementSelector.course_detail_ppt_pages_num_loc)
-                page_text = page_num_text[11:]
-                num_text = page_text[:2]
-                page_num = int(num_text)
-                for s in range(page_num):
-                    self.slow_click(*ElementSelector.course_detail_ppt_next_btn_loc)
-            except Exception as e:
-                log(self.step_log_path, f'{e}PPT显示异常')
-            finally:
-                self.switch_to_default_content()
 
     def add_work(self, work_name, test_field=False):
         """

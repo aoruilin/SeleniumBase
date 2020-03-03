@@ -235,6 +235,7 @@ class ElementSelector:
     course_detail_choose_chap_loc = '', '选择章节'  # 待定
     course_detail_choose_section_loc = '', '选择小节'  # 待定
     course_detail_full_screen_course_loc = '', '全屏授课'  # 待定
+    course_detail_start_study_course_loc = '', '开始学习'  # 待定
 
     course_detail_start_course_edit_btn_loc = '//div[@class="trigger-editer-icon"]', '精简试炼场弹出开关'  # 待定
     course_detail_start_course_edit_cross_btn_loc = '', '精简试炼场横向模式'  # 待定
