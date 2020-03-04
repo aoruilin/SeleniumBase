@@ -261,6 +261,7 @@ class BaseTestCase(BaseCase):
                               loading=True, wait=True, msg=f' {package_name}')  # 授课包选择其他课程 待定 后期可能会加上
         self.click_and_jump(1, *ElementSelector.add_course_preview_course_loc)  # 点击预览暂定跳转
         # 预览课程页面操作，后期添加
+        self.check_course_simple('')
         self.driver.close()
         self.switch_window(0)
         self.click_button(*ElementSelector.add_course_course_plan_switch_loc)
@@ -385,6 +386,8 @@ class BaseTestCase(BaseCase):
         """
         for i in ['名称', '知识点', '班级']:
             homework_name = f'{i}不输入'
+            self.click_button(*ElementSelector.homework_list_add_homework_btn_loc,
+                              loading=True, wait=True)
             self.click_button(*ElementSelector.add_homework_homework_name_input_loc, wait=True)
             if '名称' == i:
                 self.__choose_problem_operation()
@@ -460,6 +463,25 @@ class BaseTestCase(BaseCase):
             self.click_button(*ElementSelector.add_homework_choice_point_id_sel_know_loc)
             self.__choice_problem_for_homework()
 
+    def teacher_check_index_course(self, course_name):
+        """
+        教师端检查首页课程名称
+        :param course_name: 断言用课程名称
+        :return:
+        """
+        self.click_button(*ElementSelector.bar_index_loc)
+        self.__assert_equal(course_name, ElementSelector.index_course_loc)
+
+    def teacher_check_index_homework(self, homework_name):
+        """
+        教师端检查首页作业名称
+        :param homework_name: 断言用作业名称
+        :return:
+        """
+        self.click_button(*ElementSelector.bar_index_loc)
+        self.__assert_equal(homework_name, ElementSelector.teacher_index_homework_name_loc)
+        self.__assert_equal('进行中', ElementSelector.index_homework_status_loc)
+
     def student_check_index_course(self, course_name):
         """
         学生端检查首页课件名称
@@ -468,7 +490,16 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         self.__assert_equal(course_name, ElementSelector.index_course_loc)
-        self.click_button(*ElementSelector.standard_course_btn_loc)
+        self.click_button(*ElementSelector.bar_course_loc)
+
+    def student_check_index_homework(self, homework_name):
+        """
+        学生端检查首页作业名称
+        :param homework_name: 断言用作业名称
+        :return:
+        """
+        self.__assert_equal(homework_name, ElementSelector.student_index_homework_name_loc)
+        self.__assert_equal('进行中', ElementSelector.index_homework_status_loc)
 
     def subject_student_check_index_course(self, course_name):
         self.__assert_equal(course_name, ElementSelector.index_course_loc)
@@ -525,6 +556,7 @@ class BaseTestCase(BaseCase):
                 self.click_button(*full_screen_loc)
                 self.course_field_operation(turtle_code(), 'abc')
                 self.__check_course_operation(course_name)
+                self.click_button(*ElementSelector.course_detail_full_screen_return_course_loc)  # 点击退出全屏
 
     def student_check_course_loop(self):
         """
@@ -610,7 +642,7 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         try:
-            self.element_visible(*ElementSelector.homework_list_student_detail_go_answer_loc)
+            self.element_visible(*ElementSelector.homework_list_homework_name)
         except Exception as e:
             log(self.step_log_path, f'{e}学生端作业列表返回空列表')
             self.refresh()
@@ -624,8 +656,11 @@ class BaseTestCase(BaseCase):
         eval_id = eval_id_list[0]
 
         c, n = self.__get_problem_id_list(eval_id)
-        self.__do_homework_operation(len(c), c, problem_type='选择')
-        self.__do_homework_operation(len(n), n, problem_type='操作')
+        choice_p_num = len(c)
+        operation_p_num = len(n)
+        all_num = choice_p_num + operation_p_num
+        self.__do_homework_operation(choice_p_num, c, problem_type='选择')
+        self.__do_homework_operation(operation_p_num, n, problem_type='操作')
 
         self.click_button(*ElementSelector.homework_detail_push_homework_btn_loc)
         self.click_button(*ElementSelector.homework_detail_push_homework_confirm_btn_loc)
@@ -639,8 +674,17 @@ class BaseTestCase(BaseCase):
 
         self.switch_to_default_window()
         self.refresh()
-        self.wait_text('已完成', *ElementSelector.homework_status_loc)  # 待定检查点，可以定得分或状态
+        self.wait_text('100', *ElementSelector.homework_list_student_detail_score_loc)  # 检查得分
         self.wait_text('A', *ElementSelector.homework_list_student_detail_level_loc)
+        self.__assert_equal(
+            f'{all_num}/{all_num}',
+            ElementSelector.homework_list_student_detail_correct_loc)  # 作业列表的正确率检查
+        self.__assert_equal(
+            f'{all_num}/{all_num}',
+            ElementSelector.homework_list_student_detail_completion_loc)  # 作业列表的完成率检查
+        correct = self.take_text(*ElementSelector.homework_list_student_detail_correct_loc)
+        completion = self.take_text(*ElementSelector.homework_list_student_detail_completion_loc)
+        return completion, correct  # 返回完成率和正确率文本
 
     def student_do_homework_loop(self):
         """
@@ -717,6 +761,21 @@ class BaseTestCase(BaseCase):
         c_problem_list = [i for i, _ in choice_problem_id_list]
         problem_id_list = self.parameter.get_problem_id_for_ui(eval_id, traditional_teach=True)
         return c_problem_list, problem_id_list
+
+    def teacher_check_homework_simple(self, homework_name, student_username,
+                                      student_name, completion, correct):
+        self.refresh()
+        self.__assert_equal(homework_name, ElementSelector.teacher_index_homework_name_loc)
+        self.__assert_equal('已结束', ElementSelector.index_homework_status_loc)
+        self.click_button(*ElementSelector.bar_homework_loc)
+        self.click_button(*ElementSelector.homework_list_homework_name, loading=True)
+        self.__assert_equal(homework_name, ElementSelector.homework_list_homework_name)
+        self.__assert_equal(student_username, ElementSelector.homework_list_student_list_username_loc)
+        self.__assert_equal(student_name, ElementSelector.homework_list_student_list_name_loc)
+        self.__assert_equal(completion, ElementSelector.homework_list_student_list_completion_loc)
+        self.__assert_equal(correct, ElementSelector.homework_list_student_list_correct_loc)
+        self.__assert_equal('100', ElementSelector.homework_list_student_list_score_loc)
+        self.__assert_equal('A', ElementSelector.homework_list_student_list_level_loc)
 
     # def student_do_homework_for_teach(self):
     #     """

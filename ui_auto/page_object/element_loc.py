@@ -89,6 +89,7 @@ class ElementSelector:
 
     """首页最近作业"""
     index_homework_more_loc = '//div[contains(text(),"最近作业")]/parent::div/div[2]/a/span', '最近作业更多'
+    index_homework_status_loc = '', '最近作业列表作业状态'  # 待定
     teacher_index_homework_name_loc = '//div[@class="ant-table-content"]/descendant::td[1]', '教师首页最近作业列表作业名称'
     student_index_homework_name_loc = '', '学生首页最近作业列表作业名称'  # 待定
     student_index_homework_go_finish_loc = '', '学生最近作业去完成'  # 待定
@@ -215,7 +216,7 @@ class ElementSelector:
     course_edit_confirm_loc = '', '编辑课程确定'  # 待定
     course_edit_cancel_loc = '', '编辑课程取消'  # 待定
 
-    """教师查看课程详情"""
+    """查看课程详情"""
     lookNumber_loc = '//div[@class="courseware-card-looknumber"]', '课程详情页面查看人数'
     crumbs_loc = '//div[@class="courseware-title"]/font[1]', '面包屑'
 
@@ -236,6 +237,7 @@ class ElementSelector:
     course_detail_choose_section_loc = '', '选择小节'  # 待定
     course_detail_full_screen_course_loc = '', '全屏授课'  # 待定
     course_detail_start_study_course_loc = '', '开始学习'  # 待定
+    course_detail_full_screen_return_course_loc = '', '全屏模式返回课程'  # 待定
 
     course_detail_start_course_edit_btn_loc = '//div[@class="trigger-editer-icon"]', '精简试炼场弹出开关'  # 待定
     course_detail_start_course_edit_cross_btn_loc = '', '精简试炼场横向模式'  # 待定
@@ -254,9 +256,11 @@ class ElementSelector:
     homework_list_homework_name = \
         '//div[@class="homework-container-gird"]/ul/li[1]/div/div/div/div[1]/div[1]/div', '作业列表作业名称'  # 待定
     homework_list_wrong_statistic_loc = '', '错题统计'  # 待定
+    homework_list_student_list_username_loc = '', '学生列表学生学号'  # 待定
     homework_list_student_list_name_loc = '', '学生列表学生名字'  # 待定
     homework_list_student_list_completion_loc = '', '学生列表学生完成率'  # 待定
     homework_list_student_list_correct_loc = '', '学生列表正确率'  # 待定
+    homework_list_student_list_score_loc = '', '学生得分'  # 待定
     homework_list_student_list_level_loc = '', '学生列表作业等级'  # 待定
     homework_list_student_list_look_loc = '', '学生列表查看按钮'  # 待定
     homework_list_student_list_resubmit_loc = '', '学生列表重交按钮'  # 待定
@@ -283,6 +287,7 @@ class ElementSelector:
     homework_list_student_detail_student_name_loc = '', '学生姓名'  # 待定
     homework_list_student_detail_completion_loc = '', '完成率'  # 待定
     homework_list_student_detail_correct_loc = '', '正确率'  # 待定
+    homework_list_student_detail_score_loc = '', '得分'  # 待定
     homework_list_student_detail_level_loc = '', '等级'  # 待定
 
     """发布作业"""

@@ -27,54 +27,34 @@ class TestMainProcess(BaseTestCase):
 
     def test_MainProcess_01(self):
         self.step_log_path = get_log_path(self.file_name, self.name)
-        # self.teacher_login.user_login(self.username_manager, self.manager_name, self.password, teacher_assert=True)
+        # self.teacher_login.user_login(self.username_manager, self.manager_name, self.password)
         # self.teacher_click.click_button(*ElementSelector.teach_management_btn_loc)
         # self.teacher_manage.add_account_class(self.username_teacher, self.teacher_name,
         #                                       self.username_student, self.student_name,
         #                                       self.admin_class_name, self.pro_class_name,
         #                                       enable_assert=True)
         # self.teacher_login.user_logout()
-        self.login(**self.teacher_data, teacher_assert=True)
-        self.click_button(*ElementSelector.standard_course_btn_loc)
+        self.login(**self.teacher_data)
+        self.click_button(*ElementSelector.bar_course_loc)
         course_name = self.add_course_simple(self.teaching_package_list[0])
-        self.click_button(*ElementSelector.homework_btn_loc)
-        self.click_button(*ElementSelector.add_homework_btn_loc, loading=True)
-        self.add_homework_simple(self.homework_name, self.answer_list[0])
+        self.teacher_check_index_course(course_name)
+        self.click_button(*ElementSelector.bar_homework_loc)
+        self.click_button(*ElementSelector.homework_list_add_homework_btn_loc, loading=True)
+        self.add_homework_simple(self.homework_name, self.answer_list[0], '显示难度')
+        self.teacher_check_index_homework(self.homework_name)
 
         self.get_new_driver()
-        self.login(**self.student_data, student_assert=True)
+        self.login(**self.student_data)
+        self.student_check_index_homework(self.homework_name)
         self.student_check_index_course(course_name)
-        self.click_button(*ElementSelector.first_course_loc)
-        self.student_check_course_simple(course_name)
-        self.click_button(*ElementSelector.crumbs_loc)
-        self.click_button(*ElementSelector.homework_btn_loc, loading=True)
-        self.student_do_homework_simple(self.homework_name)
-
-    def test_MainProcess_02(self):
-        self.step_log_path = get_log_path(self.file_name, self.name)
-        self.login(**self.teacher_data, teacher_assert=True)
-        self.click_button(*ElementSelector.checkpoint_course_loc)
-        self.click_button(*ElementSelector.start_discover_btn_loc)
-        self.click_china_map()
-        self.click_map_path()
-        self.click_and_jump(1, *ElementSelector.watch_course_btn_loc, loading=True)
-        self.click_button(*ElementSelector.kj_add_checkpoint_course_loc)
-        checkpoint_course_name = self.subject_add_course_simple(self.teaching_package_list[0],
-                                                                discover=True)
-        self.click_and_jump(1, *ElementSelector.watch_homework_btn_loc)
-        self.click_button(*ElementSelector.add_checkpoint_homework_loc, loading=True)
-        self.subject_add_homework_simple(self.homework_name, self.subject_answer_list[0])
-        self.get_new_driver()
-        self.login(**self.student_data, student_assert=True)
-        self.click_button(*ElementSelector.checkpoint_course_loc)
-        self.click_button(*ElementSelector.start_discover_btn_loc)
-        self.click_china_map()
-        self.click_map_path()
-        self.click_and_jump(1, *ElementSelector.watch_course_btn_loc, loading=True)
-        self.subject_student_check_course_simple(checkpoint_course_name,
-                                                 discover=True)
-        self.click_and_jump(1, *ElementSelector.watch_homework_btn_loc)
-        self.subject_student_do_homework_simple(self.homework_name)
+        self.click_button(*ElementSelector.course_list_card_mode_first_course_loc)
+        self.check_course_simple(course_name)
+        self.click_button(*ElementSelector.bar_homework_loc, loading=True)
+        completion, correct = self.student_do_homework_simple(self.homework_name)
+        # 教师检查作业详情
+        self.switch_to_default_driver()
+        self.teacher_check_homework_simple(self.homework_name, self.student_data['username'],
+                                           self.student_data['name'], completion, correct)
 
 
 if __name__ == "__main__":

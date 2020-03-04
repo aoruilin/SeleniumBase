@@ -17,10 +17,16 @@ class TestWishBox(BaseTestCase):
         self.wish_box()
 
     def test_demo(self):
+        # self._default_driver = 'chrome'
         self.open('http://192.168.0.160:8096')
         input_elems = self.elements_list('//input[@class="el-input__inner"]')
         for input_elem in input_elems:
             input_elem.click()
+
+        self.get_new_driver()
+        self.open('https://www.baidu.com')
+        self.switch_to_default_driver()
+
 
 
 if __name__ == "__main__":
