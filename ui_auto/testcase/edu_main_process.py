@@ -1,6 +1,6 @@
 """
 Created on 2019年3月22日
-Last Update on 2019年5月8日
+Last Update on 2020年3月5日
 
 @author: 敖瑞麟
 """
@@ -25,7 +25,20 @@ class TestMainProcess(BaseTestCase):
     admin_class_name = d.admin_class_name_for_edu()
     pro_class_name = d.pro_class_name_for_edu()
 
-    def test_MainProcess_01(self):
+    def test_01_main_process_course(self):
+        self.step_log_path = get_log_path(self.file_name, self.name)
+        self.login(**self.teacher_data)
+        self.click_button(*ElementSelector.bar_course_loc)
+        course_name = self.add_course_simple(self.teaching_package_list[0])
+        self.teacher_check_index_course(course_name)
+
+        self.get_new_driver()
+        self.login(**self.student_data)
+        self.student_check_index_course(course_name)
+        self.click_button(*ElementSelector.course_list_card_mode_first_course_loc)
+        self.check_course_simple(course_name)
+
+    def test_02_main_process_homework(self):
         self.step_log_path = get_log_path(self.file_name, self.name)
         # self.teacher_login.user_login(self.username_manager, self.manager_name, self.password)
         # self.teacher_click.click_button(*ElementSelector.teach_management_btn_loc)
@@ -35,9 +48,6 @@ class TestMainProcess(BaseTestCase):
         #                                       enable_assert=True)
         # self.teacher_login.user_logout()
         self.login(**self.teacher_data)
-        self.click_button(*ElementSelector.bar_course_loc)
-        course_name = self.add_course_simple(self.teaching_package_list[0])
-        self.teacher_check_index_course(course_name)
         self.click_button(*ElementSelector.bar_homework_loc)
         self.click_button(*ElementSelector.homework_list_add_homework_btn_loc, loading=True)
         self.add_homework_simple(self.homework_name, self.answer_list[0], '显示难度')
@@ -46,9 +56,6 @@ class TestMainProcess(BaseTestCase):
         self.get_new_driver()
         self.login(**self.student_data)
         self.student_check_index_homework(self.homework_name)
-        self.student_check_index_course(course_name)
-        self.click_button(*ElementSelector.course_list_card_mode_first_course_loc)
-        self.check_course_simple(course_name)
         self.click_button(*ElementSelector.bar_homework_loc, loading=True)
         completion, correct = self.student_do_homework_simple(self.homework_name)
         # 教师检查作业详情

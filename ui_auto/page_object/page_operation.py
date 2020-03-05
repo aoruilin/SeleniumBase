@@ -83,23 +83,23 @@ class BaseTestCase(BaseCase):
                 log(self.step_log_path, f'等待遮罩层隐藏')
                 if wait:
                     log(self.step_log_path,
-                        f'慢速点击{msg}并切换第{handle_num}个窗口')
+                        f'慢速点击{msg}并切换第{handle_num + 1}个窗口')
                     self.slow_click(btn_loc)
                     self.switch_window(handle_num)
                 else:
                     log(self.step_log_path,
-                        f'点击{msg}并切换第{handle_num}个窗口')
+                        f'点击{msg}并切换第{handle_num + 1}个窗口')
                     self.click(btn_loc)
                     self.switch_window(handle_num)
         else:
             if wait:
                 log(self.step_log_path,
-                    f'慢速点击{msg}并切换第{handle_num}个窗口')
+                    f'慢速点击{msg}并切换第{handle_num + 1}个窗口')
                 self.slow_click(btn_loc)
                 self.switch_window(handle_num)
             else:
                 log(self.step_log_path,
-                    f'点击{msg}并切换第{handle_num}个窗口')
+                    f'点击{msg}并切换第{handle_num + 1}个窗口')
                 self.click(btn_loc)
                 self.switch_window(handle_num)
 
@@ -265,9 +265,10 @@ class BaseTestCase(BaseCase):
         self.driver.close()
         self.switch_window(0)
         self.click_button(*ElementSelector.add_course_course_plan_switch_loc)
-        self.day_of_week = self.__choose_course_plan()
+        day_of_week = self.__choose_course_plan()
         # 计划授课选择日期
-        self.click_button(*ElementSelector.add_course_course_plan_choose_date_loc)  # 后面会在此处改成具体定位器，将day_of_week带入
+        self.click_button(f'//div[@class="ant-row"]/div[{day_of_week + 1}]/label/span[1]/input',
+                          f'每周{day_of_week + 1}')
         self.click_button(*ElementSelector.add_course_choose_class_loc, loading=True)
         self.click_button(*ElementSelector.add_course_choose_first_class_loc)
         self.click_button(*ElementSelector.add_course_publish_course_loc)
@@ -672,7 +673,7 @@ class BaseTestCase(BaseCase):
         # else:
         #     self.__do_challenge_operation()
 
-        self.switch_to_default_window()
+        self.switch_window(0)
         self.refresh()
         self.wait_text('100', *ElementSelector.homework_list_student_detail_score_loc)  # 检查得分
         self.wait_text('A', *ElementSelector.homework_list_student_detail_level_loc)
@@ -703,7 +704,7 @@ class BaseTestCase(BaseCase):
             finally:
                 self.click_button(homework_name_sel, msg=f'第{a}个作业')
             self.click_button(*ElementSelector.homework_list_student_detail_go_answer_loc)
-            self.switch_window(a)
+            self.switch_window(1)
 
             # problem_list = self.driver.find_elements(*ElementSelector.problem_list_loc, tag=False)
             eval_id_list = self.parameter.get_eval_id(traditional_teach=True)
@@ -726,6 +727,9 @@ class BaseTestCase(BaseCase):
             self.wait_text('评测有误', *ElementSelector.homework_detail_unpass_result_text_loc)
             self.click_button(*ElementSelector.homework_detail_push_homework_btn_loc)
             self.click_button(*ElementSelector.homework_detail_push_homework_confirm_btn_loc)
+            self.driver.close()
+            self.switch_window(0)
+            self.refresh()
 
             do_num = s + choice_p_num  # 做对题目总数
             all_num = choice_p_num + opera_p_num  # 所有题目总数
@@ -737,6 +741,8 @@ class BaseTestCase(BaseCase):
                     f'{do_num + 1}/{all_num}',
                     ElementSelector.homework_list_student_detail_completion_loc)  # 作业列表的完成率检查
                 correct_rate = int((do_num / all_num) * 100)
+                # 作业列表得分检查
+                self.__assert_equal(correct_rate, ElementSelector.homework_list_student_detail_score_loc)
                 if 100 >= correct_rate >= 85:
                     exp_homework_quality = 'A'
                 elif 85 > correct_rate >= 70:
@@ -1633,10 +1639,10 @@ class BaseTestCase(BaseCase):
     def __choose_course_plan():
         now_time_str = time.strftime('%Y%m%d')
         week_day_index = weekday(int(now_time_str[:4]), int(now_time_str[4:6]), int(now_time_str[6:8]))
-        lis = ['每周一', '每周二', '每周三', '每周四', '每周五', '每周六', '每周日', ]
-        dic = dict(enumerate(lis))
-        day = dic[week_day_index]
-        return day
+        # lis = ['每周一', '每周二', '每周三', '每周四', '每周五', '每周六', '每周日', ]
+        # dic = dict(enumerate(lis))
+        # day = dic[week_day_index]
+        return week_day_index
 
     def __wait_for_loading(self):
         """

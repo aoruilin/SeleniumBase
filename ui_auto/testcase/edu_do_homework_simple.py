@@ -17,16 +17,8 @@ class DoHomeworkSimple(BaseTestCase):
     
     def test_01(self):
         self.step_log_path = get_log_path(self.file_name, self.name)
-        self.login(**self.student_data, student_assert=True)
-        self.click_button(*ElementSelector.standard_course_btn_loc)
-        self.click_button(*ElementSelector.homework_btn_loc)
-        self.student_do_homework_simple(homework_name=None)
-
-    def test_02(self):
-        self.step_log_path = get_log_path(self.file_name, self.name)
-        self.login(**self.student_data, student_assert=True)
-        self.click_button(*ElementSelector.checkpoint_course_loc)
-        self.click_button(*ElementSelector.index_homework_btn_loc)
+        self.login(**self.student_data)
+        self.click_button(*ElementSelector.bar_homework_loc, loading=True)
         self.student_do_homework_simple(homework_name=None)
 
 

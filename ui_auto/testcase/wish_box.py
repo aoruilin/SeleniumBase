@@ -13,20 +13,21 @@ class TestWishBox(BaseTestCase):
 
     def test_wish_box(self):
         self.step_log_path = get_log_path(self.file_name, self.name)
-        self.login(**self.student_data, student_assert=True)
+        self.login(**self.student_data)
         self.wish_box()
 
     def test_demo(self):
-        # self._default_driver = 'chrome'
-        self.open('http://192.168.0.160:8096')
-        input_elems = self.elements_list('//input[@class="el-input__inner"]')
-        for input_elem in input_elems:
-            input_elem.click()
-
-        self.get_new_driver()
-        self.open('https://www.baidu.com')
-        self.switch_to_default_driver()
-
+        import time
+        from ..page_object.element_loc import ElementSelector
+        self.step_log_path = get_log_path(self.file_name, self.name)
+        self.login(**self.student_data)
+        self.click_and_jump(1, *ElementSelector.test_field_btn_loc)
+        time.sleep(1)
+        self.driver.close()
+        self.switch_window(0)
+        time.sleep(1)
+        self.click_and_jump(1, *ElementSelector.test_field_btn_loc)
+        time.sleep(1)
 
 
 if __name__ == "__main__":

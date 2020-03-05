@@ -34,18 +34,6 @@ class HomeworkLoop(BaseTestCase):
         # self.date_selection('作业', Data().homework_name, student=True)
         self.search_input(Data().homework_name)
 
-    def test_homework_loop_02(self):
-        self.step_log_path = get_log_path(self.file_name, self.name)
-        self.login(**self.teacher_data)
-        self.click_button(*ElementSelector.checkpoint_course_loc)
-        self.click_button(*ElementSelector.index_homework_btn_loc, loading=True)
-        self.subject_add_homework_loop()
-        self.get_new_driver()
-        self.login(**self.student_data)
-        self.click_button(*ElementSelector.checkpoint_course_loc)
-        self.click_button(*ElementSelector.index_homework_btn_loc, loading=True, wait=True)
-        self.subject_student_do_homework_loop()
-
 
 if __name__ == "__main__":
     unittest.main()
