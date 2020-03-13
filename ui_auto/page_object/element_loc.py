@@ -14,10 +14,10 @@ class ElementSelector:
     all_loc = '//body', '页面所有元素'
 
     """登录页面"""
-    username_input_loc = '//input[@name="username"]', '用户名输入框'  # 待定
-    password_input_loc = '//input[@name="password"]', '密码输入框'  # 待定
-    save_login_loc = '//span[@class="el-checkbox__inner"]', '记住密码'  # 待定
-    login_btn_loc = '//span[text()="登录"]', '登录按钮'  # 待定
+    username_input_loc = '//input[@id="normal_login_username"]', '用户名输入框'
+    password_input_loc = '//input[@id="normal_login_password"]', '密码输入框'
+    save_login_loc = '//input[@class="ant-radio-input"]', '记住账号'
+    login_btn_loc = '//span[contains(text(),"登 录")]', '登录按钮'
     uni_teach_login_btn_loc = '//span[contains(text(),"登录")]/parent::button', '教学版登录按钮'
 
     class_manage_text_loc = '//div[@class="model-tips-word"]', '班级管理文本'
@@ -161,20 +161,20 @@ class ElementSelector:
     level_three_loc = '//div[@class="el-cascader-panel"]/div[3]/div[1]/ul/li', '三级菜单所有知识点'
 
     """课件列表"""
-    course_list_add_course_loc = '//span[text()="发布课件"]', '发布课程'  # 待定
-    course_list_choose_class_loc = '//div[@class="course_nav-header__12wqR"]/div[1]/div[1]/div', '班级筛选'
-    course_list_choose_course_loc = '//div[@class="course_nav-header__12wqR"]/div[1]/div[2]/div', '课程筛选'
+    course_list_add_course_loc = '//span[text()="发布课程"]', '发布课程'
+    course_list_choose_class_loc = '//div[@class="course_nav-header__KaIKl"]/div[1]/div[1]/div', '班级筛选'
+    course_list_choose_course_loc = '//div[@class="course_nav-header__KaIKl"]/div[1]/div[2]/div', '课程筛选'
     course_list_search_all_loc = '//span[contains(text(),"全部")]', '全部'
     course_list_search_ongoing_loc = '//span[contains(text(),"全部")]/parent::label/following-sibling::label[1]', '进行中'
     course_list_search_ended_loc = '//span[contains(text(),"全部")]/parent::label/following-sibling::label[2]', '已结束'
-    course_list_card_mode_loc = '//div[@class="course_nav-header__12wqR"]/div[2]/div[1]/div/label[1]', '卡片形式'
-    course_list_list_mode_loc = '//div[@class="course_nav-header__12wqR"]/div[2]/div[1]/div/label[2]', '列表形式'
-    course_list_card_mode_first_course_loc = '//div[@class="course_card-main__2Nx6v"]/div[1]/div[2]/span[1]', '课程卡片第一个'
-    course_list_list_mode_first_course_loc = '//div[@class="ant-table-content"]/descendant::span[2]', '课程列表第一个'
+    course_list_card_mode_loc = '//div[@class="course_nav-header__KaIKl"]/div[2]/div[1]/div/label[1]', '卡片形式'
+    course_list_list_mode_loc = '//div[@class="course_nav-header__KaIKl"]/div[2]/div[1]/div/label[2]', '列表形式'
+    course_list_card_mode_first_course_loc = '//div[@class="course_card-main__OJhEN"]/div[1]/div[1]/div[1]', '课程卡片第一个'
+    course_list_list_mode_first_course_loc = '//div[@class="ant-table-content"]/descendant::span[2]', '课程列表第一个'  # 待定
     course_list_card_mode_teacher_name_loc = '', '课程卡片发布教师'  # 待定
-    course_list_card_mode_all_course_loc = '//div[@class="course_card-main__2Nx6v"]/div', '所有课程卡片'
-    course_list_list_mode_all_course_loc = '//div[@class="ant-table-content"]', '列表所有课程'
-    course_list_operation_loc = '//div[@class="course_card-main__2Nx6v"]/div[1]/div[3]/span[2]', '课程列表操作'
+    course_list_card_mode_all_course_loc = '//div[@class="course_card-main__OJhEN"]/div', '所有课程卡片'
+    course_list_list_mode_all_course_loc = '//div[@class="ant-table-content"]', '列表所有课程'  # 待定
+    course_list_operation_loc = '//div[@class="course_card-main__OJhEN"]/div[1]/div[4]/span[2]', '课程列表操作'
     course_list_operation_end_course_loc = '//div[@class="ant-dropdown ant-dropdown-placement-bottomCenter "]' \
                                            '/ul/li[1]', '课程列表操作结束课程'
     course_list_operation_edit_course_loc = '//div[@class="ant-dropdown ant-dropdown-placement-bottomCenter "]' \
@@ -183,20 +183,18 @@ class ElementSelector:
                                               '/ul/li[4]', '课程列表操作删除'
 
     """添加课程"""
-    add_course_choose_course_loc = '//input[@class="ant-input ant-input-sm ant-cascader-input ant-input-lg"]', '选择课程'
+    add_course_choose_course_loc = '//form[@class="ant-form ant-form-horizontal ant-form-small ' \
+                                   'courseCompile_form-items__3KJIT"]/div[1]/div[2]', '选择课程'
     add_course_choose_class_loc = '//div[@class="ant-select courseCompile_class-select__1CdH2 ant-select-lg ' \
                                   'ant-select-multiple ant-select-show-search"]', '发布班级'
-    add_course_choose_first_course_loc = '', '选择下拉框第一个课程'  # 待定
-    add_course_choose_first_class_loc = '//div[@class="ant-select-dropdown ant-select-dropdown-placement-topLeft"]' \
-                                        '/div/div[2]/div/div/div[1]/div', '选择下拉框第一个班级'
-    add_course_delete_first_class_loc = '//div[@class="ant-select courseCompile_class-select__1CdH2 ant-select-lg ' \
-                                        'ant-select-multiple ant-select-show-search"]/div/span[1]/span/span',\
-                                        '删除列表第一个班级'
+    add_course_choose_first_course_loc = '//div[contains(text(),"S1")]', '选择下拉框第一个课程'  # 待定，后期加到操作代码
+    add_course_choose_first_class_loc = '//div[contains(text(),"课程班153")]', '选择下拉框第一个班级'  # 待定，后期加到操作代码
+    add_course_delete_first_class_loc = '//span[@class="anticon anticon-close"]', '删除列表第一个班级'
     add_course_preview_course_loc = '//span[contains(text(),"预览")]', '预览课程'
     add_course_course_plan_switch_loc = '//button[@class="ant-switch"]', '计划授课开关'
     add_course_course_plan_choose_date_loc = '//div[@class="ant-row"]/div[1]/label/span[1]/input', '计划授课日期选择'
-    add_course_publish_course_loc = '//span[contains(text(),"发布")]', '发布课程按钮'  # 待定
-    add_course_cancel_course_loc = '//span[contains(text(),"取消")]', '发布课程取消按钮'  # 待定
+    add_course_publish_course_loc = '//span[contains(text(),"发 布")]', '发布课程按钮'
+    add_course_cancel_course_loc = '//span[contains(text(),"取 消")]', '发布课程取消按钮'
     add_course_publish_course_success_tip_loc = '', '发布课程成功文本'  # 待定
     add_course_publish_course_window_confirm_loc = '', '发布课程弹窗确定'  # 待定
     add_course_publish_course_fail_tip_loc = '', '发布课程失败文本'  # 待定

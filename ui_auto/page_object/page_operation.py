@@ -8,9 +8,9 @@ from selenium.webdriver.common.keys import Keys
 
 from seleniumbase import BaseCase
 
+from interface.K12edu.common.parameter_for_others import ParameterForOthers
 from ui_auto.base.data import Data, PointIdIndex
 from ui_auto.base.logs import log
-from ui_auto.common.get_answer import ParameterForOthers
 from ui_auto.common.mysql import get_code, get_choice
 from ui_auto.common.upload_file import upload_file_by_auto_it
 from ui_auto.common.picture_list_code import turtle_code, \
@@ -208,7 +208,7 @@ class BaseTestCase(BaseCase):
         self.send_text(*ElementSelector.password_input_loc, text=Keys.ENTER)
         self.click_button(*ElementSelector.login_btn_loc)
 
-        self.__assert_equal('用户账号在5至18位之间', ElementSelector.wrong_username_tip_loc)
+        self.__assert_equal('用户账号在6至19位之间', ElementSelector.wrong_username_tip_loc)
         self.__assert_equal('请输入6-16位的密码', ElementSelector.wrong_password_tip_loc)
 
     def user_logout(self):

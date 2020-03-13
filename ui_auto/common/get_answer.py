@@ -3,6 +3,7 @@ from itertools import chain
 
 import requests
 
+# from interface.K12edu.common.parameter_for_others import ParameterForOthers
 from ui_auto.base.data import Data
 from ui_auto.base.data import PointIdIndex
 from ui_auto.common.mysql import get_code

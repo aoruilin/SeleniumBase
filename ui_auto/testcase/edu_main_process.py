@@ -7,7 +7,8 @@ Last Update on 2020年3月5日
 import unittest
 
 from ui_auto.base.data import Data
-from ui_auto.base.logs import get_log_path
+from ui_auto.base.logs import get_log_path, log_path
+from ui_auto.base.log_decorator import log_decorator
 from ui_auto.page_object.element_loc import ElementSelector
 from ui_auto.page_object.page_operation import BaseTestCase
 
@@ -15,7 +16,7 @@ from ui_auto.page_object.page_operation import BaseTestCase
 class TestMainProcess(BaseTestCase):
     file_name = __file__
     name = __name__
-    # step_log_path = get_log_path(file_name, name)
+    case_log_path = log_path(file_name, name)
     d = Data()
     manager_data = d.manager_data()
     teacher_data = d.teacher_data()
@@ -25,8 +26,9 @@ class TestMainProcess(BaseTestCase):
     admin_class_name = d.admin_class_name_for_edu()
     pro_class_name = d.pro_class_name_for_edu()
 
+    @log_decorator(case_log_path)
     def test_01_main_process_course(self):
-        self.step_log_path = get_log_path(self.file_name, self.name)
+        self.step_log_path = self.case_log_path
         self.login(**self.teacher_data)
         self.click_button(*ElementSelector.bar_course_loc)
         course_name = self.add_course_simple(self.teaching_package_list[0])
@@ -38,8 +40,9 @@ class TestMainProcess(BaseTestCase):
         self.click_button(*ElementSelector.course_list_card_mode_first_course_loc)
         self.check_course_simple(course_name)
 
+    @log_decorator(case_log_path)
     def test_02_main_process_homework(self):
-        self.step_log_path = get_log_path(self.file_name, self.name)
+        self.step_log_path = self.case_log_path
         # self.teacher_login.user_login(self.username_manager, self.manager_name, self.password)
         # self.teacher_click.click_button(*ElementSelector.teach_management_btn_loc)
         # self.teacher_manage.add_account_class(self.username_teacher, self.teacher_name,
