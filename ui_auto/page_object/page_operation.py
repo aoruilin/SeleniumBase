@@ -185,7 +185,7 @@ class BaseTestCase(BaseCase):
         self.send_text(*ElementSelector.password_input_loc, text=Keys.ENTER)
         self.click_button(*ElementSelector.login_btn_loc)
 
-        self.__assert_equal('用户账号在5至18位之间', ElementSelector.wrong_username_tip_loc)
+        self.__assert_equal('用户账号在6至19位之间', ElementSelector.wrong_username_tip_loc)
         self.__assert_equal('请输入6-16位的密码', ElementSelector.wrong_password_tip_loc)
 
     def user_logout(self):
