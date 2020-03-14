@@ -51,7 +51,7 @@ class CourseController(unittest.TestCase):
         老师切换知识点标识
         :return:
         """
-        for f in [1, 0]:
+        for f in [1, 0]:  # 0-关闭 1-开启
             url = f'{self.ip}/course/teacher/' \
                   f'{self.course_id_list[0]}/{self.class_id_list[-1]}/{self.point_id_tup[1]}/switch/{f}'
             res = requests.get(url=url, headers=self.teacher_headers)

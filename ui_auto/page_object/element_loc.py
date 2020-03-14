@@ -1,4 +1,4 @@
-from selenium.webdriver.common.by import By
+from ui_auto.base.data import Data, PointIdIndex
 
 
 class ElementSelector:
@@ -113,13 +113,13 @@ class ElementSelector:
 
     """上课引导"""
     index_hidden_course_guide_loc = '//span[contains(text(),"上课引导")]/parent::div/span[2]/span', '上课引导隐藏'
-    index_course_guide_add_class_loc = '//span[contains(text(),"上课引导")]/parent::div/parent::div/descendant::a[1]',\
+    index_course_guide_add_class_loc = '//span[contains(text(),"上课引导")]/parent::div/parent::div/descendant::a[1]', \
                                        '上课引导创建班级'
-    index_course_guide_add_course_loc = '//span[contains(text(),"上课引导")]/parent::div/parent::div/descendant::a[2]',\
+    index_course_guide_add_course_loc = '//span[contains(text(),"上课引导")]/parent::div/parent::div/descendant::a[2]', \
                                         '上课引导发布课程'
-    index_course_guide_add_homework_loc = '//span[contains(text(),"上课引导")]/parent::div/parent::div/descendant::a[3]',\
+    index_course_guide_add_homework_loc = '//span[contains(text(),"上课引导")]/parent::div/parent::div/descendant::a[3]', \
                                           '上课引导发布作业'
-    index_course_guide_start_course_loc = '//span[contains(text(),"上课引导")]/parent::div/parent::div/descendant::a[4]',\
+    index_course_guide_start_course_loc = '//span[contains(text(),"上课引导")]/parent::div/parent::div/descendant::a[4]', \
                                           '上课引导开始上课'
 
     """首页AI体验"""
@@ -187,14 +187,16 @@ class ElementSelector:
                                    'courseCompile_form-items__3KJIT"]/div[1]/div[2]', '选择课程'
     add_course_choose_class_loc = '//div[@class="ant-select courseCompile_class-select__1CdH2 ant-select-lg ' \
                                   'ant-select-multiple ant-select-show-search"]', '发布班级'
-    add_course_choose_first_course_loc = '//div[contains(text(),"S1")]', '选择下拉框第一个课程'  # 待定，后期加到操作代码
-    add_course_choose_first_class_loc = '//div[contains(text(),"课程班153")]', '选择下拉框第一个班级'  # 待定，后期加到操作代码
-    add_course_delete_first_class_loc = '//span[@class="anticon anticon-close"]', '删除列表第一个班级'
+    add_course_choose_first_course_loc = f'//div[text()="S{PointIdIndex().level_one_index - 1}"]', \
+                                         f'S{PointIdIndex().level_one_index - 1}'  # 待定，后期加到操作代码
+    add_course_choose_first_class_loc = f'//div[text()="{Data().pro_class_name_for_edu()}"]', \
+                                        Data().pro_class_name_for_edu(), '选择下拉框第一个班级'  # 待定，后期加到操作代码
+    add_course_delete_first_class_loc = '//span[@class="ant-select-selection-item-remove"]/span', '删除列表第一个班级'  # 发布作业共用
     add_course_preview_course_loc = '//span[contains(text(),"预览")]', '预览课程'
     add_course_course_plan_switch_loc = '//button[@class="ant-switch"]', '计划授课开关'
     add_course_course_plan_choose_date_loc = '//div[@class="ant-row"]/div[1]/label/span[1]/input', '计划授课日期选择'
-    add_course_publish_course_loc = '//span[contains(text(),"发 布")]', '发布课程按钮'
-    add_course_cancel_course_loc = '//span[contains(text(),"取 消")]', '发布课程取消按钮'
+    add_course_publish_course_loc = '//span[text()="发 布"]/parent::button', '发布按钮'  # 发布作业共用
+    add_course_cancel_course_loc = '//span[contains(text(),"取 消")]', '发布取消按钮'  # 发布作业共用
     add_course_publish_course_success_tip_loc = '', '发布课程成功文本'  # 待定
     add_course_publish_course_window_confirm_loc = '', '发布课程弹窗确定'  # 待定
     add_course_publish_course_fail_tip_loc = '', '发布课程失败文本'  # 待定
@@ -220,8 +222,6 @@ class ElementSelector:
     wrapper_elem = '//div[@class="el-scrollbar__wrap"]'
 
     """编辑课程"""
-    course_edit_course_plan_switch_loc = '', '编辑课程计划授课开关'  # 待定
-    course_edit_course_plan_choose_date_loc = '', '编辑课程计划授课选择日期'  # 待定
     course_edit_confirm_loc = '', '编辑课程确定'  # 待定
     course_edit_cancel_loc = '', '编辑课程取消'  # 待定
 
@@ -248,7 +248,7 @@ class ElementSelector:
     course_detail_start_study_course_loc = '', '开始学习'  # 待定
     course_detail_full_screen_return_course_loc = '//span[contains(text(),"返回")]', '全屏模式返回课程'
 
-    course_detail_start_course_edit_btn_loc = '//span[contains(text(),"返回")]/parent::button/following::button',\
+    course_detail_start_course_edit_btn_loc = '//span[contains(text(),"返回")]/parent::button/following::button', \
                                               '精简试炼场弹出开关'
     course_detail_start_course_edit_cross_btn_loc = '', '精简试炼场横向模式'  # 待定
     course_detail_start_course_putback_btn_loc = '//span[contains(text(),"收起")]', '精简试炼场收起开关'  # 待定
@@ -262,7 +262,7 @@ class ElementSelector:
     course_detail_start_course_iframe_loc = '//div[@class="courseware-content-ware"]/iframe', '第一层iframe'  # 待定
 
     """作业列表"""
-    homework_list_add_homework_btn_loc = '//div[@class="homework-bg-gird"]/div[1]/div[3]/button', '发布作业按钮'  # 待定
+    homework_list_add_homework_btn_loc = '//span[contains(text(),"发布作业")]', '发布作业按钮'
     homework_list_homework_name = \
         '//div[@class="homework-container-gird"]/ul/li[1]/div/div/div/div[1]/div[1]/div', '作业列表作业名称'  # 待定
     homework_list_wrong_statistic_loc = '//span[contains(text(),"错题统计")]', '错题统计'
@@ -301,32 +301,37 @@ class ElementSelector:
     homework_list_student_detail_level_loc = '', '等级'  # 待定
 
     """发布作业"""
-    add_homework_homework_name_input_loc = '//div[@class="container-box-item-0"]/div/input', '作业名称输入框'  # 待定
-    add_homework_choice_point_id_loc = '//div[@class="container-box-item-1"]/button', '选取知识点按钮'  # 待定
-    add_homework_choice_point_id_sel_know_loc = '//div[@class="dialog-inner-input clearfix"]/div[2]/div/div/span/span', \
-                                                '选择知识点'  # 待定
-    add_homework_choice_problem_loc = '//span[contains(text(),"选择")]', '选择题'  # 待定
-    add_homework_operation_problem_loc = '//span[contains(text(),"操作")]', '操作题'  # 待定
-    add_homework_choice_all_problem_loc = '//div[@class="check-box"]/label/span[1]/span', '全选按钮'  # 待定
-    add_homework_choice_first_problem_loc = '//div[@class="el-row"]/div[1]/label/span[1]/span', '选题列表第一道题'  # 待定
+    add_homework_homework_name_input_loc = '//form[@id="workForm"]/div[1]/div[2]/div/div/input', '作业名称输入框'
+    add_homework_choice_series_loc = '//form[@id="workForm"]/div[2]/div[2]', '选择系列下拉框'
+    add_homework_choice_point_id_loc = '//span[contains(text(),"选取知识点")]/parent::button', '选取知识点按钮'
+    add_homework_choice_point_id_sel_know_loc = '//input' \
+                                                '[@class="ant-input ant-input-lg ant-cascader-input ant-input-lg"]', \
+                                                '选择知识点'
+    add_homework_choice_problem_loc = '//span[contains(text(),"单选")]', '单选题'
+    add_homework_operation_problem_loc = '//span[contains(text(),"操作")]', '操作题'
+    add_homework_all_choice_problem_loc = '//span[contains(text(),"操作")]/ancestor::form/label[1]/span[1]', '选择题全选'
+    add_homework_all_operation_problem_loc = '//span[contains(text(),"操作")]/ancestor::form/label[2]/span[1]', '操作题全选'
+    add_homework_first_choice_problem_loc = '//span[contains(text(),"操作")]' \
+                                            '/ancestor::form/div[3]/descendant::label[1]/span[1]', '选题题第一道'
+    add_homework_first_operation_problem_loc = '//span[contains(text(),"操作")]' \
+                                               '/ancestor::form/div[5]/descendant::label[1]/span[1]', '操作题第一道'
 
-    add_homework_confirm_problem_loc = '//div[@class="el-dialog__footer"]/span/button', '确定按钮'  # 待定
-    add_homework_show_answer_loc = '//div[contains(text(),"参考答案")]/parent::div/div[2]/div/input', '显示参考答案下拉框'  # 待定
-    add_homework_show_diff_loc = '', '显示难度'  # 待定
-    add_homework_not_show_diff_loc = '', '不显示难度'  # 待定
-    add_homework_end_time_input_loc = '//div[contains(text(),"截止时间")]/parent::div/div[2]/input', '截止时间输入'  # 待定
-    add_homework_public_answer_loc = '//span[text()="立即公布"]/parent::li', '公布答案'  # 待定
-    add_homework_timing_btn_loc = '//div[contains(text(),"定时发布")]/parent::div/div[2]/span', '定时发布按钮'  # 待定
-    add_homework_timing_input_loc = '//div[contains(text(),"定时发布")]/parent::div/parent::div/div[4]/div[2]/input', \
-                                    '定时时间输入'  # 待定
-    add_homework_choose_homework_class_loc = '', '发布班级'  # 待定(如果和发布课程相同则去掉)
-    add_homework_choose_first_class_loc = '', '发布班级选择第一个班级'  # 待定(如果和发布课程相同则去掉)
-    add_homework_delete_first_class_loc = '', '发布班级删除第一个班级'  # 待定(如果和发布课程相同则去掉)
-    add_homework_public_homework_btn_loc = '//span[text()="发布"]/parent::button', '立即发布'  # 待定
-    add_homework_cancel_homework_loc = '', '发布作业取消按钮'  # 待定(如果和发布课程相同则去掉)
-    add_homework_success_tip_loc = '', '发布作业成功提示'  # 待定(如果和发布课程相同则去掉)
+    add_homework_confirm_problem_loc = '//span[contains(text(),"确 定")]', '确定按钮'
+    add_homework_show_answer_loc = '//form[@id="workForm"]/div[7]/div[2]', '显示参考答案下拉框'
+    add_homework_show_diff_loc = '//span[text()="显示"]', '显示难度'
+    add_homework_not_show_diff_loc = '//span[contains(text(),"不显示")]', '不显示难度'
+    add_homework_time_input_loc = '//form[@id="workForm"]/div[10]/descendant::input', '时间输入'  # 打开定时后输入框下标还是10
+    add_homework_public_answer_loc = '//div[text()="立即公布"]', '立即公布答案'
+    add_homework_timing_btn_loc = '//form[@id="workForm"]/div[9]/descendant::button', '定时发布按钮'
+    add_homework_choose_homework_class_loc = '//form[@id="workForm"]/div[6]/div[2]', '发布班级'
+    add_homework_choice_first_series_loc = f'//div[text()="S{PointIdIndex().level_one_index - 1}"]', \
+                                           f'S{PointIdIndex().level_one_index - 1}'
+    add_homework_choose_first_class_loc = f'//div[text()="{Data().pro_class_name_for_edu()}"]', \
+                                          Data().pro_class_name_for_edu()  # 待定(如果和发布课程相同则去掉)
+    add_homework_success_tip_loc = '//span[@class="ant-modal-confirm-title"]', '发布作业成功提示'  # 待定(如果和发布课程相同则去掉)
     add_homework_publish_fail_tip_loc = '', '发布作业失败提示'  # 待定(如果和发布课程相同则去掉)
-    add_homework_success_confirm_loc = '', '发布作业成功确定'  # 待定(如果和发布课程相同则去掉)
+    add_homework_success_confirm_loc = '//div[@class="ant-modal-confirm-body-wrapper"]/div[2]/button',\
+                                       '发布作业成功确定'  # 待定(如果和发布课程相同则去掉)
 
     """作业详情"""
     homework_detail_problem_list_loc = '//div[@class="data-back-single-title fl"]'  # , '题目列表'  # 待定

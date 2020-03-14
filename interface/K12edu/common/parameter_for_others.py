@@ -121,7 +121,7 @@ class ParameterForOthers:
         except TypeError:
             print(f'接口getClassList报错，返回{class_list_ret["msg"]}')
         except KeyError:
-            print(class_list_ret)
+            print(f'接口getClassList返回{class_list_ret}')
         else:
             class_id_list = [data_dic['id'] for data_dic in data_list] if get_all else [data['id']]
             return class_id_list
@@ -140,7 +140,7 @@ class ParameterForOthers:
         except TypeError:
             print(f'接口/pc/manage/teacherList报错，返回{data_ret["msg"]}')
         except KeyError:
-            print(data_ret)
+            print(f'接口/pc/manage/teacherList返回{data_ret}')
         else:
             teacher_id_list = [i['id'] for i in data_list]
             return teacher_id_list
@@ -160,7 +160,7 @@ class ParameterForOthers:
         except TypeError:
             print(f'接口"/pc/manage/classList"报错，返回{data_ret["msg"]}')
         except KeyError:
-            print(data_ret)
+            print(f'接口"/pc/manage/classList"返回{data_ret}')
 
     def get_class_student_id(self):  # 没改
         """
@@ -176,7 +176,7 @@ class ParameterForOthers:
         except TypeError:
             print(f'接口/pc/class/students报错，返回{student_list_ret["msg"]}')
         except KeyError:
-            print(student_list_ret)
+            print(f'接口/pc/class/students返回{student_list_ret}')
         else:
             student_id_list = [data_dic['userId'] for data_dic in data_list]
             return student_id_list
@@ -194,7 +194,7 @@ class ParameterForOthers:
         except TypeError:
             print(f'接口/pc/class/getMyManageStudList报错，返回{ret_dic["msg"]}')
         except KeyError:
-            print(ret_dic)
+            print(f'接口/pc/class/getMyManageStudList返回{ret_dic}')
         else:
             student_id_list = [data_dic['userId'] for data_dic in student_list]
             return student_id_list
@@ -210,7 +210,7 @@ class ParameterForOthers:
         try:
             data_list = point_list_ret['data']
         except KeyError:
-            print(point_list_ret)
+            print(f'接口/common/points返回{point_list_ret}')
         else:
             try:
                 problem_dic = data_list[PointIdIndex.level_two_index]  # S1二级列表
@@ -236,9 +236,9 @@ class ParameterForOthers:
             data_list = point_list_ret['data']
             id_list = [data_dic['children'] for data_dic in data_list]
         except TypeError:
-            print(point_list_ret['msg'], series_id)
+            print(f'接口common/points报错，返回{point_list_ret["msg"]}', series_id)
         except KeyError:
-            print(point_list_ret)
+            print(f'接口common/points返回{point_list_ret}')
         else:
             point_id_list = [[c['id'] for c in child_id_list] for child_id_list in id_list]
             all_id_list = list(chain(*point_id_list))
@@ -376,38 +376,31 @@ class ParameterForOthers:
             course_id_list = [i['id'] for i in data_list]
             return course_id_list
 
-    def get_problem_id(self, point_id, difficulty_list, p_type, subject_type):
+    def get_problem_id(self, point_id, subject_type, difficulty_list=None, p_type=None):
         """
         提供公用的problemId
         :param point_id: 知识点
-        :param difficulty_list: 难度 1-简单，2-中等，3-困难
-        :param p_type: 1-课程，2-作业
         :param subject_type: 1-选择题，2-操作题
+        :param difficulty_list: 难度 1-简单，2-中等，3-困难 -> 不用带这个，用作预留
+        :param p_type: 1-课程，2-作业 -> 不用带这个，用作预留
         :return:
         """
-        all_list = []
-        for d in difficulty_list:  # 遍历传入难度参数获取id
-            url = f'{self.ip}/common/subjects'
-            data = {
-                "difficulty": d,
-                "pointId": point_id,
-                "subjectType": subject_type,
-                "types": [
-                    p_type
-                ]
-            }
-            response = requests.post(url=url, headers=self.headers, json=data)
-            data_ret = response.json()
-            try:
-                problem_id_list = [i['id'] for i in data_ret['data']]
-            except TypeError:
-                print(f'接口"/common/subjects"报错，返回{data_ret["msg"]}')
-            except KeyError:
-                print(f'接口"/common/subjects"返回{data_ret}')
-            else:
-                if problem_id_list:
-                    all_list.append(problem_id_list)
-        return list(chain(*all_list))
+        url = f'{self.ip}/common/subjects'
+        data = {
+            "pointId": point_id
+        }
+        response = requests.post(url=url, headers=self.headers, json=data)
+        data_ret = response.json()
+        try:
+            data_list = data_ret['data']
+            if subject_type == 1:  # 选择题
+                return [i['id'] for i in data_list if i['subjectType'] == 1]
+            else:  # 操作题
+                return [i['id'] for i in data_list if i['subjectType'] == 2]
+        except TypeError:
+            print(f'接口"/common/subjects"报错，返回{data_ret["msg"]}')
+        except KeyError:
+            print(f'接口"/common/subjects"返回{data_ret}')
 
     def get_all_problem_id(self, point_id, check_point=False):  # 没改
         """
@@ -904,6 +897,7 @@ class ParameterForOthers:
             print(f'接口/index/user/messages，返回{data_ret},与预期不符')
         else:
             return [i['id'] for i in data_list]
+
 
 # print(ParameterForOthers(identity='teacher').get_problem_id(205, [1], 2, 2))
 # print(ParameterForOthers(identity='student').get_sucai_url())

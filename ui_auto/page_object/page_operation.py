@@ -232,9 +232,9 @@ class BaseTestCase(BaseCase):
 
     def __choice_problem_for_homework(self):
         self.click_button(*ElementSelector.add_homework_choice_problem_loc)
-        self.click_button(*ElementSelector.add_homework_choice_all_problem_loc)
+        self.click_button(*ElementSelector.add_homework_all_choice_problem_loc)
         self.click_button(*ElementSelector.add_homework_operation_problem_loc, wait=True)
-        self.click_button(*ElementSelector.add_homework_choice_all_problem_loc, wait=True)
+        self.click_button(*ElementSelector.add_homework_all_operation_problem_loc, wait=True)
         self.click_button(*ElementSelector.add_homework_confirm_problem_loc)
 
     teaching_package_list = ['叮当资源', '其他资源']
@@ -340,10 +340,12 @@ class BaseTestCase(BaseCase):
         :param homework_name: 发布作业的名称
         :return: None
         """
+        # 输入名称->截止时间->答案设置->显示难度->定时->选择系列->选择班级->选择题目->发布->检查发布是否成功
+        # 选系列时，需要有班级先发布了该系列的课程，没有班级发布该系列课程则不能选该系列题目
+        # 选班级只能选发布了该系列的班级
         self.send_text(*ElementSelector.add_homework_homework_name_input_loc, text=homework_name)
-        self.__choose_problem_operation()
-        self.click_button(*ElementSelector.add_homework_choose_homework_class_loc, loading=True)
-        self.click_button(*ElementSelector.add_homework_choose_first_class_loc)
+        self.change_text(*ElementSelector.add_homework_time_input_loc, text=self.__input_time())
+        self.send_text(*ElementSelector.add_homework_time_input_loc, text=Keys.ENTER)
         self.click_button(*ElementSelector.add_homework_show_answer_loc)
         self.click_button(f'//span[text()="{answer_config}"]/parent::li',  # 待定
                           msg=answer_config)
@@ -351,16 +353,17 @@ class BaseTestCase(BaseCase):
             self.click_button(*ElementSelector.add_homework_show_diff_loc)
         if 1 == timing:
             self.click_button(*ElementSelector.add_homework_timing_btn_loc)
-            self.change_text(*ElementSelector.add_homework_timing_input_loc,
+            self.change_text(*ElementSelector.add_homework_time_input_loc,
                              text=self.__input_time(start=True))
-            self.send_text(*ElementSelector.add_homework_timing_input_loc, text=Keys.ENTER)
+            self.send_text(*ElementSelector.add_homework_time_input_loc, text=Keys.ENTER)
         else:
             pass
-        self.change_text(*ElementSelector.add_homework_end_time_input_loc, text=self.__input_time())
-        self.send_text(*ElementSelector.add_homework_end_time_input_loc, text=Keys.ENTER)
+        self.click_button(*ElementSelector.add_homework_choice_series_loc)
+        self.click_button(*ElementSelector.add_homework_choice_first_series_loc)  # 选择系列
         self.click_button(*ElementSelector.add_homework_choose_homework_class_loc)
         self.click_button(*ElementSelector.add_homework_choose_first_class_loc)
-        self.click_button(*ElementSelector.add_homework_public_homework_btn_loc)
+        self.__choose_problem_operation()
+        self.click_button(*ElementSelector.add_course_publish_course_loc)
         self.__assert_equal('成功添加作业！', ElementSelector.add_homework_success_tip_loc)
         self.click_button(*ElementSelector.add_homework_success_confirm_loc)
         self.__assert_equal(homework_name, ElementSelector.homework_list_homework_name)
@@ -397,19 +400,19 @@ class BaseTestCase(BaseCase):
                 input_loc, _ = ElementSelector.add_homework_homework_name_input_loc
                 self.find_element(input_loc).send_keys(Keys.CONTROL, 'a')
                 self.send_text(*ElementSelector.add_homework_homework_name_input_loc, text=Keys.BACKSPACE)
-                self.click_button(*ElementSelector.add_homework_public_homework_btn_loc)
+                self.click_button(*ElementSelector.add_course_publish_course_loc)
                 self.__assert_equal('请输入作业名称！', ElementSelector.add_homework_publish_fail_tip_loc)
             elif '知识点' == i:
                 self.send_text(*ElementSelector.add_homework_homework_name_input_loc, text=homework_name)
                 self.click_button(*ElementSelector.add_homework_choose_homework_class_loc, loading=True)
                 self.click_button(*ElementSelector.add_homework_choose_first_class_loc)
-                self.click_button(*ElementSelector.add_homework_public_homework_btn_loc, loading=True)
+                self.click_button(*ElementSelector.add_course_publish_course_loc, loading=True)
                 self.__assert_equal('请通过知识点选出作业题目！', ElementSelector.add_homework_publish_fail_tip_loc)
             else:
                 self.send_text(*ElementSelector.add_homework_homework_name_input_loc, text=homework_name)
                 self.__choose_problem_operation()
-                self.click_button(*ElementSelector.add_homework_delete_first_class_loc, loading=True)
-                self.click_button(*ElementSelector.add_homework_public_homework_btn_loc)
+                # self.click_button(*ElementSelector.add_course_delete_first_class_loc, loading=True)   # 每次发布重新选班
+                self.click_button(*ElementSelector.add_course_publish_course_loc)
                 self.__assert_equal('请选择您要发往的班级！', ElementSelector.add_homework_publish_fail_tip_loc)
             self.refresh()
 
@@ -426,25 +429,25 @@ class BaseTestCase(BaseCase):
                 if '定时' == t:
                     self.click_button(*ElementSelector.add_homework_timing_btn_loc)
                     if 1 == n:
-                        self.send_text(*ElementSelector.add_homework_timing_input_loc,
+                        self.send_text(*ElementSelector.add_homework_time_input_loc,
                                        text=self.__input_time(now=True))
                     else:
-                        self.send_text(*ElementSelector.add_homework_timing_input_loc,
+                        self.send_text(*ElementSelector.add_homework_time_input_loc,
                                        text=self.__input_time(front=True))
-                    self.send_text(*ElementSelector.add_homework_timing_input_loc, text=Keys.ENTER)
-                    self.change_text(*ElementSelector.add_homework_end_time_input_loc, text=self.__input_time())
-                    self.send_text(*ElementSelector.add_homework_end_time_input_loc, text=Keys.ENTER)
-                    self.click_button(*ElementSelector.add_homework_public_homework_btn_loc)
+                    self.send_text(*ElementSelector.add_homework_time_input_loc, text=Keys.ENTER)
+                    self.change_text(*ElementSelector.add_homework_time_input_loc, text=self.__input_time())
+                    self.send_text(*ElementSelector.add_homework_time_input_loc, text=Keys.ENTER)
+                    self.click_button(*ElementSelector.add_course_publish_course_loc)
                     self.__assert_equal('定时时间要大于当前时间！', ElementSelector.add_homework_publish_fail_tip_loc)
                 else:
                     if 1 == n:
-                        self.change_text(*ElementSelector.add_homework_end_time_input_loc,
+                        self.change_text(*ElementSelector.add_homework_time_input_loc,
                                          text=self.__input_time(now=True))
                     else:
-                        self.change_text(*ElementSelector.add_homework_end_time_input_loc,
+                        self.change_text(*ElementSelector.add_homework_time_input_loc,
                                          text=self.__input_time(front=True))
-                    self.send_text(*ElementSelector.add_homework_end_time_input_loc, text=Keys.ENTER)
-                    self.click_button(*ElementSelector.add_homework_public_homework_btn_loc)
+                    self.send_text(*ElementSelector.add_homework_time_input_loc, text=Keys.ENTER)
+                    self.click_button(*ElementSelector.add_course_publish_course_loc)
                     self.__assert_equal('截止时间要大于当前时间和定时时间！',
                                         ElementSelector.add_homework_publish_fail_tip_loc)
                 self.refresh()

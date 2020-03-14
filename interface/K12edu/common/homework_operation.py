@@ -9,17 +9,18 @@ from ui_auto.common.mysql import get_choice
 from ui_auto.common.get_cwd import get_absolute_path
 
 
-def add_homework(parameter, hw_name, series_id, point_id_list, difficulty_list, show_answer, show_difficulty, timing):
+def add_homework(parameter, hw_name, series_id, point_id_list,
+                 show_answer, show_difficulty, timing, difficulty_list=None):
     """
     老师发布作业
     :param parameter: 参数对象
     :param hw_name: 作业名称
     :param series_id: 系列id
     :param point_id_list: 知识点列表
-    :param difficulty_list: 题目难度 1-简单，2-中等，3-困难
     :param show_answer: 显示答案 0-不公布 1-公布
     :param show_difficulty: 显示难度 0-不显示 1-显示
     :param timing: 定时发布 0-立即发布 1-不定时
+    :param difficulty_list: 题目难度 1-简单，2-中等，3-困难 -> 不用带这个，用作预留
     :return:
     """
     url = f'{parameter.ip}/homework/tchHwPost'
@@ -27,8 +28,8 @@ def add_homework(parameter, hw_name, series_id, point_id_list, difficulty_list, 
     all_choice_id = []
     all_programme_id = []
     for point_id in point_id_list:
-        problem_id_list = parameter.get_problem_id(point_id, difficulty_list, 2, 1)
-        choice_id_list = parameter.get_problem_id(point_id, difficulty_list, 2, 2)
+        problem_id_list = parameter.get_problem_id(point_id, 1)
+        choice_id_list = parameter.get_problem_id(point_id, 2)
         if problem_id_list:
             all_programme_id.append(problem_id_list)
         if choice_id_list:
@@ -40,7 +41,7 @@ def add_homework(parameter, hw_name, series_id, point_id_list, difficulty_list, 
         "endTime": time_stamp(end=True),
         "hwName": hw_name,
         "programmeIds": all_programme_id_list,
-        "serieId": series_id,
+        "seriesId": series_id,
         "showAnswer": show_answer,
         "showDifficulty": show_difficulty,
         "timingPost": timing,
@@ -53,7 +54,7 @@ def add_homework(parameter, hw_name, series_id, point_id_list, difficulty_list, 
     try:
         success_msg = data_ret['data']['msg']
         print(data_ret['data']['success'])
-        assert ('' == success_msg)
+        # assert ('' == success_msg)
     except AssertionError:
         print(f'提示断言失败，发布作业提示“{success_msg}”')
     except TypeError:
