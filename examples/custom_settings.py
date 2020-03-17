@@ -30,6 +30,14 @@ DISABLE_CSP_ON_CHROME = False
 # If True and --proxy=IP_ADDRESS:PORT is invalid, then error immediately.
 RAISE_INVALID_PROXY_STRING_EXCEPTION = True
 
+# Default browser resolutions when opening new windows for tests.
+# (Headless resolutions take priority, and include all browsers.)
+# (Firefox starts maximized by default when running in GUI Mode.)
+CHROME_START_WIDTH = 1250
+CHROME_START_HEIGHT = 840
+HEADLESS_START_WIDTH = 1440
+HEADLESS_START_HEIGHT = 1880
+
 # Changing the default behavior of MasterQA Mode.
 MASTERQA_DEFAULT_VALIDATION_MESSAGE = "Does the page look good?"
 MASTERQA_WAIT_TIME_BEFORE_VERIFY = 0.5
@@ -44,8 +52,9 @@ TOTP_KEY = "base32secretABCD"
 
 # MySQL DB Credentials
 # (For saving data from tests to a MySQL DB)
-# Add "--with-db_reporting" to save test data to a MySQL DB during test runs
+# Usage: "--with-db_reporting"
 DB_HOST = "127.0.0.1"
+DB_PORT = 3306
 DB_USERNAME = "root"
 DB_PASSWORD = "test"
 DB_SCHEMA = "test_db"
@@ -53,7 +62,7 @@ DB_SCHEMA = "test_db"
 # Amazon S3 Bucket Credentials
 # (For saving screenshots and other log files from tests)
 # (Bucket names are unique across all existing bucket names in Amazon S3)
-# Add "--with-s3_logging" to save test results to S3
+# Usage: "--with-s3_logging"
 S3_LOG_BUCKET = "[S3 BUCKET NAME]"
 S3_BUCKET_URL = "https://s3.amazonaws.com/[S3 BUCKET NAME]/"
 S3_SELENIUM_ACCESS_KEY = "[S3 ACCESS KEY]"

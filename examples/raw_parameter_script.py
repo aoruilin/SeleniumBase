@@ -35,6 +35,9 @@ except (ImportError, ValueError):
     sb.data = None
     sb.environment = "test"
     sb.user_agent = None
+    sb.incognito = False
+    sb.mobile_emulator = False
+    sb.device_metrics = None
     sb.extension_zip = None
     sb.extension_dir = None
     sb.database_env = "test"
@@ -42,6 +45,9 @@ except (ImportError, ValueError):
     sb.archive_logs = False
     sb.disable_csp = False
     sb.enable_sync = False
+    sb.no_sandbox = False
+    sb.disable_gpu = False
+    sb._reuse_session = False
     sb.visual_baseline = False
     sb.maximize_option = False
     sb.save_screenshot_after_test = False
@@ -52,6 +58,7 @@ except (ImportError, ValueError):
     sb.with_s3_logging = False
     sb.js_checking_on = False
     sb.is_pytest = False
+    sb.time_limit = None
     sb.slow_mode = False
     sb.demo_mode = False
     sb.demo_sleep = 1

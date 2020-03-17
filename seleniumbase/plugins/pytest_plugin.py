@@ -13,36 +13,42 @@ def pytest_addoption(parser):
     """
     This parser plugin includes the following command-line options for pytest:
     --browser=BROWSER  (The web browser to use.)
-    --cap_file=FILE  (The web browser's desired capabilities to use.)
-    --settings_file=FILE  (Overrides SeleniumBase settings.py values.)
+    --cap-file=FILE  (The web browser's desired capabilities to use.)
+    --settings-file=FILE  (Overrides SeleniumBase settings.py values.)
     --env=ENV  (Set a test environment. Use "self.env" to use this in tests.)
     --data=DATA  (Extra data to pass to tests. Use "self.data" in tests.)
-    --user_data_dir=DIR  (Set the Chrome user data directory to use.)
+    --user-data-dir=DIR  (Set the Chrome user data directory to use.)
     --server=SERVER  (The server / IP address used by the tests.)
     --port=PORT  (The port that's used by the test server.)
     --proxy=SERVER:PORT  (This is the proxy server:port combo used by tests.)
     --agent=STRING  (This designates the web browser's User Agent to use.)
-    --extension_zip=ZIP  (Load a Chrome Extension .zip file, comma-separated.)
-    --extension_dir=DIR  (Load a Chrome Extension directory, comma-separated.)
+    --mobile  (The option to use the mobile emulator while running tests.)
+    --metrics=STRING  ("CSSWidth,Height,PixelRatio" for mobile emulator tests.)
+    --extension-zip=ZIP  (Load a Chrome Extension .zip file, comma-separated.)
+    --extension-dir=DIR  (Load a Chrome Extension directory, comma-separated.)
     --headless  (The option to run tests headlessly. The default on Linux OS.)
     --headed  (The option to run tests with a GUI on Linux OS.)
-    --start_page=URL  (The starting URL for the web browser when tests begin.)
-    --log_path=LOG_PATH  (The directory where log files get saved to.)
-    --archive_logs  (Archive old log files instead of deleting them.)
+    --start-page=URL  (The starting URL for the web browser when tests begin.)
+    --archive-logs  (Archive old log files instead of deleting them.)
+    --time-limit  (The option to set a time limit per test before failing it.)
     --slow  (The option to slow down the automation.)
     --demo  (The option to visually see test actions as they occur.)
-    --demo_sleep=SECONDS  (The option to wait longer after Demo Mode actions.)
+    --demo-sleep=SECONDS  (The option to wait longer after Demo Mode actions.)
     --highlights=NUM  (Number of highlight animations for Demo Mode actions.)
-    --message_duration=SECONDS  (The time length for Messenger alerts.)
-    --check_js  (The option to check for JavaScript errors after page loads.)
-    --ad_block  (The option to block some display ads after page loads.)
-    --verify_delay=SECONDS  (The delay before MasterQA verification checks.)
-    --disable_csp  (This disables the Content Security Policy of websites.)
-    --enable_sync  (The option to enable "Chrome Sync".)
-    --maximize_window  (The option to start with the web browser maximized.)
-    --save_screenshot  (The option to save a screenshot after each test.)
-    --visual_baseline  (Set the visual baseline for Visual/Layout tests.)
-    --timeout_multiplier=MULTIPLIER  (Multiplies the default timeout values.)
+    --message-duration=SECONDS  (The time length for Messenger alerts.)
+    --check-js  (The option to check for JavaScript errors after page loads.)
+    --ad-block  (The option to block some display ads after page loads.)
+    --verify-delay=SECONDS  (The delay before MasterQA verification checks.)
+    --disable-csp  (This disables the Content Security Policy of websites.)
+    --enable-sync  (The option to enable "Chrome Sync".)
+    --no-sandbox  (The option to enable Chrome's "No-Sandbox" feature.)
+    --disable_gpu  (The option to enable Chrome's "Disable GPU" feature.)
+    --incognito  (The option to enable Chrome's Incognito mode.)
+    --reuse-session  (The option to reuse the browser session between tests.)
+    --maximize-window  (The option to start with the web browser maximized.)
+    --save-screenshot  (The option to save a screenshot after each test.)
+    --visual-baseline  (Set the visual baseline for Visual/Layout tests.)
+    --timeout-multiplier=MULTIPLIER  (Multiplies the default timeout values.)
     """
     parser = parser.getgroup('SeleniumBase',
                              'SeleniumBase specific configuration options')
@@ -109,7 +115,7 @@ def pytest_addoption(parser):
     parser.addoption('--log_path', '--log-path',
                      dest='log_path',
                      default='latest_logs/',
-                     help='Where the log files are saved.')
+                     help='Where log files are saved. (No longer editable!)')
     parser.addoption('--archive_logs', '--archive-logs',
                      action="store_true",
                      dest='archive_logs',
@@ -162,7 +168,9 @@ def pytest_addoption(parser):
                      dest='servername',
                      default='localhost',
                      help="""Designates the Selenium Grid server to use.
-                          Default: localhost.""")
+                          Use "127.0.0.1" to connect to a localhost Grid.
+                          If unset or set to "localhost", Grid isn't used.
+                          Default: "localhost".""")
     parser.addoption('--port',
                      action='store',
                      dest='port',
@@ -184,6 +192,21 @@ def pytest_addoption(parser):
                      help="""Designates the User-Agent for the browser to use.
                           Format: A string.
                           Default: None.""")
+    parser.addoption('--mobile', '--mobile-emulator', '--mobile_emulator',
+                     action="store_true",
+                     dest='mobile_emulator',
+                     default=False,
+                     help="""If this option is enabled, the mobile emulator
+                          will be used while running tests.""")
+    parser.addoption('--metrics', '--device-metrics', '--device_metrics',
+                     action='store',
+                     dest='device_metrics',
+                     default=None,
+                     help="""Designates the three device metrics of the mobile
+                          emulator: CSS Width, CSS Height, and Pixel-Ratio.
+                          Format: A comma-separated string with the 3 values.
+                          Example: "375,734,3"
+                          Default: None. (Will use default values if None)""")
     parser.addoption('--extension_zip', '--extension-zip',
                      action='store',
                      dest='extension_zip',
@@ -229,6 +252,12 @@ def pytest_addoption(parser):
                      default=True,
                      help="""This is used by the BaseCase class to tell apart
                           pytest runs from nosetest runs. (Automatic)""")
+    parser.addoption('--time_limit', '--time-limit', '--timelimit',
+                     action='store',
+                     dest='time_limit',
+                     default=None,
+                     help="""Use this to set a time limit per test, in seconds.
+                          If a test runs beyond the limit, it fails.""")
     parser.addoption('--slow_mode', '--slow-mode', '--slow',
                      action="store_true",
                      dest='slow_mode',
@@ -292,6 +321,27 @@ def pytest_addoption(parser):
                      dest='enable_sync',
                      default=False,
                      help="""Using this enables the "Chrome Sync" feature.""")
+    parser.addoption('--no_sandbox', '--no-sandbox',
+                     action="store_true",
+                     dest='no_sandbox',
+                     default=False,
+                     help="""Using this enables the "No Sandbox" feature.""")
+    parser.addoption('--disable_gpu', '--disable-gpu',
+                     action="store_true",
+                     dest='disable_gpu',
+                     default=False,
+                     help="""Using this enables the "Disable GPU" feature.""")
+    parser.addoption('--incognito',
+                     action="store_true",
+                     dest='incognito',
+                     default=False,
+                     help="""Using this enables Chrome's Incognito mode.""")
+    parser.addoption('--reuse_session', '--reuse-session',
+                     action="store_true",
+                     dest='reuse_session',
+                     default=False,
+                     help="""The option to reuse the selenium browser window
+                          session between tests.""")
     parser.addoption('--maximize_window', '--maximize-window', '--maximize',
                      '--fullscreen',
                      action="store_true",
@@ -320,6 +370,12 @@ def pytest_addoption(parser):
                      help="""Setting this overrides the default timeout
                           by the multiplier when waiting for page elements.
                           Unused when tests overide the default value.""")
+    for arg in sys.argv:
+        if "--timeout=" in arg:
+            raise Exception(
+                "\n\n  Don't use --timeout=s from pytest-timeout! "
+                "\n  It's not thread-safe for WebDriver processes! "
+                "\n  Use --time-limit=s from SeleniumBase instead!\n")
 
 
 def pytest_configure(config):
@@ -330,6 +386,8 @@ def pytest_configure(config):
     sb_config.environment = config.getoption('environment')
     sb_config.with_selenium = config.getoption('with_selenium')
     sb_config.user_agent = config.getoption('user_agent')
+    sb_config.mobile_emulator = config.getoption('mobile_emulator')
+    sb_config.device_metrics = config.getoption('device_metrics')
     sb_config.headless = config.getoption('headless')
     sb_config.headed = config.getoption('headed')
     sb_config.start_page = config.getoption('start_page')
@@ -348,8 +406,9 @@ def pytest_configure(config):
     sb_config.settings_file = config.getoption('settings_file')
     sb_config.user_data_dir = config.getoption('user_data_dir')
     sb_config.database_env = config.getoption('database_env')
-    sb_config.log_path = config.getoption('log_path')
+    sb_config.log_path = 'latest_logs/'  # (No longer editable!)
     sb_config.archive_logs = config.getoption('archive_logs')
+    sb_config.time_limit = config.getoption('time_limit')
     sb_config.slow_mode = config.getoption('slow_mode')
     sb_config.demo_mode = config.getoption('demo_mode')
     sb_config.demo_sleep = config.getoption('demo_sleep')
@@ -360,11 +419,22 @@ def pytest_configure(config):
     sb_config.verify_delay = config.getoption('verify_delay')
     sb_config.disable_csp = config.getoption('disable_csp')
     sb_config.enable_sync = config.getoption('enable_sync')
+    sb_config.no_sandbox = config.getoption('no_sandbox')
+    sb_config.disable_gpu = config.getoption('disable_gpu')
+    sb_config.incognito = config.getoption('incognito')
+    sb_config.reuse_session = config.getoption('reuse_session')
+    sb_config.shared_driver = None  # The default driver for session reuse
     sb_config.maximize_option = config.getoption('maximize_option')
     sb_config.save_screenshot = config.getoption('save_screenshot')
     sb_config.visual_baseline = config.getoption('visual_baseline')
     sb_config.timeout_multiplier = config.getoption('timeout_multiplier')
     sb_config.pytest_html_report = config.getoption('htmlpath')  # --html=FILE
+
+    if sb_config.reuse_session:
+        arg_join = " ".join(sys.argv)
+        if ("-n" in sys.argv) or ("-n=" in arg_join) or (arg_join == "-c"):
+            # Can't "reuse_session" if multithreaded
+            sb_config.reuse_session = False
 
     if "linux" in sys.platform and (
             not sb_config.headed and not sb_config.headless):
@@ -383,6 +453,17 @@ def pytest_configure(config):
 def pytest_unconfigure():
     """ This runs after all tests have completed with pytest. """
     proxy_helper.remove_proxy_zip_if_present()
+    if sb_config.reuse_session:
+        # Close the shared browser session
+        if sb_config.shared_driver:
+            try:
+                sb_config.shared_driver.quit()
+            except AttributeError:
+                pass
+            except Exception:
+                pass
+        sb_config.shared_driver = None
+    log_helper.archive_logs_if_set(sb_config.log_path, sb_config.archive_logs)
 
 
 def pytest_runtest_setup():

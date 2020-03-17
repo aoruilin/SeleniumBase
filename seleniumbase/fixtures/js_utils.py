@@ -6,10 +6,12 @@ import re
 import requests
 import time
 from selenium.common.exceptions import WebDriverException
+from seleniumbase import config as sb_config
 from seleniumbase.common import decorators
 from seleniumbase.config import settings
 from seleniumbase.core import style_sheet
 from seleniumbase.fixtures import constants
+from seleniumbase.fixtures import shared_utils
 
 
 def wait_for_ready_state_complete(driver, timeout=settings.EXTREME_TIMEOUT):
@@ -19,10 +21,10 @@ def wait_for_ready_state_complete(driver, timeout=settings.EXTREME_TIMEOUT):
     fully loaded (although AJAX and other loads might still be happening).
     This method will wait until document.readyState == "complete".
     """
-
     start_ms = time.time() * 1000.0
     stop_ms = start_ms + (timeout * 1000.0)
     for x in range(int(timeout * 10)):
+        shared_utils.check_if_time_limit_exceeded()
         try:
             ready_state = driver.execute_script("return document.readyState")
         except WebDriverException:
@@ -75,6 +77,14 @@ def wait_for_angularjs(driver, timeout=settings.LARGE_TIMEOUT, **kwargs):
         time.sleep(0.05)
 
 
+def is_html_inspector_activated(driver):
+    try:
+        driver.execute_script("HTMLInspector")  # Fails if not defined
+        return True
+    except Exception:
+        return False
+
+
 def is_jquery_activated(driver):
     try:
         driver.execute_script("jQuery('html')")  # Fails if jq is not defined
@@ -97,6 +107,15 @@ def wait_for_jquery_active(driver, timeout=None):
             return
         except Exception:
             time.sleep(0.1)
+
+
+def raise_unable_to_load_jquery_exception(driver):
+    """ The most-likely reason for jQuery not loading on web pages. """
+    raise Exception(
+        '''Unable to load jQuery on "%s" due to a possible violation '''
+        '''of the website's Content Security Policy directive. '''
+        '''To override this policy, add "--disable-csp" on the '''
+        '''command-line when running your tests.''' % driver.current_url)
 
 
 def activate_jquery(driver):
@@ -126,11 +145,7 @@ def activate_jquery(driver):
         except Exception:
             time.sleep(0.1)
     # Since jQuery still isn't activating, give up and raise an exception
-    raise Exception(
-        '''Unable to load jQuery on "%s" due to a possible violation '''
-        '''of the website's Content Security Policy directive. '''
-        '''To override this policy, add "--disable_csp" on the '''
-        '''command-line when running your tests.''' % driver.current_url)
+    raise_unable_to_load_jquery_exception(driver)
 
 
 def are_quotes_escaped(string):
@@ -296,14 +311,14 @@ def add_css_link(driver, css_link):
 def add_js_link(driver, js_link):
     script_to_add_js = (
         """function injectJS(link) {
-              var head = document.getElementsByTagName("head")[0];
+              var body = document.getElementsByTagName("body")[0];
               var script = document.createElement("script");
               script.src = link;
               script.defer;
               script.type="text/javascript";
               script.crossorigin = "anonymous";
               script.onload = function() { null };
-              head.appendChild(script);
+              body.appendChild(script);
            }
            injectJS("%s");""")
     js_link = escape_quotes_if_needed(js_link)
@@ -330,12 +345,12 @@ def add_js_code_from_link(driver, js_link):
         js_link = "http:" + js_link
     js_code = requests.get(js_link).text
     add_js_code_script = (
-        '''var h = document.getElementsByTagName('head').item(0);'''
-        '''var s = document.createElement("script");'''
-        '''s.type = "text/javascript";'''
-        '''s.onload = function() { null };'''
-        '''s.appendChild(document.createTextNode("%s"));'''
-        '''h.appendChild(s);''')
+        '''var body = document.getElementsByTagName('body').item(0);'''
+        '''var script = document.createElement("script");'''
+        '''script.type = "text/javascript";'''
+        '''script.onload = function() { null };'''
+        '''script.appendChild(document.createTextNode("%s"));'''
+        '''body.appendChild(script);''')
     js_code = js_code.replace('\n', '')
     js_code = escape_quotes_if_needed(js_code)
     driver.execute_script(add_js_code_script % js_code)
@@ -373,14 +388,36 @@ def activate_jquery_confirm(driver):
 
     if not is_jquery_activated(driver):
         add_js_link(driver, jquery_js)
-        wait_for_jquery_active(driver, timeout=0.6)
+        wait_for_jquery_active(driver, timeout=0.9)
     add_css_link(driver, jq_confirm_css)
     add_js_link(driver, jq_confirm_js)
 
-    for x in range(7):
+    for x in range(15):
         # jQuery-Confirm needs a small amount of time to load & activate.
         try:
             driver.execute_script("jconfirm")
+            wait_for_ready_state_complete(driver)
+            wait_for_angularjs(driver)
+            return
+        except Exception:
+            time.sleep(0.1)
+
+
+def activate_html_inspector(driver):
+    jquery_js = constants.JQuery.MIN_JS
+    html_inspector_js = constants.HtmlInspector.MIN_JS
+
+    if is_html_inspector_activated(driver):
+        return
+    if not is_jquery_activated(driver):
+        add_js_link(driver, jquery_js)
+        wait_for_jquery_active(driver, timeout=0.9)
+    add_js_link(driver, html_inspector_js)
+
+    for x in range(15):
+        # HTML-Inspector needs a small amount of time to load & activate.
+        try:
+            driver.execute_script("HTMLInspector")
             wait_for_ready_state_complete(driver)
             wait_for_angularjs(driver)
             return
@@ -508,7 +545,12 @@ def post_messenger_success_message(driver, message, msg_dur):
         msg_dur = settings.DEFAULT_MESSAGE_DURATION
     msg_dur = float(msg_dur)
     try:
-        set_messenger_theme(driver, theme="future", location="bottom_right")
+        theme = "future"
+        location = "bottom_right"
+        if sb_config.mobile_emulator:
+            theme = "block"
+            location = "top_center"
+        set_messenger_theme(driver, theme=theme, location=location)
         post_message(
             driver, message, msg_dur, style="success")
         time.sleep(msg_dur + 0.07)
@@ -600,8 +642,8 @@ def scroll_to_element(driver, element):
     try:
         element_location = element.location['y']
     except Exception:
-        element.location_once_scrolled_into_view
-        return
+        # element.location_once_scrolled_into_view  # Old hack
+        return False
     element_location = element_location - 130
     if element_location < 0:
         element_location = 0
@@ -610,8 +652,9 @@ def scroll_to_element(driver, element):
     # scroll_script = "jQuery('%s')[0].scrollIntoView()" % selector
     try:
         driver.execute_script(scroll_script)
-    except WebDriverException:
-        pass  # Older versions of Firefox experienced issues here
+        return True
+    except Exception:
+        return False
 
 
 def slow_scroll_to_element(driver, element, browser):

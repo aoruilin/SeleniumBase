@@ -1,19 +1,13 @@
-[<img src="https://cdn2.hubspot.net/hubfs/100006/images/SeleniumBaseText_F.png" title="SeleniumBase" align="center" height="38">](https://github.com/seleniumbase/SeleniumBase/blob/master/README.md)
+[<img src="https://cdn2.hubspot.net/hubfs/100006/images/SeleniumBaseText_F.png" title="SeleniumBase" align="center" height="46">](https://github.com/seleniumbase/SeleniumBase/blob/master/README.md)
 ## Method Summary Overview
 
-Here's a summary of SeleniumBase method definitions, which are defined in 下面是对SeleniumBase方法定义的总结，这些定义在[base_case.py](https://github.com/seleniumbase/SeleniumBase/blob/master/seleniumbase/fixtures/base_case.py)
+Here's a summary of SeleniumBase method definitions, which are defined in [base_case.py](https://github.com/seleniumbase/SeleniumBase/blob/master/seleniumbase/fixtures/base_case.py)
 
-For backwards compatibility, older versions of method names have remained to keep old scripts working. *(Ex: wait_for_element_visible was later shortened to wait_for_element and then to find_element.)*
-为了向后兼容，旧版本的方法名仍然保持旧脚本的工作。*(例如:wait_for_element_visible后来缩短为wait_for_element，然后缩短为find_element.)*
+For backwards compatibility, older versions of method names have remained to keep older scripts working. *(Ex: wait_for_element_visible was later shortened to wait_for_element and then to find_element. Also, add_text and send_keys are the same, etc.)*
 
 ```python
 self.open(url)
-
-self.open_url(url)
-
-self.get(url)
-
-self.visit(url)
+# Duplicates: self.open_url(url), self.get(url), self.visit(url)
 
 self.click(selector, by=By.CSS_SELECTOR, timeout=None, delay=0)
 
@@ -23,29 +17,24 @@ self.double_click(selector, by=By.CSS_SELECTOR, timeout=None)
 
 self.click_chain(selectors_list, by=By.CSS_SELECTOR, timeout=None, spacing=0)
 
-self.type(selector, text, by=By.CSS_SELECTOR, timeout=None, retry=False)
-
-self.input(selector, text, by=By.CSS_SELECTOR, timeout=None, retry=False)
-
 self.update_text(selector, new_value, by=By.CSS_SELECTOR, timeout=None, retry=False)
+# Duplicates: self.type(selector, text, by=By.CSS_SELECTOR, timeout=None, retry=False)
+#             self.input(selector, text, by=By.CSS_SELECTOR, timeout=None, retry=False)
 
 self.add_text(selector, text, by=By.CSS_SELECTOR, timeout=None)
-
-self.send_keys(selector, text, by=By.CSS_SELECTOR, timeout=None)
+# Duplicates: self.send_keys(selector, text, by=By.CSS_SELECTOR, timeout=None)
 
 self.submit(selector, by=By.CSS_SELECTOR)
 
-self.refresh_page()
-
 self.refresh()
+# Duplicates: self.refresh_page()
 
 self.get_current_url()
 
 self.get_page_source()
 
-self.get_page_title()
-
 self.get_title()
+# Duplicates: self.get_page_title()
 
 self.go_back()
 
@@ -66,14 +55,12 @@ self.is_link_text_present(link_text)
 self.is_partial_link_text_present(link_text)
 
 self.get_link_attribute(link_text, attribute, hard_fail)
-
-self.get_link_text_attribute(link_text, attribute, hard_fail)
+# Duplicates: self.get_link_text_attribute(link_text, attribute, hard_fail)
 
 self.get_partial_link_text_attribute(link_text, attribute, hard_fail)
 
-self.click_link_text(link_text, timeout=None)
-
 self.click_link(link_text, timeout=None)
+# Duplicates: self.click_link_text(link_text, timeout=None)
 
 self.click_partial_link_text(partial_link_text, timeout=None)
 
@@ -84,8 +71,7 @@ self.get_attribute(selector, attribute, by=By.CSS_SELECTOR, timeout=None)
 self.set_attribute(selector, attribute, value, by=By.CSS_SELECTOR, timeout=None)
 
 self.set_attributes(selector, attribute, value, by=By.CSS_SELECTOR)
-
-self.set_attribute_all(selector, attribute, value, by=By.CSS_SELECTOR)
+# Duplicates: self.set_attribute_all(selector, attribute, value, by=By.CSS_SELECTOR)
 
 self.remove_attribute(selector, attribute, by=By.CSS_SELECTOR, timeout=None)
 
@@ -100,6 +86,8 @@ self.find_elements(selector, by=By.CSS_SELECTOR, limit=0)
 self.find_visible_elements(selector, by=By.CSS_SELECTOR, limit=0)
 
 self.click_visible_elements(selector, by=By.CSS_SELECTOR, limit=0)
+
+self.click_nth_visible_element(selector, number, by=By.CSS_SELECTOR)
 
 self.click_if_visible(selector, by=By.CSS_SELECTOR)
 
@@ -160,19 +148,37 @@ self.save_screenshot(name, folder=None)
 
 self.save_page_source(name, folder=None)
 
+self.save_cookies(name="cookies.txt")
+
+self.load_cookies(name="cookies.txt")
+
+self.delete_all_cookies()
+
+self.delete_saved_cookies(name="cookies.txt")
+
 self.wait_for_ready_state_complete(timeout=None)
 
 self.wait_for_angularjs(timeout=None)
 
+self.sleep(seconds)
+
 self.activate_jquery()
 
 self.bring_to_front(selector, by=By.CSS_SELECTOR)
+
+self.highlight_click(selector, by=By.CSS_SELECTOR, loops=3, scroll=True)
+
+self.highlight_update_text(selector, new_value, by=By.CSS_SELECTOR, loops=3, scroll=True)
 
 self.highlight(selector, by=By.CSS_SELECTOR, loops=4, scroll=True)
 
 self.scroll_to(selector, by=By.CSS_SELECTOR)
 
 self.slow_scroll_to(selector, by=By.CSS_SELECTOR)
+
+self.scroll_to_top()
+
+self.scroll_to_bottom()
 
 self.click_xpath(xpath)
 
@@ -212,6 +218,12 @@ self.assert_no_404_errors(multithreaded=True)
 
 self.print_unique_links_with_status_codes()
 
+self.get_pdf_text(pdf, page=None, maxpages=None, password=None,
+                  codec='utf-8', wrap=False, nav=False, override=False)
+
+self.assert_pdf_text(pdf, text, page=None, maxpages=None, password=None,
+                     codec='utf-8', wrap=True, nav=False, override=False)
+
 self.create_folder(folder)
 
 self.choose_file(selector, file_path, by=By.CSS_SELECTOR, timeout=None)
@@ -224,7 +236,7 @@ self.save_file_as(file_url, new_file_name, destination_folder=None)
 
 self.save_data_as(data, file_name, destination_folder=None)
 
-self.get_downloads_folder(file)
+self.get_downloads_folder()
 
 self.get_path_of_downloaded_file(file)
 
@@ -244,6 +256,8 @@ self.assert_title(title)
 
 self.assert_no_js_errors()
 
+self.inspect_html()
+
 self.get_google_auth_password(totp_key=None)
 
 self.convert_xpath_to_css(xpath)
@@ -255,6 +269,10 @@ self.set_value(selector, new_value, by=By.CSS_SELECTOR, timeout=None)
 self.js_update_text(selector, new_value, by=By.CSS_SELECTOR, timeout=None)
 
 self.jquery_update_text(selector, new_value, by=By.CSS_SELECTOR, timeout=None)
+
+self.set_time_limit(time_limit)
+
+self.skip(reason="")
 
 ########
 
@@ -312,35 +330,28 @@ self.generate_traffic_chain(pages, loops=1)
 
 ########
 
-self.wait_for_element_present(selector, by=By.CSS_SELECTOR, timeout=None)
-
-self.wait_for_element_visible(selector, by=By.CSS_SELECTOR, timeout=None)
-
-self.wait_for_element(selector, by=By.CSS_SELECTOR, timeout=None)
-
 self.get_element(selector, by=By.CSS_SELECTOR, timeout=None)
+# Duplicates: self.wait_for_element_present(selector, by=By.CSS_SELECTOR, timeout=None)
+
+self.find_element(selector, by=By.CSS_SELECTOR, timeout=None)
+# Duplicates: self.wait_for_element(selector, by=By.CSS_SELECTOR, timeout=None)
+#             self.wait_for_element_visible(selector, by=By.CSS_SELECTOR, timeout=None)
 
 self.assert_element_present(selector, by=By.CSS_SELECTOR, timeout=None)
 
-self.find_element(selector, by=By.CSS_SELECTOR, timeout=None)
-
 self.assert_element(selector, by=By.CSS_SELECTOR, timeout=None)
-
-self.assert_element_visible(selector, by=By.CSS_SELECTOR, timeout=None)
+# Duplicates: self.assert_element_visible(selector, by=By.CSS_SELECTOR, timeout=None)
 
 ########
 
-self.wait_for_text_visible(text, selector="html", by=By.CSS_SELECTOR, timeout=None)
+self.find_text(text, selector="html", by=By.CSS_SELECTOR, timeout=None)
+# Duplicates: self.wait_for_text(text, selector="html", by=By.CSS_SELECTOR, timeout=None)
+#             self.wait_for_text_visible(text, selector="html", by=By.CSS_SELECTOR, timeout=None)
 
 self.wait_for_exact_text_visible(text, selector="html", by=By.CSS_SELECTOR, timeout=None)
 
-self.wait_for_text(text, selector="html", by=By.CSS_SELECTOR, timeout=None)
-
-self.find_text(text, selector="html", by=By.CSS_SELECTOR, timeout=None)
-
-self.assert_text_visible(text, selector="html", by=By.CSS_SELECTOR, timeout=None)
-
 self.assert_text(text, selector="html", by=By.CSS_SELECTOR, timeout=None)
+# Duplicates: self.assert_text_visible(text, selector="html", by=By.CSS_SELECTOR, timeout=None)
 
 self.assert_exact_text(text, selector="html", by=By.CSS_SELECTOR, timeout=None)
 
@@ -350,19 +361,16 @@ self.wait_for_link_text_present(link_text, timeout=None)
 
 self.wait_for_partial_link_text_present(link_text, timeout=None)
 
-self.wait_for_link_text_visible(link_text, timeout=None)
-
-self.wait_for_link_text(link_text, timeout=None)
-
 self.find_link_text(link_text, timeout=None)
+# Duplicates: self.wait_for_link_text(link_text, timeout=None)
+#             self.wait_for_link_text_visible(link_text, timeout=None)
 
 self.assert_link_text(link_text, timeout=None)
 
 ########
 
-self.wait_for_partial_link_text(partial_link_text, timeout=None)
-
 self.find_partial_link_text(partial_link_text, timeout=None)
+# Duplicates: self.wait_for_partial_link_text(partial_link_text, timeout=None)
 
 self.assert_partial_link_text(partial_link_text, timeout=None)
 
