@@ -3,7 +3,7 @@ import datetime
 from calendar import weekday
 from random import choice
 
-from selenium.common.exceptions import NoSuchElementException, ElementNotVisibleException
+from selenium.common.exceptions import WebDriverException, ElementNotVisibleException
 from selenium.webdriver.common.keys import Keys
 
 from seleniumbase import BaseCase
@@ -23,6 +23,7 @@ class BaseTestCase(BaseCase):
 
     def setUp(self, masterqa_mode=False):
         super(BaseTestCase, self).setUp()
+        self.step_log_path = None
         self.url_for_edu = Data().ip_for_edu()
         self.url_for_uni = Data().ip_for_uni_teach()
         self.parameter = ParameterForOthers(identity='student')
@@ -259,23 +260,23 @@ class BaseTestCase(BaseCase):
         else:
             self.click_button(f'//span[text()="{package_name}"]/parent::label/span[1]',
                               loading=True, wait=True, msg=f' {package_name}')  # 授课包选择其他课程 待定 后期可能会加上
-        self.click_and_jump(1, *ElementSelector.add_course_preview_course_loc)  # 点击预览暂定跳转
-        # 预览课程页面操作，后期添加
-        self.check_course_simple('')
-        self.driver.close()
-        self.switch_window(0)
+        # self.click_and_jump(1, *ElementSelector.add_course_preview_course_loc)  # 点击预览暂定跳转
+        # # 预览课程页面操作，后期添加
+        # self.check_course_simple('')
+        # self.driver.close()
+        # self.switch_window(0)
         self.click_button(*ElementSelector.add_course_course_plan_switch_loc)
         day_of_week = self.__choose_course_plan()
         # 计划授课选择日期
-        self.click_button(f'//div[@class="ant-row"]/div[{day_of_week + 1}]/label/span[1]/input',
+        self.click_button(f'//div[@class="ant-row"]/div[{day_of_week + 1}]/label/span[1]',
                           f'每周{day_of_week + 1}')
         self.click_button(*ElementSelector.add_course_choose_class_loc, loading=True)
         self.click_button(*ElementSelector.add_course_choose_first_class_loc)
         self.click_button(*ElementSelector.add_course_publish_course_loc)
-        self.__assert_add_course_tip('发布成功！', ElementSelector.succ_tip_loc,
-                                     '发布失败')  # 失败提示暂定发布失败，等高保真
-        self.click_button(*ElementSelector.add_course_publish_course_window_confirm_loc)
-        course_name = self.take_text(*ElementSelector.course_list_card_mode_first_course_loc)
+        # self.__assert_add_course_tip('发布成功！', ElementSelector.succ_tip_loc,
+        #                              '发布失败')  # 失败提示暂定发布失败，等高保真
+        # self.click_button(*ElementSelector.add_course_publish_course_window_confirm_loc)
+        course_name = self.take_text(*ElementSelector.course_list_card_mode_first_course_name_loc)
 
         return course_name  # 返回课程名称
 
@@ -340,15 +341,14 @@ class BaseTestCase(BaseCase):
         :param homework_name: 发布作业的名称
         :return: None
         """
-        # 输入名称->截止时间->答案设置->显示难度->定时->选择系列->选择班级->选择题目->发布->检查发布是否成功
+        # 答案设置->输入名称->截止时间->显示难度->定时->选择系列->选择班级->选择题目->发布->检查发布是否成功
         # 选系列时，需要有班级先发布了该系列的课程，没有班级发布该系列课程则不能选该系列题目
         # 选班级只能选发布了该系列的班级
+        self.click_button(*ElementSelector.add_homework_show_answer_loc, wait=True)
+        self.click_button(f'//div[text()="{answer_config}"]', msg=answer_config)
         self.send_text(*ElementSelector.add_homework_homework_name_input_loc, text=homework_name)
         self.change_text(*ElementSelector.add_homework_time_input_loc, text=self.__input_time())
         self.send_text(*ElementSelector.add_homework_time_input_loc, text=Keys.ENTER)
-        self.click_button(*ElementSelector.add_homework_show_answer_loc)
-        self.click_button(f'//span[text()="{answer_config}"]/parent::li',  # 待定
-                          msg=answer_config)
         if 1 == difficulty:  # 显示难度
             self.click_button(*ElementSelector.add_homework_show_diff_loc)
         if 1 == timing:
@@ -493,7 +493,7 @@ class BaseTestCase(BaseCase):
         :param course_name: 断言用课件名称
         :return: None
         """
-        self.__assert_equal(course_name, ElementSelector.index_course_loc)
+        # self.__assert_equal(course_name, ElementSelector.index_course_loc)
         self.click_button(*ElementSelector.bar_course_loc)
 
     def student_check_index_homework(self, homework_name):
@@ -549,18 +549,26 @@ class BaseTestCase(BaseCase):
         """
         # 选择章节，可考虑复数定位元素列表->遍历列表点击每个小节
         chap_elem_list = self.elements_list(*ElementSelector.course_detail_choose_chap_loc, loading=True)  # 章节知识点
+        for c in range(2, len(chap_elem_list) + 1):  # 遍历点击章节
+            self.click_button(f'//div[@class="courseDetail_course-catalogue__1_99C"]/div[2]/div[{c}]', f'第{c}章')
+            time.sleep(0.2)
+        send_elem_list = self.elements_list(*ElementSelector.course_detail_send_course_loc)
+        for p in range(len(send_elem_list)):  # 遍历点击发送
+            self.click_button(
+                f'//div[@class="courseDetail_course-catalogue__1_99C"]/descendant::li[{p + 1}]/div[3]/div/div[1]',
+                f'发送第{p + 1}节')
         sec_elem_list = self.elements_list(*ElementSelector.course_detail_choose_section_loc)  # 小节知识点
-        for chap_elem in chap_elem_list:
-            chap_elem.click()
-            for sec_elem in sec_elem_list:
-                sec_elem.click()
-                self.__check_course_operation(course_name)
-                full_screen_loc = ElementSelector.course_detail_full_screen_course_loc \
-                    if teacher else ElementSelector.course_detail_start_study_course_loc
-                self.click_button(*full_screen_loc)
-                self.course_field_operation(turtle_code(), 'abc')
-                self.__check_course_operation(course_name)
-                self.click_button(*ElementSelector.course_detail_full_screen_return_course_loc)  # 点击退出全屏
+        for s in range(len(sec_elem_list)):  # 遍历点击小节
+            self.click_button(
+                f'//div[@class="courseDetail_course-catalogue__1_99C"]/descendant::li[{s + 1}]/div[3]/div/div[1]',
+                f'第{s + 1}节', wait=True)
+            self.__check_course_operation(course_name)
+            full_screen_loc = ElementSelector.course_detail_full_screen_course_loc \
+                if teacher else ElementSelector.course_detail_start_study_course_loc
+            # self.click_button(*full_screen_loc)
+            # self.course_field_operation(turtle_code(), 'abc')
+            # self.__check_course_operation(course_name)
+            # self.click_button(*ElementSelector.course_detail_full_screen_return_course_loc)  # 点击退出全屏
 
     def student_check_course_loop(self):
         """
@@ -584,40 +592,59 @@ class BaseTestCase(BaseCase):
         btn_list = ['课件', '视频', '讲义']
         for btn in btn_list:
             try:
-                self.click_button(f'//p[text()="{btn}"]')
-                if '自动上传课件' == course_name:
-                    self.click_button(
-                        f'//p[text()="{btn}"]/parent::div/parent::div/parent::div/div[2]/div[2]',
-                        msg=btn
-                    )
-                else:
-                    self.click_button(
-                        f'//p[text()="{btn}"]/parent::div/parent::div/parent::div/div[2]',
-                        msg=btn
-                    )
+                self.click_button(f'//div[text()="{btn}"]', wait=True)
+                # if '自动上传课件' == course_name:
+                #     self.click_button(
+                #         f'//p[text()="{btn}"]/parent::div/parent::div/parent::div/div[2]/div[2]',
+                #         msg=btn
+                #     )
+                # else:
+                #     self.click_button(
+                #         f'//p[text()="{btn}"]/parent::div/parent::div/parent::div/div[2]',
+                #         msg=btn
+                #     )
             except ElementNotVisibleException:
                 log(self.step_log_path, '缺少资源')
-            self.__ppt_operation(btn)
+            except WebDriverException:
+                log(self.step_log_path, '按钮被挡住')
+                self.click_button(*ElementSelector.back_on_top_loc)
+                self.click_button(f'//div[text()="{btn}"]', wait=True)
+            self.__ppt_video_operation(btn)
 
-    def __ppt_operation(self, btn):
+    def __ppt_video_operation(self, btn):
         if '课件' == btn:
             try:
                 frame_elem = self.take_element(*ElementSelector.course_detail_start_course_iframe_loc)
-                self.switch_to_frame(frame_elem)
-                self.switch_to_frame('wacframe')
+                self.switch_to_frame(frame_elem, timeout=10)
+                self.switch_to_frame('wacframe', timeout=10)
                 time.sleep(1)
                 if self.__wait_for_loading():
+                    self.element_visible(*ElementSelector.course_detail_ppt_content_loc)  # 等待PPT显示
                     self.element_visible(*ElementSelector.course_detail_ppt_pages_num_loc)
                     page_num_text = self.take_text(*ElementSelector.course_detail_ppt_pages_num_loc)
                     page_text = page_num_text[11:]
                     num_text = page_text[:2]
-                    page_num = int(num_text)
+                    try:
+                        page_num = int(num_text)
+                    except ValueError:  # 没取到页码数值时等待后重新取
+                        time.sleep(1)
+                        page_num_text = self.take_text(*ElementSelector.course_detail_ppt_pages_num_loc)
+                        page_text = page_num_text[11:]
+                        num_text = page_text[:2]
+                        page_num = int(num_text)
                     for s in range(page_num):
                         self.slow_click(*ElementSelector.course_detail_ppt_next_btn_loc)
             except ElementNotVisibleException:
-                raise log(self.step_log_path, 'PPT显示异常')
+                log(self.step_log_path, 'PPT显示异常')
+            except Exception as e:
+                log(self.step_log_path, f'{e},PPT加载异常')
             finally:
                 self.switch_to_default_content()
+        if '视频' == btn:
+            try:
+                self.element_visible(*ElementSelector.course_detail_video_content_loc)
+            except ElementNotVisibleException:
+                log(self.step_log_path, '没有视频资源')
 
     # def uni_teach_student_check_course(self, course_name):
     #     """
@@ -771,16 +798,15 @@ class BaseTestCase(BaseCase):
         problem_id_list = self.parameter.get_problem_id_for_ui(eval_id, traditional_teach=True)
         return c_problem_list, problem_id_list
 
-    def teacher_check_homework_simple(self, homework_name, student_username,
-                                      student_name, completion, correct):
+    def teacher_check_homework_simple(self, homework_name, completion, correct):
         self.refresh()
         self.__assert_equal(homework_name, ElementSelector.teacher_index_homework_name_loc)
         self.__assert_equal('已结束', ElementSelector.index_homework_status_loc)
         self.click_button(*ElementSelector.bar_homework_loc)
         self.click_button(*ElementSelector.homework_list_homework_name, loading=True)
         self.__assert_equal(homework_name, ElementSelector.homework_list_homework_name)
-        self.__assert_equal(student_username, ElementSelector.homework_list_student_list_username_loc)
-        self.__assert_equal(student_name, ElementSelector.homework_list_student_list_name_loc)
+        self.element_visible(*ElementSelector.homework_list_student_list_username_loc)
+        self.element_visible(*ElementSelector.homework_list_student_list_name_loc)
         self.__assert_equal(completion, ElementSelector.homework_list_student_list_completion_loc)
         self.__assert_equal(correct, ElementSelector.homework_list_student_list_correct_loc)
         self.__assert_equal('100', ElementSelector.homework_list_student_list_score_loc)

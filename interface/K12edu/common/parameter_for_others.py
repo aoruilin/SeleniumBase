@@ -376,6 +376,24 @@ class ParameterForOthers:
             course_id_list = [i['id'] for i in data_list]
             return course_id_list
 
+    def teacher_get_homework_problem_id_list(self):
+        """
+        老师获取单个作业题目列表
+        :return:
+        """
+        url = f'{self.ip}/homework/tchHwAnsProblemList'
+        data = {
+            "hwId": self.get_homework_id_list(teacher=True)[0]
+        }
+        res = requests.post(url=url, headers=self.headers, json=data)
+        data_ret = res.json()
+        try:
+            return [(i['problemId'], i['problemType']) for i in data_ret['data']]
+        except TypeError:
+            print(f'接口"/homework/tchHwAnsProblemList"报错，返回{data_ret["msg"]}')
+        except KeyError:
+            print(f'接口"/homework/tchHwAnsProblemList"返回{data_ret}')
+
     def get_problem_id(self, point_id, subject_type, difficulty_list=None, p_type=None):
         """
         提供公用的problemId
@@ -556,6 +574,49 @@ class ParameterForOthers:
             resource_id_list = [r['resourceId'] for r in data_list]
             return resource_id_list
 
+    def student_get_problem_id_list(self, choice=False):
+        """
+        学生获取作业题目id
+        :param choice: 是否获取选择题
+        :return:
+        """
+        url = f'{self.ip}/homework/stuHwProblemList'
+        data = {
+            "hwId": self.get_homework_id_list()[0]  # 第一个作业
+        }
+        res = requests.post(url=url, headers=self.headers, json=data)
+        data_ret = res.json()
+        try:
+            # problem_type = 1 if choice else 2
+            return [(i['problemId'], i['problemType'])
+                    for i in data_ret['data']]  # if i['problemType'] == problem_type]
+        except TypeError:
+            print(f'接口"/homework/stuHwProblemList"报错：{data_ret["msg"]}')
+        except KeyError:
+            print(f'接口"/homework/stuHwProblemList"返回{data_ret}')
+
+    def teacher_get_student_eval_id_list(self):
+        """
+        获取学生evalId
+        :return:
+        """
+        url = f'{self.ip}/homework/tchHwStuList'
+        data = {
+            "currPage": 1,
+            "hwId": self.get_homework_id_list(teacher=True)[0],
+            "pageSize": 30
+        }
+        res = requests.post(url=url, headers=self.headers, json=data)
+        data_ret = res.json()
+        try:
+            data_list = data_ret['data']['list']
+        except TypeError:
+            print(f'接口"/homework/tchHwStuList"报错，返回{data_ret["msg"]}')
+        except KeyError:
+            print(f'接口"/homework/tchHwStuList"返回{data_ret}')
+        else:
+            return [i['studentEvalId'] for i in data_list]
+
     def get_choice_problem_id_for_ui(self, eval_id):  # 没改
         choice_url = f'{self.ip}/pc/choice/getChoiceListByEvalId?pageNum=1&pageSize=120&evalId={eval_id}&sort=0'
         res = requests.get(url=choice_url, headers=self.headers)
@@ -645,20 +706,28 @@ class ParameterForOthers:
         else:
             return [i['id'] for i in data_list]
 
-    def get_student_homework_id(self):  # 没改
-        url = f'{self.ip}/pc/student/homeworkEval?pageNum=1&pageSize=12'
-        res = requests.get(url=url, headers=self.headers)
+    def get_homework_id_list(self, teacher=False):
+        url = f'{self.ip}/homework/tchHwList' if teacher else f'{self.ip}/homework/stuHwList'
+        class_id_index = -1 if teacher else 0
+        _, school_id = self.get_user_school_id()
+        data = {
+            "classId": self.get_class_list(get_all=True)[class_id_index],
+            "currPage": 1,
+            "homeworkName": "",
+            "pageSize": 30,
+            "schoolId": school_id,
+            "status": ''
+        }
+        res = requests.post(url=url, headers=self.headers, json=data)
         data_ret = res.json()
         try:
             data_list = data_ret['data']['list']
         except TypeError:
-            print(f'接口/pc/student/homeworkEval报错，返回{data_ret["msg"]}')
+            print(f'接口/homework/stuHwList报错，返回{data_ret["msg"]}')
         except KeyError:
-            print(data_ret)
+            print(f'接口/homework/stuHwList返回{data_ret}')
         else:
-            homework_dic = data_list[0]
-            homework_id = homework_dic['homeworkId']
-            return homework_id
+            return [i['homeworkId'] for i in data_list]
 
     def get_record_id_list(self, traditional_teach=False):  # 没改
         """
@@ -898,6 +967,5 @@ class ParameterForOthers:
         else:
             return [i['id'] for i in data_list]
 
-
-# print(ParameterForOthers(identity='teacher').get_problem_id(205, [1], 2, 2))
-# print(ParameterForOthers(identity='student').get_sucai_url())
+# print(ParameterForOthers(identity='teacher').teacher_get_homework_problem_id_list())
+# print(ParameterForOthers(identity='student').student_get_problem_id_list())

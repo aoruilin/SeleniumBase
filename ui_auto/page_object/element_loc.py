@@ -6,6 +6,7 @@ class ElementSelector:
     confirm_btn_contais_text = '//div[contains(text(),"确定")]', '确定按钮'
     confirm_btn_equal_text = '//div[text()="确定"]', '确定按钮'
     succ_tip_loc = '//p[@class="el-message__content"]', '成功提示'
+    back_on_top_loc = '//div[@class="ant-back-top-icon"]', '回到顶部'
 
     """页面遮罩层"""
     loading_mask_loc = '//div[@class="el-loading-mask is-fullscreen"]'
@@ -16,8 +17,8 @@ class ElementSelector:
     """登录页面"""
     username_input_loc = '//input[@id="normal_login_username"]', '用户名输入框'
     password_input_loc = '//input[@id="normal_login_password"]', '密码输入框'
-    save_login_loc = '//input[@class="ant-radio-input"]', '记住账号'
-    login_btn_loc = '//span[contains(text(),"登 录")]', '登录按钮'
+    save_login_loc = '//label[@class="ant-radio-wrapper"]', '记住账号'
+    login_btn_loc = '//span[contains(text(),"登 录")]/parent::button', '登录按钮'
     uni_teach_login_btn_loc = '//span[contains(text(),"登录")]/parent::button', '教学版登录按钮'
 
     class_manage_text_loc = '//div[@class="model-tips-word"]', '班级管理文本'
@@ -29,12 +30,12 @@ class ElementSelector:
         '//form[@class="el-form login-form el-form--label-left"]/div[2]/div/div[3]', '密码错误提示'  # 待定
 
     """导航栏"""
-    bar_index_loc = '//span[contains(text(), "首页")]', '首页'
-    bar_course_loc = '//span[text()="课程"]', '课程'
-    bar_homework_loc = '//span[text()="作业"]', '作业'
-    bar_creative_space_loc = '//span[contains(text(),"创作空间")]', '创作空间'
-    bar_study_analysis_loc = '//span[contains(text(),"学情分析")]', '学情分析'
-    bar_teach_center_loc = '//span[contains(text(),"教学中心")]', '教学中心'
+    bar_index_loc = '//span[contains(text(),"首页")]/parent::a', '首页'
+    bar_course_loc = '//span[text()="课程"]/parent::a', '课程'
+    bar_homework_loc = '//span[text()="作业"]/parent::a', '作业'
+    bar_creative_space_loc = '//span[contains(text(),"创作空间")]/parent::a', '创作空间'
+    bar_study_analysis_loc = '//span[contains(text(),"学情分析")]/parent::a', '学情分析'
+    bar_teach_center_loc = '//span[contains(text(),"教学中心")]/parent::a', '教学中心'
     bar_test_field_loc = '//span[contains(text(),"进入试炼场")]', '进入试炼场'
 
     standard_course_btn_loc = '//span[contains(text(),"标准")]', '标准授课按钮'
@@ -63,8 +64,8 @@ class ElementSelector:
     submit_btn_loc = '//span[contains(text(),"提交")]', '提交按钮'
 
     """头像下拉选项"""
-    index_portrait_loc = '//span[@class="ant-dropdown-trigger ant-badge"]', '头像'
-    index_portrait_name_loc = '//span[text()="Data中的名称"]', '头像下拉框用户名称'
+    index_portrait_loc = '//div[@class="headercustom_avatar__3qY6R"]/span', '头像'
+    index_portrait_name_loc = '//div[@class="avatarHeader_name__1-ZZT"]/span[1]', '头像下拉框用户名称'
     index_portrait_msg_loc = '//span[contains(text(),"消息")]', '消息'
     index_portrait_setup_loc = '//span[contains(text(),"设置")]', '设置'
     index_portrait_knowledge_base_loc = '//span[contains(text(),"知识库")]', '知识库'
@@ -88,7 +89,7 @@ class ElementSelector:
     index_course_resource_loc = '//span[contains(text(),"课程资源")]', '课程资源'
 
     """首页最近作业"""
-    index_homework_more_loc = '//div[contains(text(),"最近作业")]/parent::div/div[2]/a/span', '最近作业更多'
+    index_homework_more_loc = '//div[contains(text(),"最近作业")]/parent::div/div[2]/a', '最近作业更多'
     index_homework_status_loc = '//div[@class="ant-table-content"]/descendant::td[3]', '最近作业列表作业状态'
     teacher_index_homework_name_loc = '//div[@class="ant-table-content"]/descendant::td[1]', '教师首页最近作业列表作业名称'
     student_index_homework_name_loc = '', '学生首页最近作业列表作业名称'  # 待定
@@ -100,15 +101,15 @@ class ElementSelector:
     #     '学生端首页最新课程课程名称'  # .home-stu-course-container.clearfix>div:nth-of-type(1)>div>div>div
 
     """首页我的课程"""
-    index_course_more_loc = '//div[contains(text(),"我的课程")]/parent::div/div[2]/a/span', '我的课程更多'
+    index_course_more_loc = '//div[contains(text(),"我的课程")]/parent::div/div[2]/a', '我的课程更多'
     index_course_loc = '//div[@class="home_course-main__2BWf1"]/div[1]/div[1]', '我的课程第一个课程卡片'
 
     """学生动态"""
-    index_dynamic_more_loc = '//div[contains(text(),"学生动态")]/parent::div/div[2]/a/span', '动态更多'
+    index_dynamic_more_loc = '//div[contains(text(),"学生动态")]/parent::div/div[2]/a', '动态更多'
     index_dynamic_work_loc = '', '动态作品'  # 待定
 
     """作品推荐"""
-    index_work_recommend_more_loc = '//div[contains(text(),"作品推荐")]/parent::div/div[2]/a/span', '作品推荐更多'
+    index_work_recommend_more_loc = '//div[contains(text(),"作品推荐")]/parent::div/div[2]/a', '作品推荐更多'
     index_wowk_recommend_loc = '', '作品推荐卡片'  # 待定
 
     """上课引导"""
@@ -161,7 +162,7 @@ class ElementSelector:
     level_three_loc = '//div[@class="el-cascader-panel"]/div[3]/div[1]/ul/li', '三级菜单所有知识点'
 
     """课件列表"""
-    course_list_add_course_loc = '//span[text()="发布课程"]', '发布课程'
+    course_list_add_course_loc = '//span[text()="发布课程"]/parent::button', '发布课程'
     course_list_choose_class_loc = '//div[@class="course_nav-header__KaIKl"]/div[1]/div[1]/div', '班级筛选'
     course_list_choose_course_loc = '//div[@class="course_nav-header__KaIKl"]/div[1]/div[2]/div', '课程筛选'
     course_list_search_all_loc = '//span[contains(text(),"全部")]', '全部'
@@ -171,6 +172,8 @@ class ElementSelector:
     course_list_list_mode_loc = '//div[@class="course_nav-header__KaIKl"]/div[2]/div[1]/div/label[2]', '列表形式'
     course_list_card_mode_first_course_loc = '//div[@class="course_card-main__OJhEN"]/div[1]/div[1]/div[1]', '课程卡片第一个'
     course_list_list_mode_first_course_loc = '//div[@class="ant-table-content"]/descendant::span[2]', '课程列表第一个'  # 待定
+    course_list_card_mode_first_course_name_loc = \
+        '//div[@class="course_card-main__OJhEN"]/div[1]/div[2]/span[1]', '第一个课程的名称'
     course_list_card_mode_teacher_name_loc = '', '课程卡片发布教师'  # 待定
     course_list_card_mode_all_course_loc = '//div[@class="course_card-main__OJhEN"]/div', '所有课程卡片'
     course_list_list_mode_all_course_loc = '//div[@class="ant-table-content"]', '列表所有课程'  # 待定
@@ -183,10 +186,13 @@ class ElementSelector:
                                               '/ul/li[4]', '课程列表操作删除'
 
     """添加课程"""
-    add_course_choose_course_loc = '//form[@class="ant-form ant-form-horizontal ant-form-small ' \
-                                   'courseCompile_form-items__3KJIT"]/div[1]/div[2]', '选择课程'
-    add_course_choose_class_loc = '//div[@class="ant-select courseCompile_class-select__1CdH2 ant-select-lg ' \
-                                  'ant-select-multiple ant-select-show-search"]', '发布班级'
+    add_course_choose_course_loc = \
+        '//form[@class="ant-form ant-form-horizontal ant-form-small courseCompile_form-items__3Pooa"]' \
+        '/div[1]/div[2]', '选择课程'
+    add_course_choose_class_loc = \
+        '//div[@class=' \
+        '"ant-select courseCompile_class-select__36btN ant-select-lg ant-select-multiple ant-select-show-search"]',\
+        '发布班级'
     add_course_choose_first_course_loc = f'//div[text()="S{PointIdIndex().level_one_index - 1}"]', \
                                          f'S{PointIdIndex().level_one_index - 1}'  # 待定，后期加到操作代码
     add_course_choose_first_class_loc = f'//div[text()="{Data().pro_class_name_for_edu()}"]', \
@@ -196,7 +202,7 @@ class ElementSelector:
     add_course_course_plan_switch_loc = '//button[@class="ant-switch"]', '计划授课开关'
     add_course_course_plan_choose_date_loc = '//div[@class="ant-row"]/div[1]/label/span[1]/input', '计划授课日期选择'
     add_course_publish_course_loc = '//span[text()="发 布"]/parent::button', '发布按钮'  # 发布作业共用
-    add_course_cancel_course_loc = '//span[contains(text(),"取 消")]', '发布取消按钮'  # 发布作业共用
+    add_course_cancel_course_loc = '//span[contains(text(),"取 消")]/parent::button', '发布取消按钮'  # 发布作业共用
     add_course_publish_course_success_tip_loc = '', '发布课程成功文本'  # 待定
     add_course_publish_course_window_confirm_loc = '', '发布课程弹窗确定'  # 待定
     add_course_publish_course_fail_tip_loc = '', '发布课程失败文本'  # 待定
@@ -237,19 +243,25 @@ class ElementSelector:
     course_detail_teach_plan_loc = '', '教案tab'  # 待定
     course_detail_practice_loc = '', '练习tab'  # 待定
     course_detail_ppt_next_btn_loc = '//span[@class="cui-toolbar-buttondock aligncenter"]/a[3]', '课件PPT下一页按钮'  # 待定
-    course_detail_ppt_pages_num_loc = '//span[@class="cui-toolbar-buttondock aligncenter"]/a[2]', '课件页数'  # 待定
+    course_detail_ppt_pages_num_loc = '//span[@class="cui-toolbar-buttondock aligncenter"]/a[2]/span', '课件页数'
+    course_detail_ppt_content_loc = '//div[@id="browserLayerViewId"]/div[2]', 'PPT内容'
+    course_detail_video_content_loc = '//video', '视频标签'
     course_detail_practice_list_problem_loc = '', '练习题目'  # 待定
     course_detail_practice_list_student_name_loc = '', '练习列表学生名字'  # 待定
     course_detail_practice_list_refresh_loc = '', '练习列表刷新'  # 待定
 
-    course_detail_choose_chap_loc = '//span[contains(text(),"目录")]/parent::div/following-sibling::div/div', '选择章节'
-    course_detail_choose_section_loc = '', '选择小节'  # 待定
-    course_detail_full_screen_course_loc = '//span[contains(text(),"全屏")]', '全屏授课'
-    course_detail_start_study_course_loc = '', '开始学习'  # 待定
-    course_detail_full_screen_return_course_loc = '//span[contains(text(),"返回")]', '全屏模式返回课程'
+    course_detail_choose_chap_loc = '//div[@class="courseDetail_course-catalogue__3rF7c"]/div[2]/div/div/span[2]',\
+                                    '选择章节'
+    course_detail_choose_section_loc = '//span[contains(text(),"目录")]' \
+                                       '/parent::div/following-sibling::div/div/div[2]/div/ul/li/div[3]/div/div[1]',\
+                                       '选择小节'
+    course_detail_send_course_loc = '//span[text()="发送"]', '课程发送按钮'
+    course_detail_full_screen_course_loc = '//span[contains(text(),"全屏")]/parent::button', '全屏授课'
+    course_detail_start_study_course_loc = '//span[contains(text(),"学习")]/parent::button', '开始学习'
+    course_detail_full_screen_return_course_loc = '//span[contains(text(),"返回")]', '全屏模式返回课程'  # 待定
 
     course_detail_start_course_edit_btn_loc = '//span[contains(text(),"返回")]/parent::button/following::button', \
-                                              '精简试炼场弹出开关'
+                                              '精简试炼场弹出开关'  # 待定
     course_detail_start_course_edit_cross_btn_loc = '', '精简试炼场横向模式'  # 待定
     course_detail_start_course_putback_btn_loc = '//span[contains(text(),"收起")]', '精简试炼场收起开关'  # 待定
     course_detail_start_course_edit_cursor_loc = '//div[@class=" ace_editor ace-cobalt ace_dark"]/textarea', \
@@ -259,39 +271,52 @@ class ElementSelector:
     course_detail_start_course_pic_output_btn_loc = '//div[contains(text(),"图形")]', '图形输出区按钮'  # 待定
     course_detail_start_course_pic_output_area_loc = '//div[@class="gird"]/img', '图形输出'  # 待定
     course_detail_start_course_course_run_code_btn_loc = '//span[contains(text(),"运行")]', '运行代码按钮'  # 待定
-    course_detail_start_course_iframe_loc = '//div[@class="courseware-content-ware"]/iframe', '第一层iframe'  # 待定
+    course_detail_start_course_iframe_loc = '//div[@class="courseDetail_gird__1TJBu"]/iframe', '第一层iframe'
 
     """作业列表"""
-    homework_list_add_homework_btn_loc = '//span[contains(text(),"发布作业")]', '发布作业按钮'
+    homework_list_add_homework_btn_loc = '//span[contains(text(),"发布作业")]/parent::button', '发布作业按钮'
     homework_list_homework_name = \
-        '//div[@class="homework-container-gird"]/ul/li[1]/div/div/div/div[1]/div[1]/div', '作业列表作业名称'  # 待定
-    homework_list_wrong_statistic_loc = '//span[contains(text(),"错题统计")]', '错题统计'
-    homework_list_student_list_username_loc = '', '学生列表学生学号'  # 待定
-    homework_list_student_list_name_loc = '', '学生列表学生名字'  # 待定
-    homework_list_student_list_completion_loc = '', '学生列表学生完成率'  # 待定
-    homework_list_student_list_correct_loc = '', '学生列表正确率'  # 待定
-    homework_list_student_list_score_loc = '', '学生得分'  # 待定
-    homework_list_student_list_level_loc = '', '学生列表作业等级'  # 待定
-    homework_list_student_list_look_loc = '', '学生列表查看按钮'  # 待定
-    homework_list_student_list_resubmit_loc = '', '学生列表重交按钮'  # 待定
-    homework_list_class_select_loc = '', '班级下拉框'  # 待定
-    homework_list_search_all_loc = '', '筛选全部'  # 待定
-    homework_list_search_ongoing_loc = '', '筛选进行中'  # 待定
-    homework_list_search_ended_loc = '', '筛选已结束'  # 待定
-    homework_list_date_search_loc = '', '日期筛选'  # 待定
-    homework_list_search_input_loc = '', '搜索输入框'  # 待定
-    homework_list_search_btn_loc = '', '搜索按钮'  # 待定
+        '//div[@class="leftMenu_work-card-wrap__2_8pq"]/descendant::ul[1]/li[1]/span', '作业列表作业名称'
+    homework_list_wrong_statistic_loc = '//span[contains(text(),"错题统计")]', '错题统计'  # 待定
+    homework_list_student_info_loc = '//div[@class="ant-table-body"]', '学生列表'
+    homework_list_student_list_username_loc = f'//td[text()="{Data().student_data()["username"]}"]', '学生列表学生学号'
+    homework_list_student_list_name_loc = f'//td[text()="{Data().student_data()["name"]}"]', '学生列表学生名字'
+    homework_list_student_list_completion_loc = f'//td[text()="{Data().student_data()["name"]}"]' \
+                                                '/following-sibling::td[3]/span', '学生列表学生完成率'
+    homework_list_student_list_correct_loc = f'//td[text()="{Data().student_data()["name"]}"]' \
+                                             '/following-sibling::td[4]/span', '学生列表正确率'
+    homework_list_student_list_score_loc = f'//td[text()="{Data().student_data()["name"]}"]' \
+                                           '/following-sibling::td[5]', '学生得分'
+    homework_list_student_list_level_loc = f'//td[text()="{Data().student_data()["name"]}"]' \
+                                           '/following-sibling::td[6]/span', '学生列表作业等级'
+    homework_list_student_list_look_loc = f'//td[text()="{Data().student_data()["name"]}"]' \
+                                          '/following-sibling::td[7]/div/span[1]', '学生列表查看按钮'
+    homework_list_student_list_resubmit_loc = f'//td[text()="{Data().student_data()["name"]}"]' \
+                                              '/following-sibling::td[7]/div/span[2]', '学生列表重交按钮'
+    homework_list_class_select_loc = '//div[@class="ant-select-selector"]', '班级下拉框'
+    homework_list_search_all_loc = '//span[contains(text(),"全部")]', '筛选全部'
+    homework_list_not_begin_loc = '//span[contains(text(),"全部")]/ancestor::label/following-sibling::label[1]',\
+                                  '筛选未开始'
+    homework_list_search_ongoing_loc = '//span[contains(text(),"全部")]/ancestor::label/following-sibling::label[2]',\
+                                       '筛选进行中'
+    homework_list_search_ended_loc = '//span[contains(text(),"全部")]/ancestor::label/following-sibling::label[3]',\
+                                     '筛选已结束'
+    homework_list_search_input_loc = '//input[@class="ant-input ant-input-lg"]', '搜索输入框'
+    homework_list_search_btn_loc = '//span[@class="anticon anticon-search ant-input-search-icon"]', '搜索按钮'
     homework_list_homework_card_loc = '', '作业卡片'  # 待定
-    homework_list_operation_loc = '', '作业操作'  # 待定
-    homework_list_operation_edit_loc = '', '重新编辑'  # 待定
+    homework_list_operation_loc = '//div[@class="leftMenu_work-card-wrap__2_8pq"]/div/div[1]/span', '作业操作'
+    homework_list_operation_edit_loc = '//li[contains(text(),"重新编辑")]', '重新编辑'
     homework_list_operation_edit_keep_choose_problem_loc = '', '重新编辑继续选取题目'  # 待定
-    homework_list_operation_edit_confirm_edit_loc = '', '重新编辑确认修改'  # 待定
-    homework_list_operation_replacement_loc = '', '补发作业'  # 待定
-    homework_list_operation_delete_loc = '', '删除'  # 待定
-    homework_list_problem_analysis_loc = '', '题目分析'  # 待定
-    homework_list_problem_analysis_go_explain_loc = '', '去讲解'  # 待定
-    homework_list_problem_analysis_go_explain_student_choose_loc = '', '去讲解学生下拉框'  # 待定
-    homework_list_problem_analysis_go_explain_student_choose_first_loc = '', '学生下拉框第一个'  # 待定
+    homework_list_operation_edit_confirm_edit_loc = '//span[contains(text(),"确定")]', '重新编辑确认修改'
+    homework_list_operation_replacement_loc = '', '补发作业'  # 待定，现在需求去掉了
+    homework_list_operation_delete_loc = '//li[contains(text(),"删除")]', '删除'
+    homework_list_problem_analysis_loc = '//div[contains(text(),"分析")]', '题目分析'
+    homework_list_problem_analysis_go_explain_loc = '//th[contains(text(),"题目名称")]' \
+                                                    '/ancestor::table/parent::div/parent::div' \
+                                                    '/descendant::tr[3]/descendant::span[5]', '去讲解'
+    homework_list_problem_analysis_go_explain_student_choose_loc = '//div[@class="ant-select-selector"]', '去讲解学生下拉框'
+    homework_list_problem_analysis_go_explain_student_choose_first_loc = \
+        f'//div[text()="{Data().student_data()["name"]}"]', '下拉框选择学生'
     homework_list_student_detail_go_answer_loc = '', '去作答'  # 待定
     homework_list_student_detail_look_loc = '', '查看'  # 待定
     homework_list_student_detail_student_name_loc = '', '学生姓名'  # 待定
@@ -326,11 +351,11 @@ class ElementSelector:
     add_homework_choose_homework_class_loc = '//form[@id="workForm"]/div[6]/div[2]', '发布班级'
     add_homework_choice_first_series_loc = f'//div[text()="S{PointIdIndex().level_one_index - 1}"]', \
                                            f'S{PointIdIndex().level_one_index - 1}'
-    add_homework_choose_first_class_loc = f'//div[text()="{Data().pro_class_name_for_edu()}"]', \
-                                          Data().pro_class_name_for_edu()  # 待定(如果和发布课程相同则去掉)
+    add_homework_choose_first_class_loc = '//form[@class="ant-form ant-form-horizontal ant-form-large"]' \
+                                          '/div[6]/descendant::span[6]', '发布班级'
     add_homework_success_tip_loc = '//span[@class="ant-modal-confirm-title"]', '发布作业成功提示'  # 待定(如果和发布课程相同则去掉)
     add_homework_publish_fail_tip_loc = '', '发布作业失败提示'  # 待定(如果和发布课程相同则去掉)
-    add_homework_success_confirm_loc = '//div[@class="ant-modal-confirm-body-wrapper"]/div[2]/button',\
+    add_homework_success_confirm_loc = '//div[@class="ant-modal-confirm-body-wrapper"]/div[2]/button', \
                                        '发布作业成功确定'  # 待定(如果和发布课程相同则去掉)
 
     """作业详情"""

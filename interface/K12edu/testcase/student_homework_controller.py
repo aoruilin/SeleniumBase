@@ -14,13 +14,13 @@ class DoHomework(unittest.TestCase):
         self.point_id = point_id_list[0]
 
     def test_do_homework_01(self):
-        do_homework_simple(self.parameter, cut_num=None, traditional_teach=True)
+        do_homework_simple(self.parameter, cut_num=None)
 
     def test_do_homework_02(self):
         do_homework_simple(self.parameter, cut_num=None)
 
     def test_do_homework_turtle(self):
-        do_homework_simple(self.parameter, cut_num=None, traditional_teach=True, homework_num=3)
+        do_homework_simple(self.parameter, cut_num=None, homework_num=3)
 
 
 if __name__ == "__main__":

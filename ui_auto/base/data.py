@@ -21,7 +21,7 @@ class Data:
 
     def ip_for_edu(self):
         ip_for_edu = 'https://edu.dingdangcode.com' \
-            if self.production else 'http://192.168.0.160:8096'
+            if self.production else 'https://edu.dingdangcode.cn/'
 
         return ip_for_edu
 

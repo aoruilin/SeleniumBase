@@ -14,8 +14,7 @@ from ui_auto.page_object.page_operation import BaseTestCase
 
 
 class TestMainProcess(BaseTestCase):
-    file_name = __file__
-    name = __name__
+    file_name, name = __file__, __name__
     case_log_path = log_path(file_name, name)
     d = Data()
     manager_data = d.manager_data()
@@ -32,7 +31,7 @@ class TestMainProcess(BaseTestCase):
         self.login(**self.teacher_data)
         self.click_button(*ElementSelector.bar_course_loc)
         course_name = self.add_course_simple(self.teaching_package_list[0])
-        self.teacher_check_index_course(course_name)
+        # self.teacher_check_index_course(course_name)  # 前端还没做
 
         self.get_new_driver()
         self.login(**self.student_data)
@@ -63,8 +62,7 @@ class TestMainProcess(BaseTestCase):
         completion, correct = self.student_do_homework_simple(self.homework_name)
         # 教师检查作业详情
         self.switch_to_default_driver()
-        self.teacher_check_homework_simple(self.homework_name, self.student_data['username'],
-                                           self.student_data['name'], completion, correct)
+        self.teacher_check_homework_simple(self.homework_name, completion, correct)
 
 
 if __name__ == "__main__":

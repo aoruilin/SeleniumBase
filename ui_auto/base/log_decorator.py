@@ -9,6 +9,7 @@ def log_decorator(log_path):
     @wrapt.decorator
     def inner_decorator(wrapped, instance, args, kwargs):
         func_name = wrapped.__name__
+        log(log_path, '##################################################')
         log(log_path, f'{func_name}开始执行')
         try:
             wrapped(*args)
