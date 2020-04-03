@@ -19,7 +19,7 @@ class DoHomework(unittest.TestCase):
     def test_do_homework_02(self):
         do_homework_simple(self.parameter, cut_num=None)
 
-    def test_do_homework_turtle(self):
+    def test_03_do_homework_loop(self):
         do_homework_simple(self.parameter, cut_num=None, homework_num=3)
 
 

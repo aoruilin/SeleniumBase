@@ -5,7 +5,7 @@ from itertools import chain
 import requests
 
 from interface.K12edu.common.assert_msg import assert_res
-from interface.K12edu.common.homework_operation import add_homework, oj_data
+from interface.K12edu.common.homework_operation import add_homework, oj_data, do_homework_simple
 from interface.K12edu.common.parameter_for_others import ParameterForOthers
 
 
@@ -24,11 +24,11 @@ class HomeworkController(unittest.TestCase):
         self.point_id_tup = self.teacher_parm.get_point_id()
         self.all_point_id = self.teacher_parm.get_all_point_id(1)
         self.class_id_list = self.teacher_parm.get_class_list(get_all=True)
-        self.series_id_list = self.teacher_parm.get_series_list()
+        self.series_id_list = self.teacher_parm.get_series_list(2)
         self.teacher_id, self.school_id = self.teacher_parm.get_user_school_id()
         self.student_id, _ = self.student_parm.get_user_school_id()
         self.teacher_homework_id_list = self.teacher_parm.get_homework_id_list(teacher=True)
-        self.student_homework_id_list = self.teacher_parm.get_homework_id_list()
+        self.student_homework_id_list = self.student_parm.get_homework_id_list()
         self.teacher_problem_id_list = self.teacher_parm.teacher_get_homework_problem_id_list()
         self.student_problem_id_list = self.student_parm.student_get_problem_id_list()
 
@@ -39,31 +39,67 @@ class HomeworkController(unittest.TestCase):
         """
         param = {
             'hw_name': '接口发布作业',
-            'series_id': self.series_id_list[0],
+            'series_id': self.series_id_list[1],
             'point_id_list': [self.point_id_tup[0]],
             'show_answer': 1,
             'show_difficulty': 1,
             'timing': 0
         }
-        add_homework(self.teacher_parm, **param)
+        add_result = add_homework(self.teacher_parm, **param)
+        if add_result:
+            c = 0
+            for student_username in self.teacher_parm.teacher_get_hw_student_num():
+                student_param = ParameterForOthers('student', student_username)
+                do_homework_simple(student_param, cut_num=c)
+                c -= 1
 
     def test_02_post_homework_loop(self):
         """
         老师遍历发布设置发布作业
         :return:
         """
-        for a in range(2):
+        for a in range(3):
             for d in range(2):
                 for t in range(2):
                     param = {
                         'hw_name': f'答案{a}难度{d}定时{t}',
-                        'series_id': self.series_id_list[0],
+                        'series_id': self.series_id_list[1],
                         'point_id_list': [self.point_id_tup[0]],
                         'show_answer': a,
                         'show_difficulty': d,
                         'timing': t
                     }
-                    add_homework(self.teacher_parm, **param)
+                    add_result = add_homework(self.teacher_parm, **param)
+                    if add_result and t == 0:
+                        c = 0
+                        for student_username in self.teacher_parm.teacher_get_hw_student_num():
+                            student_param = ParameterForOthers('student', student_username)
+                            do_homework_simple(student_param, cut_num=c)
+                            c -= 1
+
+    def test_03_post_simple_series_problem(self):
+        """
+        教师发布单个系列全部题目
+        :return:
+        """
+        series_id = 1
+        all_point_id_list = self.teacher_parm.get_all_point_id(series_id)
+        for point_id in all_point_id_list:
+            param = {
+                'hw_name': f'S{series_id}的{point_id}',
+                'series_id': series_id,
+                'point_id_list': [point_id],
+                'show_answer': 1,
+                'show_difficulty': 1,
+                'timing': 0
+            }
+            add_result = add_homework(self.teacher_parm, **param)
+            if add_result:
+                c = 0
+                for student_username in self.teacher_parm.teacher_get_hw_student_num():
+                    student_param = ParameterForOthers('student', student_username)
+                    do_homework_simple(student_param, cut_num=c)
+                    c -= 1
 
     def test_03_post_all_problem(self):
         """
@@ -72,8 +108,17 @@ class HomeworkController(unittest.TestCase):
         """
         for series_id in self.series_id_list:
             all_point_id_list = self.teacher_parm.get_all_point_id(series_id)
-            add_homework(self.teacher_parm, f'S{series_id}所有题目',
-                         series_id, all_point_id_list, [1, 2, 3], 1, 1, 0)
+            for point_id in all_point_id_list:
+                param = {
+                    'hw_name': f'S{series_id}的{point_id}',
+                    'series_id': series_id,
+                    'point_id_list': all_point_id_list,
+                    'show_answer': 1,
+                    'show_difficulty': 1,
+                    'timing': 0
+                }
+                add_homework(self.teacher_parm, **param)
+                do_homework_simple(self.student_parm, cut_num=None)
 
     def test_04_teacher_homework_list(self):
         """
@@ -112,7 +157,7 @@ class HomeworkController(unittest.TestCase):
         url = f'{self.ip}/homework/tchHwClassList'
         data = {
             "schoolId": self.school_id,
-            "seriesId": self.series_id_list[0]
+            "seriesId": self.series_id_list[1]
         }
         res = requests.post(url=url, headers=self.teacher_headers, json=data)
         assert_res(res.text)
@@ -174,7 +219,7 @@ class HomeworkController(unittest.TestCase):
         url = f'{self.ip}/homework/tchHwClassList'
         data = {
             "schoolId": self.school_id,
-            "seriesId": self.series_id_list[0],
+            "seriesId": self.series_id_list[1],
             "seriesType": 0
         }
         res = requests.post(url=url, headers=self.teacher_headers, json=data)
@@ -192,6 +237,7 @@ class HomeworkController(unittest.TestCase):
         教师端当前作业学生下拉列表
         :return:
         """
+        self.teacher_problem_id_list = self.teacher_parm.teacher_get_homework_problem_id_list()
         url = f'{self.ip}/homework/tchHwCurrentStuList'
         for subject_id, subject_type in self.teacher_problem_id_list:
             data = {

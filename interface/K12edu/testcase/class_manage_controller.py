@@ -13,6 +13,7 @@ class ClassManage(unittest.TestCase):
         self.teacher_param = ParameterForOthers(identity='teacher')
         self.student_param = ParameterForOthers(identity='student')
         self.ip = self.teacher_param.ip
+        self.user_id, self.school_id = self.manager_param.get_user_school_id()
         self.class_id = self.manager_param.get_class_list(1)[0]
         self.manager_id, _ = self.manager_param.get_user_school_id()
         self.student_id_list = self.teacher_param.get_class_student_id()
@@ -22,14 +23,23 @@ class ClassManage(unittest.TestCase):
         管理员创建班级
         :return:
         """
-        url = f'{self.ip}/pc/class/addCourse'
+        url = f'{self.ip}/teachcenter/classmanage/create'
         data = {
             'className': '接口添加班级，待删除',
-            'seriesIds': ['1', '3'],
-            'teacherIds': [str(self.manager_id)]
+            'schoolId': self.school_id,
+            'teachersId': [str(self.manager_id)]
         }
         res = requests.post(url=url, headers=self.manager_param.headers, json=data)
         assert_res(res.text)
+        data_ret = res.json()
+        try:
+            success = data_ret['data']['success']
+            if success:
+                print('创建成功')
+            if not success:
+                print(f'创建失败,{data_ret["data"]["msg"]}')
+        except KeyError:
+            print(f"添加班级失败,{data_ret}")
         time.sleep(1)
 
     def test_02_add_form_student(self):

@@ -27,19 +27,31 @@ def add_homework(parameter, hw_name, series_id, point_id_list,
     all_choice_id = []
     all_programme_id = []
     for point_id in point_id_list:
-        problem_id_list = parameter.get_problem_id(point_id, 2)
-        choice_id_list = parameter.get_problem_id(point_id, 1)
+        problem_id_list = parameter.get_problem_id(point_id, 2, 2)
+        problem_id_dic = [
+            {
+                'pointId': point_id,
+                'subjectId': problem_id
+            } for problem_id in problem_id_list
+        ]
+        choice_id_list = parameter.get_problem_id(point_id, 1, 2)
+        choice_id_dic = [
+            {
+                'pointId': point_id,
+                'subjectId': choice_id
+            } for choice_id in choice_id_list
+        ]
         if problem_id_list:
-            all_programme_id.append(problem_id_list)
+            all_programme_id.append(problem_id_dic)
         if choice_id_list:
-            all_choice_id.append(choice_id_list)
+            all_choice_id.append(choice_id_dic)
     all_choice_id_list, all_programme_id_list = list(chain(*all_choice_id)), list(chain(*all_programme_id))
     data = {
-        "choiceIds": all_choice_id_list,
+        "choices": all_choice_id_list[:25],
         "classIds": parameter.get_class_list(),
         "endTime": time_stamp(end=True),
         "hwName": hw_name,
-        "programmeIds": all_programme_id_list,
+        "programmes": all_programme_id_list[:25],
         "seriesId": series_id,
         "showAnswer": show_answer,
         "showDifficulty": show_difficulty,
@@ -54,20 +66,23 @@ def add_homework(parameter, hw_name, series_id, point_id_list,
     try:
         success_msg = data_ret['data']['msg']
         print(data_ret['data']['success'])
-        # assert ('' == success_msg)
+        return data_ret['data']['success']
     except AssertionError:
         print(f'提示断言失败，发布作业提示“{success_msg}”')
+        return False
     except TypeError:
         print(f'接口“/homework/tchHwPost”报错，返回{data_ret["msg"]}')
+        return False
     except KeyError:
         print(f'接口“/homework/tchHwPost”返回{data_ret}')
+        return False
 
 
 def oj_data(problem_id, problem_type, homework_id):
     answer = get_choice(problem_id=problem_id, problem_name=None) if problem_type == 1 \
         else base64.b64encode(get_code(problem_id=problem_id, problem_name=None).encode('u8')).decode('u8')
     data = {
-        "hwId": homework_id,
+        "hwId": homework_id.__str__(),
         "picContentError": "",
         "picEncryptContent": "",
         "subjectId": problem_id,
@@ -85,6 +100,7 @@ def do_homework_simple(parameter, cut_num=None, homework_num=1):
     homework_id_list = parameter.get_homework_id_list()
     for n in range(homework_num):  # 做前几个作业
         homework_id = homework_id_list[n]
+        __add_homework_eval(parameter, homework_id)
         problem_id_list = parameter.student_get_problem_id_list()[:cut_num] \
             if cut_num else parameter.student_get_problem_id_list()
         for p, c in problem_id_list:
@@ -92,16 +108,14 @@ def do_homework_simple(parameter, cut_num=None, homework_num=1):
             response = requests.post(url=url, headers=parameter.headers, json=data)
             ret = response.json()
             __assert_code_result(ret, p, c)
-            time.sleep(1)
+            time.sleep(1.5)
         # 提交作业
         commit_url = f'{parameter.ip}/homework/stuHwSubmit'
         commit_data = {
-            "hwId": homework_id
+            "hwId": homework_id.__str__()
         }
         commit_res = requests.post(url=commit_url, headers=parameter.headers, json=commit_data)
         assert_res(commit_res.text)
-        commit_ret = commit_res.json()
-        print(commit_ret['data']['success'])
         time.sleep(1)
 
 
@@ -118,6 +132,21 @@ def __base64_img(problem_id):
         return b_string
 
 
+def __add_homework_eval(parameter, hw_id):
+    """
+    学生激活作业
+    :param parameter: 参数对象
+    :param hw_id: 作业id
+    :return:
+    """
+    url = f'{parameter.ip}/homework/stuHwAddEval'
+    data = {
+        "hwId": hw_id
+    }
+    res = requests.post(url=url, headers=parameter.headers, json=data)
+    assert_res(res.text)
+
+
 def __assert_code_result(ret, problem_id, problem_type):
     if 1 == problem_type:
         try:
@@ -131,7 +160,7 @@ def __assert_code_result(ret, problem_id, problem_type):
             out = ret['data']['problemStatus']
             assert (1 == out)
         except TypeError:
-            print(f'紧急挑战评测接口报错，返回{ret["msg"]}', problem_id)
+            print(f'操作题评测接口报错，返回{ret["msg"]}', problem_id)
         except AssertionError as a:
             print(a, f'题号{problem_id}')
         except BaseException as e:

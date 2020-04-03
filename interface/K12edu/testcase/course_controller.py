@@ -119,8 +119,9 @@ class CourseController(unittest.TestCase):
             time.sleep(1)
             data_ret = res.json()
             try:
-                print(f"{data_ret['practisedCount']}/{data_ret['practiseCount']},{data_ret['avgCorrectRate']}")
-                practises_data = data_ret['practises']
+                data_dic = data_ret['data']
+                print(f"{data_dic['practisedCount']}/{data_dic['practiseCount']},{data_dic['avgCorrectRate']}")
+                practises_data = data_dic['practises']
                 print(
                     [
                         {i['name']: i['correctRate'], 'subject': [{p['name']: p['result']}

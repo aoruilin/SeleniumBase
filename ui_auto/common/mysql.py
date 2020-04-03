@@ -6,7 +6,7 @@ def get_code(problem_id, problem_name, challenge=False):
     if challenge:
         sql = "SELECT pc.code from problem_code pc join problem  p WHERE  p.id = pc.problem_id and p.title=%s"
     else:
-        sql = "SELECT code FROM problem_code WHERE problem_id=%s"
+        sql = "SELECT code_python FROM dim_subject_problem WHERE id=%s"
     tup_code = execute_sql(sql, problem_id, problem_name, challenge)
     try:
         code = tup_code[0][0]
@@ -19,7 +19,7 @@ def get_code(problem_id, problem_name, challenge=False):
 
 
 def get_choice(problem_id, problem_name, challenge=False):
-    sql = "SELECT answer from choice WHERE id=%s"
+    sql = "SELECT answer from dim_subject_choice WHERE id=%s"
     tup_choice = execute_sql(sql, problem_id, problem_name, challenge)
     try:
         choice = tup_choice[0][0]
@@ -32,8 +32,7 @@ def get_choice(problem_id, problem_name, challenge=False):
 
 
 def execute_sql(sql, problem_id, problem_name, challenge):
-    # db = pymysql.connect('192.168.0.160', 'root', 'zsyl@db', 'pt_edu')
-    db = pymysql.connect('cdb-qmt1sbt0.cd.tencentcdb.com', 'root', 'zsyl@2020', 'pt_edu', 10069)
+    db = pymysql.connect('sh-cdb-9emlkgqw.sql.tencentcdb.com', 'root', 'zsyl@2020', 'pt_edu3', 61227)
     cursor = db.cursor()
     if challenge:
         cursor.execute(sql, (problem_name,))
@@ -45,5 +44,5 @@ def execute_sql(sql, problem_id, problem_name, challenge):
     return data
 
 
-# print(get_code(problem_id=None, problem_name='字符串连接', challenge=True))
-# print(get_choice(problem_id=136, problem_name=None, challenge=False))
+# print(get_code(problem_id=9317, problem_name=None, challenge=False))
+# print(get_choice(problem_id=438, problem_name=None, challenge=False))

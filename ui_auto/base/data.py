@@ -26,8 +26,7 @@ class Data:
         return ip_for_edu
 
     def api_ip_for_edu(self):
-        # https://api.dingdangcode.com/ddc-edu
-        ip_for_edu = 'https://api.dingdangcode.com/ddc-edu' \
+        ip_for_edu = 'https://api.dingdangcode.com/ddc-edu3' \
             if self.production else 'https://api.dingdangcode.cn/ddc-edu3'
 
         return ip_for_edu

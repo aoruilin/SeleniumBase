@@ -12,8 +12,9 @@ from ui_auto.common.mysql import get_code
 
 
 class ParameterForOthers:
+    """公共参数"""
 
-    def __init__(self, identity=''):
+    def __init__(self, identity='', username=None):
         d = Data()
         self.ip = d.api_ip_for_edu()
         self.headers = {
@@ -26,15 +27,15 @@ class ParameterForOthers:
             raise Exception('身份不能为空，请输入 identity="manager"、"teacher"或"student"')
         elif 'manager' == self.identity:
             manager_data = d.manager_data()
-            self.username = manager_data['username']
+            self.username = username if username else manager_data['username']
             self.password = manager_data['password']
         elif 'teacher' == self.identity:
             teacher_data = d.teacher_data()
-            self.username = teacher_data['username']
+            self.username = username if username else teacher_data['username']
             self.password = teacher_data['password']
         elif 'student' == self.identity:
             student_data = d.student_data()
-            self.username = student_data['username']
+            self.username = username if username else student_data['username']
             self.password = student_data['password']
         else:
             raise Exception('错误的身份，请输入 identity="manager"、"teacher"或"student"')
@@ -66,11 +67,17 @@ class ParameterForOthers:
         try:
             user_id = data_ret['data']['id']
             school_id = data_ret['data']['currentSchool']['id']
-            return user_id, school_id
+            if user_id and school_id:
+                return user_id, school_id
+            else:
+                print(f'{self.username}无法获取user_info')
+                return 0, 0
         except TypeError:
             print(f'接口/user/userInfo报错，返回{data_ret["msg"]}')
+            return 0, 0
         except KeyError:
             print(data_ret)
+            return 0, 0
 
     def get_school_id_list(self):
         """
@@ -382,30 +389,37 @@ class ParameterForOthers:
         :return:
         """
         url = f'{self.ip}/homework/tchHwAnsProblemList'
-        data = {
-            "hwId": self.get_homework_id_list(teacher=True)[0]
-        }
-        res = requests.post(url=url, headers=self.headers, json=data)
-        data_ret = res.json()
-        try:
-            return [(i['problemId'], i['problemType']) for i in data_ret['data']]
-        except TypeError:
-            print(f'接口"/homework/tchHwAnsProblemList"报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(f'接口"/homework/tchHwAnsProblemList"返回{data_ret}')
+        homework_id_list = self.get_homework_id_list(teacher=True)
+        if homework_id_list:
+            data = {
+                "hwId": homework_id_list[0]
+            }
+            res = requests.post(url=url, headers=self.headers, json=data)
+            data_ret = res.json()
+            try:
+                return [(i['problemId'], i['problemType']) for i in data_ret['data']]
+            except TypeError:
+                print(f'接口"/homework/tchHwAnsProblemList"报错，返回{data_ret["msg"]}')
+            except KeyError:
+                print(f'接口"/homework/tchHwAnsProblemList"返回{data_ret}')
+        else:
+            print('这个账号没有发过作业')
 
-    def get_problem_id(self, point_id, subject_type, difficulty_list=None, p_type=None):
+    def get_problem_id(self, point_id, subject_type, p_type=None, difficulty_list=None):
         """
         提供公用的problemId
         :param point_id: 知识点
         :param subject_type: 1-选择题，2-操作题
+        :param p_type: 1-课程，2-作业
         :param difficulty_list: 难度 1-简单，2-中等，3-困难 -> 不用带这个，用作预留
-        :param p_type: 1-课程，2-作业 -> 不用带这个，用作预留
         :return:
         """
         url = f'{self.ip}/common/subjects'
         data = {
-            "pointId": point_id
+            "pointId": point_id,
+            "types": [
+                p_type
+            ]
         }
         response = requests.post(url=url, headers=self.headers, json=data)
         data_ret = response.json()
@@ -529,9 +543,10 @@ class ParameterForOthers:
             resource_id_list = [r['id'] for r in data_list]
             return resource_id_list
 
-    def get_series_list(self):
+    def get_series_list(self, module_type=1):
         """
         获取所有系列seriesID
+        :param module_type: 1-课程，2-作业，默认获取课程
         :return:
         """
         url = f'{self.ip}/common/series'
@@ -539,9 +554,7 @@ class ParameterForOthers:
         data = {
             "schoolId": school_id,
             "seriesType": 0,
-            "types": [
-                1
-            ]
+            "moduleType": module_type
         }
         res = requests.post(url=url, headers=self.headers, json=data)
         data_ret = res.json()
@@ -574,6 +587,28 @@ class ParameterForOthers:
             resource_id_list = [r['resourceId'] for r in data_list]
             return resource_id_list
 
+    def teacher_get_hw_student_num(self):
+        """
+        教师获取作业的学生学号
+        :return:
+        """
+        url = f'{self.ip}/homework/tchHwStuList'
+        data = {
+            "currPage": 1,
+            "hwId": self.get_homework_id_list(teacher=True)[0],
+            "pageSize": 30
+        }
+        res = requests.post(url=url, headers=self.headers, json=data)
+        data_ret = res.json()
+        try:
+            data_list = data_ret['data']['list']
+        except TypeError:
+            print(f'接口"/homework/tchHwStuList"报错：{data_ret["msg"]}')
+        except KeyError:
+            print(f'接口"/homework/tchHwStuList"返回{data_ret}')
+        else:
+            return [i['studentNo'] for i in data_list]
+
     def student_get_problem_id_list(self, choice=False):
         """
         学生获取作业题目id
@@ -581,19 +616,23 @@ class ParameterForOthers:
         :return:
         """
         url = f'{self.ip}/homework/stuHwProblemList'
-        data = {
-            "hwId": self.get_homework_id_list()[0]  # 第一个作业
-        }
-        res = requests.post(url=url, headers=self.headers, json=data)
-        data_ret = res.json()
-        try:
-            # problem_type = 1 if choice else 2
-            return [(i['problemId'], i['problemType'])
-                    for i in data_ret['data']]  # if i['problemType'] == problem_type]
-        except TypeError:
-            print(f'接口"/homework/stuHwProblemList"报错：{data_ret["msg"]}')
-        except KeyError:
-            print(f'接口"/homework/stuHwProblemList"返回{data_ret}')
+        homework_id_list = self.get_homework_id_list()
+        if homework_id_list:
+            data = {
+                "hwId": self.get_homework_id_list()[0]  # 第一个作业
+            }
+            res = requests.post(url=url, headers=self.headers, json=data)
+            data_ret = res.json()
+            try:
+                # problem_type = 1 if choice else 2
+                return [(i['problemId'], i['problemType'])
+                        for i in data_ret['data']]  # if i['problemType'] == problem_type]
+            except TypeError:
+                print(f'接口"/homework/stuHwProblemList"报错：{data_ret["msg"]}')
+            except KeyError:
+                print(f'接口"/homework/stuHwProblemList"返回{data_ret}')
+        else:
+            print('这个学生没有收到过作业')
 
     def teacher_get_student_eval_id_list(self):
         """
@@ -711,7 +750,7 @@ class ParameterForOthers:
         class_id_index = -1 if teacher else 0
         _, school_id = self.get_user_school_id()
         data = {
-            "classId": self.get_class_list(get_all=True)[class_id_index],
+            "classId": '',
             "currPage": 1,
             "homeworkName": "",
             "pageSize": 30,
@@ -967,5 +1006,12 @@ class ParameterForOthers:
         else:
             return [i['id'] for i in data_list]
 
-# print(ParameterForOthers(identity='teacher').teacher_get_homework_problem_id_list())
+# print(ParameterForOthers(identity='teacher').get_problem_id(534, 1, 2))
 # print(ParameterForOthers(identity='student').student_get_problem_id_list())
+# p = ParameterForOthers(identity='teacher')
+# print(p.__dict__)
+# print(p.__doc__)
+# print(p.__module__)
+# import pprint
+#
+# pprint.pprint(p.__class__.__dict__)
