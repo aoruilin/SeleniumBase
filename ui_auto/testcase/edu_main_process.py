@@ -42,13 +42,6 @@ class TestMainProcess(BaseTestCase):
     @log_decorator(case_log_path)
     def test_02_main_process_homework(self):
         self.step_log_path = self.case_log_path
-        # self.teacher_login.user_login(self.username_manager, self.manager_name, self.password)
-        # self.teacher_click.click_button(*ElementSelector.teach_management_btn_loc)
-        # self.teacher_manage.add_account_class(self.username_teacher, self.teacher_name,
-        #                                       self.username_student, self.student_name,
-        #                                       self.admin_class_name, self.pro_class_name,
-        #                                       enable_assert=True)
-        # self.teacher_login.user_logout()
         self.login(**self.teacher_data)
         self.click_button(*ElementSelector.bar_homework_loc)
         self.click_button(*ElementSelector.homework_list_add_homework_btn_loc, loading=True)

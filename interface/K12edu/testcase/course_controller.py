@@ -7,6 +7,7 @@ from interface.K12edu.common.assert_msg import assert_res
 from interface.K12edu.common.parameter_for_others import ParameterForOthers
 from interface.K12edu.common.course_operation import add_course, edit_course
 from interface.K12edu.common.course_operation import finish_course, del_course
+from interface.K12edu.common.picture_list_code import turtle_code
 
 
 class CourseController(unittest.TestCase):
@@ -136,3 +137,115 @@ class CourseController(unittest.TestCase):
                 print(f'接口"/course/user/tag/course/points"报错，返回{data_ret["msg"]}')
             except KeyError:
                 print(f'接口"/course/user/tag/course/points"返回{data_ret}')
+
+    def test_07_teacher_classes(self):
+        """
+        老师-可选班级
+        :return:
+        """
+        url = f'{self.ip}/course/teacher/classes'
+        for series_id in self.series_id_list:
+            params = f'seriesId={series_id}'
+            res = requests.get(url=url, headers=self.teacher_headers, params=params)
+            assert_res(res.text)
+            time.sleep(1)
+            data_ret = res.json()
+            try:
+                print([{i['id']: i['name']} for i in data_ret['data']])
+            except TypeError:
+                print(f'接口"/course/teacher/classes"报错，返回{data_ret["msg"]}')
+            except KeyError:
+                print(f'接口"/course/teacher/classes"返回{data_ret}')
+
+    def test_08_user_course(self):
+        """
+        课程信息
+        :return:
+        """
+        course_id_list = self.teacher_parm.get_user_course_list()
+        for course_id in course_id_list:
+            url = f'{self.ip}/course/user/course/{course_id}'
+            res = requests.get(url=url, headers=self.teacher_headers)
+            assert_res(res.text)
+            data_ret = res.json()
+            try:
+                data_dic = data_ret['data']
+                print((data_dic['id'], data_dic['issuer']))
+            except TypeError:
+                print(f'接口"/course/user/course"报错，返回{data_ret["msg"]}')
+            except KeyError:
+                print(f'接口"/course/user/course"返回{data_ret}')
+
+    def test_09_save_play_code(self):
+        """
+        课程-保存试炼场用户代码
+        :return:
+        """
+        url = f'{self.ip}/course/user/save/playCode'
+        data = {
+            "classId": self.class_id_list[0],
+            "courseId": self.course_id_list[0],
+            "pointId": self.point_id_tup[0],
+            "seriesId": self.series_id_list[0],
+            "userCode": turtle_code()
+        }
+        res = requests.post(url=url, headers=self.teacher_headers, json=data)
+        assert_res(res.text)
+        data_ret = res.json()
+        try:
+            save = data_ret['data']
+        except TypeError:
+            print(f'接口"/course/user/save/playCode"报错，返回{data_ret["msg"]}')
+        except KeyError:
+            print(f'接口"/course/user/save/playCode"返回{data_ret}')
+        else:
+            if save:
+                url = f'{self.ip}/course/user/query/playCode'
+                res = requests.post(url=url, headers=self.teacher_headers, json=data)
+                assert_res(res.text)
+                data_ret = res.json()
+                try:
+                    print(data_ret['data'])
+                except TypeError:
+                    print(f'接口"/course/user/query/playCode"报错，返回{data_ret["msg"]}')
+                except KeyError:
+                    print(f'接口"/course/user/query/playCode"返回{data_ret}')
+
+    def test_10_tag_course_current(self):
+        """
+        课程-已发布-当前授课标签信息
+        :return:
+        """
+        url = f'{self.ip}/course/user/tag/course/current'
+        res = requests.get(url=url, headers=self.teacher_headers)
+        assert_res(res.text)
+        data_ret = res.json()
+        try:
+            data_dic = data_ret['data']
+            print((data_dic['className'], data_dic['id']))
+        except TypeError:
+            print(f'接口"/course/user/tag/course/current"报错，返回{data_ret["msg"]}')
+        except KeyError:
+            print(f'接口"/course/user/tag/course/current"返回{data_ret}')
+
+    def test_11_tag_course_point_current(self):
+        """
+        课程-已发布-当前授课知识点标签信息
+        :return:
+        """
+        url = f'{self.ip}/course/user/tag/course/point/current'
+        params = f'courseId={self.course_id_list[0]}&classId={self.class_id_list[-1]}'
+        res = requests.get(url=url, headers=self.teacher_headers, params=params)
+        assert_res(res.text)
+        data_ret = res.json()
+        try:
+            data_dic = data_ret['data']
+            print((data_dic['label'], data_dic['resourceId']))
+        except TypeError:
+            print(f'接口"/course/user/tag/course/point/current"报错，返回{data_ret["msg"]}')
+        except KeyError:
+            print(f'接口"/course/user/tag/course/point/current"返回{data_ret}')
+
+
+if __name__ == '__main__':
+    unittest.main()

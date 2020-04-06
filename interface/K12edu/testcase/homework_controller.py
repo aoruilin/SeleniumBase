@@ -23,7 +23,8 @@ class HomeworkController(unittest.TestCase):
 
         self.point_id_tup = self.teacher_parm.get_point_id()
         self.all_point_id = self.teacher_parm.get_all_point_id(1)
-        self.class_id_list = self.teacher_parm.get_class_list(get_all=True)
+        self.teacher_class_id_list = self.teacher_parm.get_class_list(get_all=True)
+        self.student_class_id_list = self.student_parm.get_class_list(get_all=True)
         self.series_id_list = self.teacher_parm.get_series_list(2)
         self.teacher_id, self.school_id = self.teacher_parm.get_user_school_id()
         self.student_id, _ = self.student_parm.get_user_school_id()
@@ -126,7 +127,7 @@ class HomeworkController(unittest.TestCase):
         :return:
         """
         url = f'{self.ip}/homework/tchHwList'
-        for class_id in list(chain(self.class_id_list, [''])):
+        for class_id in list(chain(self.teacher_class_id_list, [''])):
             for homework_name in ['', '接口']:
                 for status in ['', 1, 2, 3]:  # 待定
                     data = {
@@ -332,7 +333,7 @@ class HomeworkController(unittest.TestCase):
         """
         url = f'{self.ip}/homework/tchHwSeriesList'
         data = {
-            "classIds": self.class_id_list,
+            "classIds": self.teacher_class_id_list,
             "schoolId": self.school_id
         }
         res = requests.post(url=url, headers=self.teacher_headers, json=data)
@@ -389,13 +390,45 @@ class HomeworkController(unittest.TestCase):
         """
         url = f'{self.ip}/homework/tchHwDelete'
         data = {
-            "classId": self.class_id_list[-1],
+            "classId": self.teacher_class_id_list[-1],
             "hwId": self.teacher_homework_id_list[0]
         }
         res = requests.post(url=url, headers=self.teacher_headers, json=data)
         assert_res(res.text)
 
-    def test_18_student_homework_add_eval(self):
+    def test_18_student_homework_list(self):
+        """
+        学生端-作业列表-作业列表查询
+        :return:
+        """
+        url = f'{self.ip}/homework/stuHwList'
+        class_id_list = self.student_class_id_list
+        class_id_list.append('')
+        for class_id in class_id_list:
+            for status in ['', 0, 1, 2]:
+                for homework_name in ['', '接口']:
+                    data = {
+                        "classId": class_id,
+                        "currPage": 1,
+                        "homeworkName": homework_name,
+                        "pageSize": 100,
+                        "schoolId": self.school_id,
+                        "status": status
+                    }
+                    res = requests.post(url=url, headers=self.student_headers, json=data)
+                    assert_res(res.text)
+                    time.sleep(1)
+                    data_ret = res.json()
+                    try:
+                        data_list = data_ret['data']['list']
+                    except TypeError:
+                        print(f'接口"/homework/stuHwList"报错，返回{data_ret["msg"]}')
+                    except KeyError:
+                        print(f'接口"/homework/stuHwList"返回{data_ret}')
+                    else:
+                        print([{i['homeworkId']: i['homeworkName']} for i in data_list])
+
+    def test_19_student_homework_add_eval(self):
         """
         学生端-作业列表-开始做作业(exist为0时调用)
         :return:
@@ -415,7 +448,7 @@ class HomeworkController(unittest.TestCase):
         except KeyError:
             print(f'接口"/homework/stuHwAddEval"返回{data_ret}')
 
-    def test_19_student_homework_problem_info(self):
+    def test_20_student_homework_problem_info(self):
         """
         学生端-作业题目-详细查询
         :return:
@@ -438,7 +471,7 @@ class HomeworkController(unittest.TestCase):
             except KeyError:
                 print(f'接口"/homework/stuHwProblemInfo"返回{data_ret}')
 
-    def test_20_student_homework_student_info(self):
+    def test_21_student_homework_student_info(self):
         """
         学生端-作业列表-学生信息栏查询
         :return:

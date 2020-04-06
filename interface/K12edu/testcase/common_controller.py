@@ -26,7 +26,7 @@ class CommonController(unittest.TestCase):
 
     def test_01_class(self):
         """
-        班级列表
+        班级信息
         :return:
         """
         url = f'{self.ip}/common/class/{self.class_list[0]}'
@@ -145,6 +145,32 @@ class CommonController(unittest.TestCase):
             print(f'接口/common/series，返回{data_ret["msg"]}')
         except KeyError:
             print(f'接口/common/series，返回{data_ret},与预期不符')
+
+    def test_07_default_covers(self):
+        """
+        默认封面
+        :return:
+        """
+        url = f'{self.ip}/common/default/covers'
+        content_type = list(range(5))
+        content_type.append(-1)
+        for i in content_type:
+            res = requests.get(url=url, headers=self.teacher_headers, params=f'coverType={i}')
+            assert_res(res.text)
+            time.sleep(1)
+            data_ret = res.json()
+            try:
+                print([{i['name']: i['coverUrl']} for i in data_ret['data']])
+            except TypeError:
+                print(f'接口/common/default/covers，返回{data_ret["msg"]}')
+            except KeyError:
+                print(f'接口/common/default/covers，返回{data_ret},与预期不符')
+
+    def resource(self):
+        """
+        资源详情
+        :return:
+        """
 
 
 if __name__ == '__main__':

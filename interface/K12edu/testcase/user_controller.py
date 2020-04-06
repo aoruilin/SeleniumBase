@@ -1,7 +1,7 @@
 import unittest
 import requests
 
-from base.data import Data
+from ui_auto.base.data import Data
 from interface.K12edu.common.assert_msg import assert_res
 from interface.K12edu.common.parameter_for_others import ParameterForOthers
 
@@ -9,9 +9,9 @@ from interface.K12edu.common.parameter_for_others import ParameterForOthers
 class TestUser(unittest.TestCase):
 
     def setUp(self):
-        self.parameters = ParameterForOthers(identity='teacher')
-        self.ip = self.parameters.ip
-        self.headers = self.parameters.headers
+        self.teacher_params = ParameterForOthers(identity='teacher')
+        self.ip = self.teacher_params.ip
+        self.teacher_headers = self.teacher_params.headers
 
     def test_login_01(self):
         """
@@ -62,7 +62,7 @@ class TestUser(unittest.TestCase):
         response = requests.post(url=url, json=data, headers=headers)
         assert_res(response.text, '账号不存在')
 
-    def test_login_04(self):
+    def test_login_04(self,):
         headers = {
             'Content-Type': "application/json",
             "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -91,7 +91,7 @@ class TestUser(unittest.TestCase):
         response = requests.post(url=url, json=data, headers=headers)
         assert_res(response.text, '参数校验失败')
 
-    def test_send_auth(self):
+    def test_01_send_auth(self):
         """
         忘记密码-身份验证-发送验证码
         :return:
@@ -100,87 +100,78 @@ class TestUser(unittest.TestCase):
         for i in range(1, 3):
             username = '15208451946' if i == 1 else '646010544@qq.com'
             data = f'type={i}&username={username}'
-            response = requests.get(url=url, headers=self.headers, params=data)
+            response = requests.get(url=url, headers=self.teacher_headers, params=data)
             assert_res(response.text)
 
-    def test_auth_mobile_code(self):   # 没改
+    def test_02_modify_password(self):
         """
-        获取更换绑定手机验证码
+        账号设置-修改密码
         :return:
         """
-        url = f'{self.ip}/pc/authMobileCode?mobile=15208451946'
-        response = requests.get(url=url, headers=self.headers)
-        assert_res(response.text, '认证未通过')
-
-    def test_update_password_01(self):   # 没改
-        """
-        根据旧密码修改新密码
-        :return:
-        """
-        url = f'{self.ip}/pc/updatePwdByOldPwd'
-        data = {
-            'newPassword': '123456',
-            'password': '123456'
-        }
-        response = requests.post(url=url, json=data, headers=self.headers)
+        url = f'{self.ip}/user/username/modify/password'
+        params = f"password={Data().teacher_data()['password']}&newPassword=1234567re&rePassword=1234567"
+        response = requests.get(url=url, headers=self.teacher_headers, params=params)
         assert_res(response.text)
 
-    def test_update_password_02(self):   # 没改
-        url = f'{self.ip}/pc/updatePwdByOldPwd'
-        data = {
-            'newPassword': '123456',
-            'password': '12345'
-        }
-        response = requests.post(url=url, json=data, headers=self.headers)
-        assert_res(response.text, '旧密码有误')
+    def test_03_password_reset(self):
+        """
+        用户-重置密码
+        :return:
+        """
+        user_id, _ = self.teacher_params.get_user_school_id()
+        url = f'{self.ip}/user/password/reset/{user_id}'
+        response = requests.get(url=url, headers=self.teacher_headers)
+        assert_res(response.text)
 
-    def test_update_password_03(self):   # 没改
-        url = f'{self.ip}/pc/updatePwdByOldPwd'
+    def test_04_subject_feedback(self):
+        url = f'{self.ip}/user/subject/feedback'
         data = {
-            'newPassword': '123456',
-            'password': None
+            "feedbackDetail": "string",
+            "feedbackType": 1,
+            "subjectId": 251,
+            "subjectType": 1
         }
-        response = requests.post(url=url, json=data, headers=self.headers)
-        assert_res(response.text, '参数校验失败')
+        response = requests.post(url=url, json=data, headers=self.teacher_headers)
+        assert_res(response.text,)
 
-    def test_logout(self):
+    def test_05_logout(self):
         """
         注销
         :return:
         """
         url = f'{self.ip}/user/logout'
-        response = requests.get(url=url, headers=self.headers)
+        response = requests.get(url=url, headers=self.teacher_headers)
         assert_res(response.text)
 
-    def test_user_info(self):
+    def test_06_user_info(self):
         """
         用户信息
         :return:
         """
         url = f'{self.ip}/user/userinfo'
-        response = requests.get(url=url, headers=self.headers)
+        response = requests.get(url=url, headers=self.teacher_headers)
         assert_res(response.text)
 
-    def test_switch_school(self):
+    def test_07_switch_school(self):
         """
         切换学校
         :return:
         """
-        school_id_list = self.parameters.get_school_id_list()
+        school_id_list = self.teacher_params.get_school_id_list()
         for i in [1, 0]:
             url = f'{self.ip}/user/switch/school/{school_id_list[i]}'
-            response = requests.get(url=url, headers=self.headers)
+            response = requests.get(url=url, headers=self.teacher_headers)
             assert_res(response.text)
 
-    def test_user_modify(self):
+    def test_08_user_modify(self):
         """
         用户信息验证
         :return:
         """
-        portrait_url, gender = self.parameters.get_user_portrait_url_gender()
+        portrait_url, gender = self.teacher_params.get_user_portrait_url_gender()
         data = f'nickname={Data().teacher_data()["name"]}&gender={gender}&portraitUrl={portrait_url}'
         url = f'{self.ip}/user/modify?{data}'
-        response = requests.post(url=url, headers=self.headers)
+        response = requests.post(url=url, headers=self.teacher_headers)
         assert_res(response.text)
 
 

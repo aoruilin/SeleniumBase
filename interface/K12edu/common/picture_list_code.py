@@ -42,27 +42,31 @@ def work_picture():
 
 
 def turtle_code():
-    code = "import turtle\n\n" \
-           "t = turtle.Turtle()\n" \
-           "t.begin_fill()\n" \
-           "turtle.colormode(255)\n" \
-           "t.forward(150)\n" \
-           "t.right(90)\n" \
-           "t.forward(170)\n" \
-           "t.right(90)\n" \
-           "t.forward(150)\n" \
-           "t.right(90)\n" \
-           "t.forward(170)\n" \
-           "t.fillcolor(250, 255, 230)\n" \
-           "t.end_fill()\n" \
-           "t.right(30)\n" \
-           "t.begin_fill()\n" \
-           "t.fillcolor(255, 120, 60)\n" \
-           "t.forward(150)\n" \
-           "t.right(120)\n" \
-           "t.forward(150)\n" \
-           "t.end_fill()\n\n" \
-           "print('abc')\n"
+    code = """import turtle
+
+t = turtle.Turtle()
+screen = turtle.Screen()
+screen.bgpic('userupload/sucai/3702/20200218/58eb54f9753d1.jpg')
+t.begin_fill()
+turtle.colormode(255)
+t.forward(150)
+t.right(90)
+t.forward(170)
+t.right(90)
+t.forward(150)
+t.right(90)
+t.forward(170)
+t.fillcolor(250, 255, 230)
+t.end_fill()
+t.right(30)
+t.begin_fill()
+t.fillcolor(255, 120, 60)
+t.forward(150)
+t.right(120)
+t.forward(150)
+t.end_fill()
+
+print('abc')"""
 
     return code
 

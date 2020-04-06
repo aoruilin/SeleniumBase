@@ -30,12 +30,12 @@ class ElementSelector:
         '//form[@class="el-form login-form el-form--label-left"]/div[2]/div/div[3]', '密码错误提示'  # 待定
 
     """导航栏"""
-    bar_index_loc = '//span[contains(text(),"首页")]/parent::a', '首页'
-    bar_course_loc = '//span[text()="课程"]/parent::a', '课程'
-    bar_homework_loc = '//span[text()="作业"]/parent::a', '作业'
-    bar_creative_space_loc = '//span[contains(text(),"创作空间")]/parent::a', '创作空间'
-    bar_study_analysis_loc = '//span[contains(text(),"学情分析")]/parent::a', '学情分析'
-    bar_teach_center_loc = '//span[contains(text(),"教学中心")]/parent::a', '教学中心'
+    bar_index_loc = '//div[contains(text(),"首页")]', '首页'
+    bar_course_loc = '//div[text()="课程"]', '课程'
+    bar_homework_loc = '//div[text()="作业"]', '作业'
+    bar_creative_space_loc = '//div[contains(text(),"创作空间")]', '创作空间'
+    bar_study_analysis_loc = '//div[contains(text(),"学情分析")]', '学情分析'
+    bar_teach_center_loc = '//div[contains(text(),"教学中心")]', '教学中心'
     bar_test_field_loc = '//span[contains(text(),"进入试炼场")]', '进入试炼场'
 
     standard_course_btn_loc = '//span[contains(text(),"标准")]', '标准授课按钮'
@@ -65,7 +65,7 @@ class ElementSelector:
 
     """头像下拉选项"""
     index_portrait_loc = '//div[@class="headercustom_avatar__3qY6R"]/span', '头像'
-    index_portrait_name_loc = '//div[@class="avatarHeader_name__1-ZZT"]/span[1]', '头像下拉框用户名称'
+    index_portrait_name_loc = '//div[@class="avatarHeader_user-name__1XGsx"]/span', '头像下拉框用户名称'
     index_portrait_msg_loc = '//span[contains(text(),"消息")]', '消息'
     index_portrait_setup_loc = '//span[contains(text(),"设置")]', '设置'
     index_portrait_knowledge_base_loc = '//span[contains(text(),"知识库")]', '知识库'
