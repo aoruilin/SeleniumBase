@@ -24,98 +24,56 @@ class IndexController(unittest.TestCase):
         学生同学动态
         :return:
         """
-        url = f'{self.ip}/index/student/dynamic'
-        data = 'pageNum=1&pageSize=10'
-        res = requests.get(url=url, headers=self.student_headers, params=data)
-        assert_res(res.text)
-        data_ret = res.json()
-        try:
-            data_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口/index/student/dynamic报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(f'接口/index/student/dynamic，返回{data_ret},与预期不符')
-        else:
-            print([i['nickname'] for i in data_list])
+        for i in ['student', 'teacher']:
+            url = f'{self.ip}/index/{i}/dynamic'
+            data = 'pageNum=1&pageSize=10'
+            header = self.student_headers if i == 'student' else self.teacher_headers
+            res = requests.get(url=url, headers=header, params=data)
+            assert_res(res.text)
+            data_ret = res.json()
+            try:
+                data_list = data_ret['data']['list']
+            except TypeError:
+                print(f'接口/index/{i}/dynamic报错，返回{data_ret["msg"]}')
+            except KeyError:
+                print(f'接口/index/{i}/dynamic，返回{data_ret},与预期不符')
+            else:
+                print([i['nickname'] for i in data_list])
 
     def test_02_student_homework(self):
         """
         学生最近作业
         :return:
         """
-        url = f'{self.ip}/index/student/homework'
-        data = 'pageNum=1&pageSize=10'
-        res = requests.get(url=url, headers=self.student_headers, params=data)
-        assert_res(res.text)
-        data_ret = res.json()
-        try:
-            data_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口/index/student/homework，返回{data_ret["msg"]}')
-        except KeyError:
-            print(f'接口/index/student/homework，返回{data_ret},与预期不符')
-        else:
-            print([{i['homeworkName']: i['finishCount']} for i in data_list])
+        for i in ['student', 'teacher']:
+            url = f'{self.ip}/index/{i}/homework'
+            header = self.student_headers if i == 'student' else self.teacher_headers
+            data = 'pageNum=1&pageSize=10'
+            res = requests.get(url=url, headers=header, params=data)
+            assert_res(res.text)
+            data_ret = res.json()
+            try:
+                data_list = data_ret['data']['list']
+            except TypeError:
+                print(f'接口/index/{i}/homework报错，返回{data_ret["msg"]}')
+            except KeyError:
+                print(f'接口/index/{i}/homework，返回{data_ret},与预期不符')
+            else:
+                print([{i['homeworkName']: i['finishCount']} for i in data_list])
 
     def test_03_student_statistics(self):
         """
         学生统计
         :return:
         """
-        url = f'{self.ip}/index/student/statistics'
-        res = requests.get(url=url, headers=self.student_headers)
-        assert_res(res.text)
-        print(res.text)
+        for i in ['student', 'teacher']:
+            url = f'{self.ip}/index/{i}/statistics'
+            header = self.student_headers if i == 'student' else self.teacher_headers
+            res = requests.get(url=url, headers=header)
+            assert_res(res.text)
+            print(res.text)
 
-    def test_04_teacher_dynamic(self):
-        """
-        老师拉学生动态
-        :return:
-        """
-        url = f'{self.ip}/index/teacher/dynamic'
-        data = 'pageNum=1&pageSize=10'
-        res = requests.get(url=url, headers=self.teacher_headers, params=data)
-        assert_res(res.text)
-        data_ret = res.json()
-        try:
-            data_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口/index/teacher/dynamic，返回{data_ret["msg"]}')
-        except KeyError:
-            print(f'接口/index/teacher/dynamic，返回{data_ret},与预期不符')
-        else:
-            print([i['nickname'] for i in data_list])
-
-    def test_05_teacher_homework(self):
-        """
-        老师最近作业
-        :return:
-        """
-        url = f'{self.ip}/index/teacher/homework'
-        data = 'pageNum=1&pageSize=10'
-        res = requests.get(url=url, headers=self.teacher_headers, params=data)
-        assert_res(res.text)
-        data_ret = res.json()
-        try:
-            data_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口/index/teacher/homework，返回{data_ret["msg"]}')
-        except KeyError:
-            print(f'接口/index/teacher/homework，返回{data_ret},与预期不符')
-        else:
-            print([{i['homeworkName']: i['finishCount']} for i in data_list])
-
-    def test_06_teacher_statistics(self):
-        """
-        老师统计数据
-        :return:
-        """
-        url = f'{self.ip}/index/teacher/statistics'
-        res = requests.get(url=url, headers=self.teacher_headers)
-        assert_res(res.text)
-        print(res.text)
-
-    def test_07_user_messages(self):
+    def test_04_user_messages(self):
         """
         用户消息
         :return:
@@ -140,7 +98,7 @@ class IndexController(unittest.TestCase):
             else:
                 print([{i['id']: i['content']} for i in data_list])
 
-    def test_08_user_course(self):
+    def test_05_user_course(self):
         """
         用户最近课程
         :return:
@@ -171,7 +129,7 @@ class IndexController(unittest.TestCase):
                     else:
                         print([{i['seriesName']: [i['issueName'], i['planWeeks'], i['flag']]} for i in data_list])
 
-    def test_09_messages_opt(self):
+    def test_06_messages_opt(self):
         """
         用户消息操作
         :return:
@@ -188,3 +146,7 @@ class IndexController(unittest.TestCase):
             res = requests.post(url=url, headers=self.teacher_headers, json=data)
             assert_res(res.text)
             time.sleep(1)
+
+
+if __name__ == "__main__":
+    unittest.main()

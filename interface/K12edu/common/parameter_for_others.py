@@ -317,24 +317,6 @@ class ParameterForOthers:
         except KeyError:
             print(data_ret)
 
-    def get_goods_id_list(self):  # 没改
-        """
-        获取主题授课商品id列表
-        :return:
-        """
-        url = f'{self.ip}/pc/gate/common/getGoodsList?pageNum=1&pageSize=10'
-        response = requests.get(url=url, headers=self.headers)
-        data_ret = response.json()
-        try:
-            data_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口"/pc/gate/common/getGoodsList"报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        else:
-            goods_id_list = [i['id'] for i in data_list]
-            return goods_id_list
-
     def get_user_course_list(self, class_id=None, series_id=None):
         """
         获取课程列表
@@ -906,12 +888,12 @@ class ParameterForOthers:
             work_id_list.append(second_work_id)
             return work_id_list
 
-    def get_work_id_list(self):  # 没改
+    def get_work_id_list(self):
         """
         提供学生作品id列表
         :return:
         """
-        url = f'{self.ip}/pc/play/getMyWorksList?pageNum=1&pageSize=15'
+        url = f'{self.ip}/play/getMyWorksList?pageNum=1&pageSize=30'
         response = requests.get(url=url, headers=self.headers)
         data_ret = response.json()
         try:
@@ -962,8 +944,8 @@ class ParameterForOthers:
         except KeyError:
             print(data_ret)
         else:
-            image_url = f'{Data().protocol_for_edu()}://' \
-                        f'{bucket_name}.file.myqcloud.com/{role_path}{time.strftime("%Y%m%d")}/'
+            image_url = f'https://{bucket_name}.file.myqcloud.com/' \
+                        f'{role_path}{time.strftime("%Y%m%d")}/'
             return image_url
 
     def get_image_id_list(self, category_id):  # 没改

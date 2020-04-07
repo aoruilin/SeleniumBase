@@ -55,10 +55,11 @@ class WorksController(unittest.TestCase):
         获取我发布的作品
         :return:
         """
+        url = f'{self.ip}/play/getMyWorksList'
         for s in range(2):
             for k in ['', '测试']:
-                url = f'{self.ip}/pc/play/getMyWorksList?pageNum=1&pageSize=12&sort={s}&keyword={k}'
-                response = requests.get(url=url, headers=self.teacher_headers)
+                params = f'pageNum=1&pageSize=12&sort={s}&keyword={k}'
+                response = requests.get(url=url, headers=self.teacher_headers, params=params)
                 assert_res(response.text)
                 data_ret = response.json()
                 time.sleep(1)
@@ -71,39 +72,6 @@ class WorksController(unittest.TestCase):
                 else:
                     work_list = [{i['id']: i['title']} for i in data_list]
                     print(work_list)
-
-    def test_03_get_student_list_by_class_id(self):
-        """
-        查询班级所属学生列表
-        :return:
-        """
-        student_id, _ = self.teacher_parm.get_user_school_id()
-        url = f'{self.ip}/pc/class/getStudentListByClassId?studentId={student_id}'
-        response = requests.get(url=url, headers=self.teacher_headers)
-        assert_res(response.text)
-        data_ret = response.json()
-        try:
-            print([{i['classId']: [{u['id']: u['nickName']} for u in i['userList']]} for i in data_ret['data']])
-        except TypeError:
-            print(f'接口"/pc/class/getStudentListByClassId"报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-
-    def test_04_get_teacher_list_by_class_id(self):
-        """
-        查询班级所属老师列表
-        :return:
-        """
-        url = f'{self.ip}/pc/class/getTeacherListByClassId'
-        response = requests.get(url=url, headers=self.student_headers)
-        assert_res(response.text)
-        data_ret = response.json()
-        try:
-            print([{i['classId']: [{u['id']: u['nickName']} for u in i['userList']]} for i in data_ret['data']])
-        except TypeError:
-            print(f'接口"/pc/class/getTeacherListByClassId"报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
 
     def test_05_get_work_detail_by_id(self):
         """
@@ -153,31 +121,16 @@ class WorksController(unittest.TestCase):
                               [{i['id']: {i['title']: f"作者：{i['nickname']}"}} for i in data_list])
                         print('##############################################################')
 
-    def test_07_student_class_list(self):
-        """
-        获取学生所在的课程班班级列表
-        :return:
-        """
-        url = f'{self.ip}/pc/class/studentClassList'
-        response = requests.get(url=url, headers=self.teacher_headers)
-        assert_res(response.text)
-        data_ret = response.json()
-        try:
-            print([{i['id']: i['name']}for i in data_ret['data']])
-        except TypeError:
-            print(f'接口"/pc/class/studentClassList"报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-
     def test_08_user_praise(self):
         """
         通过作品ID对作品进行点赞
         :return:
         """
+        url = f'{self.ip[:-8]}/ddc-port/play/userPraise'
         works_id_list = self.teacher_parm.get_work_id_list()
         for w in range(2):
-            url = f'{self.ip[:-8]}/ddc-port/play/userPraise?worksId={works_id_list[w]}'
-            response = requests.get(url=url, headers=self.teacher_headers)
+            params = f'worksId={works_id_list[w]}'
+            response = requests.get(url=url, headers=self.teacher_headers, params=params)
             assert_res(response.text, "今天已经点过赞了")
             time.sleep(1)
 
@@ -187,13 +140,14 @@ class WorksController(unittest.TestCase):
         :return:
         """
         works_id_list = self.teacher_parm.get_work_id_list()
-        url = f'{self.ip[:-8]}/ddc-port/play/workDetail?worksId={works_id_list[0]}'
+        url = f'{self.ip[:-8]}/ddc-port/play/workDetail'
         headers = {
             'Content-Type': 'application/json',
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                           'Chrome/68.0.3440.84 Safari/537.36'
         }
-        response = requests.get(url=url, headers=headers)
+        params = f'worksId={works_id_list[0]}'
+        response = requests.get(url=url, headers=headers, params=params)
         assert_res(response.text)
         data_ret = response.json()
         try:
@@ -217,12 +171,12 @@ class WorksController(unittest.TestCase):
             response = requests.delete(url=url, headers=self.teacher_headers)
             assert_res(response.text)
 
-    def test_11(self):
+    def test_11_get_draft_list(self):
         """
         获取草稿列表（暂放此处）
         :return:
         """
-        url = 'http://125.69.90.238:8081/ddc-port/play/getDraftList'
+        url = f'{self.ip[:-8]}/ddc-port/play/getDraftList'
         params = 'pageNum=1&pageSize=15&keywords='
         response = requests.get(url=url, headers=self.student_headers, params=params)
         assert_res(response.text)

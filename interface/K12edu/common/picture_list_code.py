@@ -81,22 +81,24 @@ def wrong_code():
 
 
 def pygame_code():
-    code = "import pygame\n\n" \
-           "from pygame.locals import *\n" \
-           "background_image = 'https://edu-release-1255999742.file.myqcloud.com/static/sucai/%E8%83%8C%E6%99%AF.png'\n" \
-           "mouse_image = 'https://edu-release-1255999742.file.myqcloud.com/userupload/sucai/9816/2019-11-2/1572669762412Snipaste_2019-07-23_17-44-01.png'\n" \
-           "pygame.init()\n" \
-           "screen = pygame.display.set_mode((640, 480), 0, 32)\n" \
-           "pygame.display.set_caption('hello world')\n" \
-           "background = pygame.image.load(background_image)\n" \
-           "mouse_cursor = pygame.image.load(mouse_image)\n" \
-           "while True:\n" \
-           "    screen.blit(background, (0, 0))\n" \
-           "    x, y = pygame.mouse.get_pos()\n" \
-           "    x -= mouse_cursor.get_width()/2\n" \
-           "    y -= mouse_cursor.get_height()/2\n" \
-           "    screen.blit(mouse_cursor, (x, y))\n" \
-           "    pygame.display.update()"
+    code = """import pygame
+
+from pygame.locals import *
+background_image = 'userupload/sucai/3702/20200118/bgimg.jpg'
+mouse_image = 'userupload/sucai/3702/20200224/Snipaste_2019-07-23_17-44-01.png'
+pygame.init()
+screen = pygame.display.set_mode((640, 480), 0, 32)
+pygame.display.set_caption('hello world')
+background = pygame.image.load(background_image)
+mouse_cursor = pygame.image.load(mouse_image)
+while True:
+    screen.blit(background, (0, 0))
+    x, y = pygame.mouse.get_pos()
+    x -= mouse_cursor.get_width()/2
+    y -= mouse_cursor.get_height()/2
+    screen.blit(mouse_cursor, (x, y))
+    pygame.display.update()
+"""
 
     return code
 
@@ -109,27 +111,11 @@ def multiple_files_code(file_name, content):
 
 
 def three_dimensional_code():
-    code = 'import io\n\n' \
-           'from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeCone\n' \
-           'from OCC.Core.TopLoc import TopLoc_Location\n' \
-           'from OCC.Core.TopoDS import TopoDS_Shape\n' \
-           'from OCC.Core.gp import gp_Pnt, gp_Trsf, gp_Vec, gp_Ax1, gp_Dir\n' \
-           'from OCC.Display.OCCViewer import rgb_color\n\n' \
-           'import cadquery as cq\n\n' \
-           'length = 80.0\n' \
-           'width = 60.0\n' \
-           'height = 100.0\n' \
-           'thickness = 10.0\n' \
-           'center_hole_dia = 22.0\n' \
-           'cbore_hole_diameter = 2.4\n' \
-           'cbore_inset = 12.0\n' \
-           'cbore_diameter = 4.4\n' \
-           'cbore_depth = 2.1\n\n' \
-           'result = cq.Workplane("XY").box(length, height, thickness).faces(">Z").workplane().hole(center_hole_dia).faces(">Z").workplane().rect(length - cbore_inset, height - cbore_inset, forConstruction=True).vertices().cboreHole(cbore_hole_diameter, cbore_diameter, cbore_depth).edges("|Z").fillet(2.0)\n\n' \
-           'if __name__ == "__main__":\n' \
-           '    s = io.StringIO()\n' \
-           '    cq.exporters.exportShape(result, cq.exporters.ExportTypes.STL, s, 0.1)\n' \
-           '    print(s.getvalue())\n'
+    code = """import cadquery as cq
+model = cq.Workplane("XY")
+model = model.box(10, 20, 30)
+show_model(model, cq)
+"""
 
     return code
 
