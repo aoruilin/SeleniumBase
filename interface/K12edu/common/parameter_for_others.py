@@ -133,59 +133,79 @@ class ParameterForOthers:
             class_id_list = [data_dic['id'] for data_dic in data_list] if get_all else [data['id']]
             return class_id_list
 
-    def get_manage_teacher_list(self):  # 没改
+    def get_manage_teacher_list(self):
         """
         管理员获取教师管理列表
         :return:
         """
-        url = f'{self.ip}/pc/manage/teacherList'
-        params = 'pageNum=1&pageSize=12&desc=0'
-        response = requests.get(url=url, headers=self.headers, params=params)
-        data_ret = response.json()
+        _, school_id = self.get_user_school_id()
+        url = f'{self.ip}/teachcenter/teachermanage/list'
+        data = {
+            "currPage": 1,
+            "keyword": '',
+            "pageSize": 50,
+            "schoolId": school_id,
+            "tchType": 1
+        }
+        res = requests.post(url=url, headers=self.headers, json=data)
+        data_ret = res.json()
         try:
             data_list = data_ret['data']['list']
         except TypeError:
-            print(f'接口/pc/manage/teacherList报错，返回{data_ret["msg"]}')
+            print(f'接口/teachcenter/teachermanage/list报错，返回{data_ret["msg"]}')
         except KeyError:
-            print(f'接口/pc/manage/teacherList返回{data_ret}')
+            print(f'接口/teachcenter/teachermanage/list返回{data_ret}')
         else:
-            teacher_id_list = [i['id'] for i in data_list]
+            teacher_id_list = [i['tchId'] for i in data_list]
             return teacher_id_list
 
-    def get_manage_class_list(self):  # 没改
+    def get_manage_class_list(self, school_id):
         """
         管理员获取管理班级列表
         :return:
         """
-        url = f'{self.ip}/pc/manage/classList'
-        params = f'teacherId={self.get_manage_teacher_list()[0]}'
-        res = requests.get(url=url, headers=self.headers, params=params)
+        url = f'{self.ip}/teachcenter/classmanage/list'
+        data = {
+            "classType": 1,
+            "currPage": 1,
+            "keyword": "",
+            "pageSize": 100,
+            "schoolId": school_id
+        }
+        res = requests.post(url=url, headers=self.headers, json=data)
         data_ret = res.json()
         try:
-            class_id_list = [i['id'] for i in data_ret['data']]
-            return class_id_list
+            data_list = data_ret['data']['list']
         except TypeError:
-            print(f'接口"/pc/manage/classList"报错，返回{data_ret["msg"]}')
+            print(f'接口"/teachcenter/classmanage/list"报错，返回{data_ret["msg"]}')
         except KeyError:
-            print(f'接口"/pc/manage/classList"返回{data_ret}')
+            print(f'接口"/teachcenter/classmanage/list"返回{data_ret}')
+        else:
+            return [i['classId'] for i in data_list]
 
-    def get_class_student_id(self):  # 没改
+    def get_class_student_id(self, class_id, school_id):
         """
         获取班级管理中一个班的学生的userID
         :return:
         """
-        class_id = self.get_class_list()[0]
-        url = f'{self.ip}/pc/class/students?pageNum=1&pageSize=12&classId={class_id}'
-        res = requests.get(url=url, headers=self.headers)
+        url = f'{self.ip}/teachcenter/classmanage/stuList'
+        data = {
+            "classId": class_id,
+            "currPage": 1,
+            "keyword": "",
+            "pageSize": 50,
+            "schoolId": school_id
+        }
+        res = requests.post(url=url, headers=self.headers, json=data)
         student_list_ret = res.json()
         try:
             data_list = student_list_ret['data']['list']
         except TypeError:
-            print(f'接口/pc/class/students报错，返回{student_list_ret["msg"]}')
+            print(f'接口/teachcenter/classmanage/stuList报错，返回{student_list_ret["msg"]}')
         except KeyError:
-            print(f'接口/pc/class/students返回{student_list_ret}')
+            print(f'接口/teachcenter/classmanage/stuList返回{student_list_ret}')
         else:
-            student_id_list = [data_dic['userId'] for data_dic in data_list]
+            student_id_list = [data_dic['stuId'] for data_dic in data_list]
             return student_id_list
 
     def get_my_manage_students(self):  # 没改
@@ -988,7 +1008,7 @@ class ParameterForOthers:
         else:
             return [i['id'] for i in data_list]
 
-# print(ParameterForOthers(identity='teacher').get_problem_id(534, 1, 2))
+print(ParameterForOthers(identity='manager').get_manage_class_list(66))
 # print(ParameterForOthers(identity='student').student_get_problem_id_list())
 # p = ParameterForOthers(identity='teacher')
 # print(p.__dict__)
