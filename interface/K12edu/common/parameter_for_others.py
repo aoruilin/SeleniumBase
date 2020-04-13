@@ -126,9 +126,12 @@ class ParameterForOthers:
             data_list = class_list_ret['data']
             data = data_list[-1]
         except TypeError:
-            print(f'接口getClassList报错，返回{class_list_ret["msg"]}')
+            msg = '接口正常，没有数据' \
+                if class_list_ret['msg'] == '操作成功' else \
+                f'接口/common/classes报错，返回{class_list_ret["msg"]}'
+            print(msg)
         except KeyError:
-            print(f'接口getClassList返回{class_list_ret}')
+            print(f'接口/common/classes返回{class_list_ret}')
         else:
             class_id_list = [data_dic['id'] for data_dic in data_list] if get_all else [data['id']]
             return class_id_list
@@ -1008,7 +1011,7 @@ class ParameterForOthers:
         else:
             return [i['id'] for i in data_list]
 
-print(ParameterForOthers(identity='manager').get_manage_class_list(66))
+print(ParameterForOthers(identity='teacher').get_class_list(get_all=True))
 # print(ParameterForOthers(identity='student').student_get_problem_id_list())
 # p = ParameterForOthers(identity='teacher')
 # print(p.__dict__)

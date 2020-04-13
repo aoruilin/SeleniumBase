@@ -1,5 +1,6 @@
 import time
 import unittest
+from pprint import pprint
 
 import requests
 from itertools import chain
@@ -129,22 +130,21 @@ class CommonController(unittest.TestCase):
         :return:
         """
         url = f'{self.ip}/common/series'
-        data = {
-            "schoolId": self.school_id,
-            "seriesType": 0,
-            "types": [
-                1
-            ]
-        }
-        res = requests.post(url=url, headers=self.teacher_headers, json=data)
-        assert_res(res.text)
-        data_ret = res.json()
-        try:
-            print([{d['id']: d['name']} for d in data_ret['data']])
-        except TypeError:
-            print(f'接口/common/series，返回{data_ret["msg"]}')
-        except KeyError:
-            print(f'接口/common/series，返回{data_ret},与预期不符')
+        for m in range(1, 3):
+            data = {
+                "schoolId": self.school_id,
+                "seriesType": 0,
+                "moduleType": m
+            }
+            res = requests.post(url=url, headers=self.teacher_headers, json=data)
+            assert_res(res.text)
+            data_ret = res.json()
+            try:
+                pprint([{d['id']: d['name']} for d in data_ret['data']])
+            except TypeError:
+                print(f'接口/common/series，返回{data_ret["msg"]}')
+            except KeyError:
+                print(f'接口/common/series，返回{data_ret},与预期不符')
 
     def test_07_default_covers(self):
         """
@@ -160,7 +160,7 @@ class CommonController(unittest.TestCase):
             time.sleep(1)
             data_ret = res.json()
             try:
-                print([{i['name']: i['coverUrl']} for i in data_ret['data']])
+                pprint([{i['name']: i['coverUrl']} for i in data_ret['data']])
             except TypeError:
                 print(f'接口/common/default/covers，返回{data_ret["msg"]}')
             except KeyError:

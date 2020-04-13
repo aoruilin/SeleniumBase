@@ -5,6 +5,8 @@ from pprint import pprint
 
 from interface.K12edu.common.assert_msg import assert_res
 from interface.K12edu.common.parameter_for_others import ParameterForOthers
+from interface.K12edu.common.files_operation import file_write
+from ui_auto.common.get_cwd import get_absolute_path
 
 
 class ClassManage(unittest.TestCase):
@@ -17,6 +19,8 @@ class ClassManage(unittest.TestCase):
         self.manager_id, self.school_id = self.manager_param.get_user_school_id()
         self.class_id_list = self.manager_param.get_manage_class_list(self.school_id)
         self.student_id_list = self.manager_param.get_class_student_id(self.class_id_list[1], self.school_id)
+
+        self.file_path = f'{get_absolute_path("interface")}\\K12edu\\files\\'
 
     def test_01_add_course(self):
         """
@@ -258,6 +262,54 @@ class ClassManage(unittest.TestCase):
             print(f'接口/teachcenter/classmanage/stuClassList报错，返回{data_ret["msg"]}')
         except KeyError:
             print(f'接口/teachcenter/classmanage/stuClassList返回{data_ret}')
+
+    def test_14_student_import(self):
+        """
+        班级管理-学生列表-批量导入
+        :return:
+        """
+        from requests_toolbelt.multipart.encoder import MultipartEncoder
+
+        url = f'{self.ip}/teachcenter/classmanage/stuFileImport'
+        file_name = 'student.xls'
+        with open(f'{self.file_path}upload\\{file_name}', 'rb') as f:
+            m = MultipartEncoder(
+                {
+                    'file': (file_name, f, 'application/vnd.ms-excel')
+                }
+            )
+            self.teacher_param.headers['Content-Type'] = m.content_type
+            params = f'classId={self.class_id_list[0]}&schoolId={self.school_id}'
+            res = requests.post(url=url, headers=self.teacher_param.headers, data=m, params=params)
+            assert_res(res.text, '批量导入用户失败')
+            data_ret = res.json()
+            try:
+                print(data_ret['data']['errMsg'])
+            except TypeError:
+                print(f'接口/teachcenter/classmanage/stuFileImport报错，返回{data_ret["msg"]}')
+            except KeyError:
+                print(f'接口/teachcenter/classmanage/stuFileImport返回{data_ret}')
+
+    def test_15_student_export(self):
+        """
+        班级管理-学生列表-批量导出
+        :return:
+        """
+        url = f'{self.ip}/teachcenter/classmanage/stuExport'
+        params = f'exportType=1&classId={self.class_id_list[0]}'
+        res = requests.get(url=url, headers=self.teacher_param.headers, params=params)
+        file_name = 'student_export.xls'
+        file_write(f'{self.file_path}export\\', file_name, res.content)
+
+    def test_16_student_temp_export(self):
+        """
+        班级管理-学生列表-模板导出
+        :return:
+        """
+        url = f'{self.ip}/teachcenter/classmanage/stuTempExport'
+        res = requests.get(url=url, headers=self.teacher_param.headers)
+        file_name = 'student_temp.xls'
+        file_write(f'{self.file_path}export\\', file_name, res.content)
 
 
 if __name__ == "__main__":
