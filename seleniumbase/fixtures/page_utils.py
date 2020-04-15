@@ -29,8 +29,7 @@ def is_xpath_selector(selector):
     A basic method to determine if a selector is an xpath selector.
     确定选择器是否是xpath选择器的基本方法。
     """
-    if (selector.startswith('/') or selector.startswith('./') or (
-            selector.startswith('('))):
+    if selector.startswith('/', './', '('):
         return True
     return False
 

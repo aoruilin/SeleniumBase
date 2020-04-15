@@ -31,31 +31,33 @@ class TestMainProcess(BaseTestCase):
         self.login(**self.teacher_data)
         self.click_button(*ElementSelector.bar_course_loc)
         course_name = self.add_course_simple(self.teaching_package_list[0])
-        # self.teacher_check_index_course(course_name)  # 前端还没做
+        self.click_and_jump(1, *ElementSelector.course_list_card_mode_first_course_loc)
+        self.check_course_simple(course_name, teacher=True)
+        self.teacher_check_index_course(course_name)
 
         self.get_new_driver()
         self.login(**self.student_data)
         self.student_check_index_course(course_name)
-        self.click_button(*ElementSelector.course_list_card_mode_first_course_loc)
+        self.click_and_jump(1, *ElementSelector.course_list_card_mode_first_course_loc)
         self.check_course_simple(course_name)
 
-    @log_decorator(case_log_path)
-    def test_02_main_process_homework(self):
-        self.step_log_path = self.case_log_path
-        self.login(**self.teacher_data)
-        self.click_button(*ElementSelector.bar_homework_loc)
-        self.click_button(*ElementSelector.homework_list_add_homework_btn_loc, loading=True)
-        self.add_homework_simple(self.homework_name, self.answer_list[0], '显示难度')
-        self.teacher_check_index_homework(self.homework_name)
-
-        self.get_new_driver()
-        self.login(**self.student_data)
-        self.student_check_index_homework(self.homework_name)
-        self.click_button(*ElementSelector.bar_homework_loc, loading=True)
-        completion, correct = self.student_do_homework_simple(self.homework_name)
-        # 教师检查作业详情
-        self.switch_to_default_driver()
-        self.teacher_check_homework_simple(self.homework_name, completion, correct)
+    # @log_decorator(case_log_path)
+    # def test_02_main_process_homework(self):
+    #     self.step_log_path = self.case_log_path
+    #     self.login(**self.teacher_data)
+    #     self.click_button(*ElementSelector.bar_homework_loc)
+    #     self.click_button(*ElementSelector.homework_list_add_homework_btn_loc, loading=True)
+    #     self.add_homework_simple(self.homework_name, self.answer_list[0], '显示难度')
+    #     self.teacher_check_index_homework(self.homework_name)
+    #
+    #     self.get_new_driver()
+    #     self.login(**self.student_data)
+    #     self.student_check_index_homework(self.homework_name)
+    #     self.click_button(*ElementSelector.bar_homework_loc, loading=True)
+    #     completion, correct = self.student_do_homework_simple(self.homework_name)
+    #     # 教师检查作业详情
+    #     self.switch_to_default_driver()
+    #     self.teacher_check_homework_simple(self.homework_name, completion, correct)
 
 
 if __name__ == "__main__":
