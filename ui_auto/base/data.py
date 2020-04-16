@@ -82,7 +82,7 @@ class Data:
         return {
             'username': f'13900000{self.global_id}',
             'password': '123456',
-            'name': f'教师{self.global_id}'
+            'name': f'老师{self.global_id}'
         }
 
     def student_data(self):

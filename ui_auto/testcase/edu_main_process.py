@@ -28,18 +28,23 @@ class TestMainProcess(BaseTestCase):
     @log_decorator(case_log_path)
     def test_01_main_process_course(self):
         self.step_log_path = self.case_log_path
+        # 教师操作
         self.login(**self.teacher_data)
         self.click_button(*ElementSelector.bar_course_loc)
         course_name = self.add_course_simple(self.teaching_package_list[0])
         self.click_and_jump(1, *ElementSelector.course_list_card_mode_first_course_loc)
         self.check_course_simple(course_name, teacher=True)
         self.teacher_check_index_course(course_name)
-
+        # 学生操作
         self.get_new_driver()
         self.login(**self.student_data)
         self.student_check_index_course(course_name)
-        self.click_and_jump(1, *ElementSelector.course_list_card_mode_first_course_loc)
+        self.click_and_jump(1, *ElementSelector.course_list_card_mode_first_course_name_loc)
         self.check_course_simple(course_name)
+        # 教师删除
+        self.switch_to_default_driver()
+        self.click_button(*ElementSelector.bar_course_loc)
+        self.del_course()
 
     # @log_decorator(case_log_path)
     # def test_02_main_process_homework(self):

@@ -184,7 +184,7 @@ class ElementSelector:
                                            '/ul/li[1]', '课程列表操作结束课程'
     course_list_operation_edit_course_loc = '//div[@class="ant-dropdown ant-dropdown-placement-topCenter "]' \
                                             '/ul/li[2]', '课程列表操作编辑'
-    course_list_operation_delete_course_loc = '//div[@class="ant-dropdown ant-dropdown-placement-topCenter "]' \
+    course_list_operation_delete_course_loc = '//div[@class="ant-dropdown ant-dropdown-placement-bottomCenter "]' \
                                               '/ul/li[3]', '课程列表操作删除'
 
     """添加课程"""
@@ -247,7 +247,11 @@ class ElementSelector:
     course_detail_ppt_next_btn_loc = '//span[@class="cui-toolbar-buttondock aligncenter"]/a[3]', '课件PPT下一页按钮'
     course_detail_ppt_pages_num_loc = '//span[@class="cui-toolbar-buttondock aligncenter"]/a[2]/span', '课件页数'
     course_detail_ppt_content_loc = '//div[@id="browserLayerViewId"]/div[2]', 'PPT内容'
-    course_detail_video_content_loc = '//video', '视频标签'
+    course_detail_video_content_loc = \
+        '//div[@class="ant-tabs-tabpane ant-tabs-tabpane-active courseDetail_section-tab-pane__7th7_"]/div[1]' \
+        '/div[2]/video', '视频标签'
+    course_detail_full_screen_video_loc = \
+        '//div[@class="seriesFull_container__1QJUr"]/div[1]/div[2]/div[1]/div[2]/div/video', '全屏模式视频标签'
     course_detail_practice_list_problem_loc = '//div[@class="exerciseList_exercise__3fOL2"]/div[1]', '练习题目'
     course_detail_practice_list_student_name_loc = f'//span[contains(text(),"{Data().student_data()["username"]}")]',\
                                                    '练习列表学生名字'
@@ -258,11 +262,13 @@ class ElementSelector:
     course_detail_choose_section_loc = '//span[contains(text(),"目录")]' \
                                        '/parent::div/following-sibling::div/div/div[2]/div/ul/li/div[3]/div/div[1]',\
                                        '选择小节'
+    course_detail_first_chap_loc = '//div[@class="courseDetail_course-catalogue__3rF7c"]/div[2]/div[1]/div[1]', \
+                                   '第一章'
     course_detail_send_course_name_loc = '//span[contains(text(),"1.")]/parent::div/parent::div', '知识点课程名称'
     course_detail_send_course_loc = '//span[text()="发送"]/parent::div', '课程发送按钮'
     course_detail_full_screen_course_loc = '//span[contains(text(),"全屏")]/parent::button', '全屏授课'
     course_detail_start_study_course_loc = '//span[contains(text(),"学习")]/parent::button', '开始学习'
-    course_detail_full_screen_return_course_loc = '//span[contains(text(),"返回")]', '全屏模式返回课程'  # 待定
+    course_detail_full_screen_return_course_loc = '//span[contains(text(),"返回")]/parent::button', '全屏模式返回课程'  # 待定
 
     course_detail_start_course_edit_btn_loc = '//span[contains(text(),"返回")]/parent::button/following::button', \
                                               '精简试炼场弹出开关'
@@ -270,14 +276,14 @@ class ElementSelector:
                                                     '精简试炼场横向模式'
     course_detail_start_course_putback_btn_loc = '//div[@class="seriesFull_drawer-header-action__33MQn"]/span[2]',\
                                                  '精简试炼场收起开关'
-    course_detail_start_course_edit_cursor_loc = '//div[@class=" ace_editor ace-cobalt ace_dark"]/textarea', \
+    course_detail_start_course_edit_cursor_loc = '//div[@class="smartPlaza_content__vBmbA"]/div/textarea', \
                                                  '精简试炼场游标'
     course_detail_start_course_text_output_btn_loc = '//span[contains(text(),"文字")]', '文本输出区按钮'
-    course_detail_start_course_text_output_area_loc = '//div[@class="smartPlaza_command-tabs__AJeof"]/div/div[1]',\
+    course_detail_start_course_text_output_area_loc = '//div[@class="smartPlaza_command-tabs__AJeof"]/div/div[1]/p',\
                                                       '文本输出'
     course_detail_start_course_pic_output_btn_loc = '//span[contains(text(),"图形")]', '图形输出区按钮'
     course_detail_start_course_pic_output_area_loc = '//div[@id="ttCanvas"]/canvas', '图形输出'
-    course_detail_start_course_course_run_code_btn_loc = '//span[contains(text(),"运行")]', '运行代码按钮'
+    course_detail_start_course_course_run_code_btn_loc = '//span[contains(text(),"运行")]/parent::button', '运行代码按钮'
     course_detail_start_course_iframe_loc = '//div[@class="courseDetail_gird__1TJBu"]//iframe', '第一层iframe'
     course_detail_full_screen_course_iframe_loc = '//div[@class="seriesFull_container__1QJUr"]//iframe', '全屏第一层iframe'
 

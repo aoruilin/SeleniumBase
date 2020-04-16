@@ -3,9 +3,8 @@ import datetime
 from calendar import weekday
 from random import choice
 
-from selenium.common.exceptions import WebDriverException, ElementNotVisibleException
+from selenium.common.exceptions import WebDriverException, ElementNotVisibleException, ElementNotInteractableException
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
 
 from seleniumbase import BaseCase
 
@@ -37,6 +36,15 @@ class BaseTestCase(BaseCase):
         log(self.step_log_path, f'打开网址：{url}')
 
         return self.open(url=url)
+
+    def back(self):
+        """
+        浏览器后退
+        :return:
+        """
+        log(self.step_log_path, '后退到上一页')
+
+        return self.go_back()
 
     def click_button(self, btn_loc, msg=None, wait=False, loading=False):
         """
@@ -129,6 +137,11 @@ class BaseTestCase(BaseCase):
         log(self.step_log_path, f'等待 {msg} 中出现 {text}')
 
         return self.wait_for_text_visible(text, selector)
+
+    def wait_element_visible(self, selector, msg=None):
+        log(self.step_log_path, f'等待元素{msg}在页面可见')
+
+        return self.wait_for_element_visible(selector)
 
     def take_element(self, selector, msg=None):
         log(self.step_log_path, f'拿到元素 {msg}')
@@ -266,17 +279,15 @@ class BaseTestCase(BaseCase):
         if '叮当资源' == package_name:
             self.click_button(*ElementSelector.add_course_choose_course_loc)
             self.__choose_course_operation()
+            # 预览课程页面操作，后面单独做一个用例
+            # self.click_button(*ElementSelector.add_course_preview_course_loc, wait=True)
+            # self.check_course_simple('', teacher=True, preview=True)
         else:
             self.click_button(f'//span[text()="{package_name}"]/parent::label/span[1]',
                               loading=True, wait=True, msg=f' {package_name}')  # 授课包选择其他课程 待定 后期可能会加上
-        # self.click_button(*ElementSelector.add_course_preview_course_loc)
-        # 预览课程页面操作，后期添加
-        # self.check_course_simple('')
-        # self.driver.close()
-        # self.switch_window(0)
+        # 计划授课选择日期
         self.click_button(*ElementSelector.add_course_course_plan_switch_loc)
         day_of_week = self.__choose_course_plan()
-        # 计划授课选择日期
         self.click_button(f'//div[@class="ant-row"]/div[{day_of_week + 1}]/label/span[1]',
                           f'每周{day_of_week + 1}')
         self.click_button(*ElementSelector.add_course_choose_class_loc, loading=True)
@@ -299,6 +310,17 @@ class BaseTestCase(BaseCase):
             course_name = self.add_course_simple(name)
             course_name_list.append(course_name)
         return course_name_list  # 返回课件名称列表，包含3个课件名称
+
+    def del_course(self):
+        """
+        教师删除课程
+        :return:
+        """
+        self.click_button(*ElementSelector.course_list_operation_loc)
+        self.click_button(*ElementSelector.course_list_operation_delete_course_loc)
+        self.click_button(*ElementSelector.confirm_btn_contains_text)
+        if self.__wait_for_loading():
+            self.__assert_equal('删除成功！', ElementSelector.succ_tip_loc)
 
     def add_course_wrong(self):
         """
@@ -523,30 +545,36 @@ class BaseTestCase(BaseCase):
         """
         self.click_button(*ElementSelector.course_detail_start_course_edit_btn_loc, loading=True)
         code_input_element = self.take_element(*ElementSelector.course_detail_start_course_edit_cursor_loc)
-        input_code(code, code_input_element)
-        self.click_button(*ElementSelector.course_detail_start_course_course_run_code_btn_loc)
-        if wrong:
-            self.wait_text(exp_output, *ElementSelector.course_detail_start_course_text_output_area_loc)
+        try:
+            input_code(code, code_input_element)
+        except ElementNotInteractableException:
+            log(self.step_log_path, 'chromedriver不稳定，版本问题，待解决')
         else:
-            self.click_button(*ElementSelector.course_detail_start_course_pic_output_btn_loc, loading=True)
-            try:
-                self.element_visible(*ElementSelector.course_detail_start_course_pic_output_area_loc)
-            except ElementNotVisibleException:
-                log(self.step_log_path, f'精简试炼场图形输出异常')
-            finally:
-                self.click_button(*ElementSelector.course_detail_start_course_text_output_btn_loc)
-                self.__assert_equal(exp_output, ElementSelector.course_detail_start_course_text_output_area_loc)
-                # 横向模式操作再次检查，最后点击收起
-                self.click_button(*ElementSelector.course_detail_start_course_edit_cross_btn_loc)
-                self.click_button(*ElementSelector.course_detail_start_course_course_run_code_btn_loc)
-                self.__assert_equal(exp_output, ElementSelector.course_detail_start_course_text_output_area_loc)
+            self.click_button(*ElementSelector.course_detail_start_course_course_run_code_btn_loc)
+            if wrong:
+                self.wait_text(exp_output, *ElementSelector.course_detail_start_course_text_output_area_loc)
+            else:
                 self.click_button(*ElementSelector.course_detail_start_course_pic_output_btn_loc, loading=True)
                 try:
                     self.element_visible(*ElementSelector.course_detail_start_course_pic_output_area_loc)
                 except ElementNotVisibleException:
                     log(self.step_log_path, f'精简试炼场图形输出异常')
                 finally:
-                    self.click_button(*ElementSelector.course_detail_start_course_putback_btn_loc)
+                    self.click_button(*ElementSelector.course_detail_start_course_text_output_btn_loc)
+                    self.wait_element_visible(*ElementSelector.course_detail_start_course_text_output_area_loc)
+                    self.__assert_equal(exp_output, ElementSelector.course_detail_start_course_text_output_area_loc)
+                    # 横向模式操作再次检查，最后点击收起
+                    self.click_button(*ElementSelector.course_detail_start_course_edit_cross_btn_loc)
+                    self.click_button(*ElementSelector.course_detail_start_course_course_run_code_btn_loc)
+                    self.wait_element_visible(*ElementSelector.course_detail_start_course_text_output_area_loc)
+                    self.__assert_equal(exp_output, ElementSelector.course_detail_start_course_text_output_area_loc)
+                    self.click_button(*ElementSelector.course_detail_start_course_pic_output_btn_loc, loading=True)
+                    try:
+                        self.element_visible(*ElementSelector.course_detail_start_course_pic_output_area_loc)
+                    except ElementNotVisibleException:
+                        log(self.step_log_path, f'精简试炼场图形输出异常')
+        finally:
+            self.click_button(*ElementSelector.course_detail_start_course_putback_btn_loc)
 
     def check_course_simple(self, course_name, teacher=False, preview=False):  # 操作待定，后续可增加按每个小节查看
         """
@@ -557,7 +585,7 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         # 进入课程第一个知识点默认展开，单独查看
-        if not preview:
+        if teacher and not preview:
             self.__send_course()
         self.__check_course_operation(course_name)
         full_screen_loc = ElementSelector.course_detail_full_screen_course_loc \
@@ -566,21 +594,18 @@ class BaseTestCase(BaseCase):
         self.course_field_operation(turtle_code(), 'abc')
         self.__check_course_operation(course_name, full_screen=True)
         self.click_button(*ElementSelector.course_detail_full_screen_return_course_loc)  # 点击退出全屏
-        # 选择章节，可考虑复数定位元素列表->遍历列表点击每个小节
-        chap_elem_list = self.elements_list(*ElementSelector.course_detail_choose_chap_loc, loading=True)  # 章节知识点
-        for c in range(2, len(chap_elem_list) + 1):  # 遍历点击章节，第一个默认展开，从第二个开始
-            self.click_button(f'//div[@class="courseDetail_course-catalogue__3rF7c"]/div[2]/div[{c}]', f'第{c}章')
-            time.sleep(0.2)
-            if not preview:
-                self.__send_course()
-            self.click_button(*ElementSelector.course_detail_send_course_name_loc, loading=True)
-            self.__check_course_operation(course_name)
-            full_screen_loc = ElementSelector.course_detail_full_screen_course_loc \
-                if teacher else ElementSelector.course_detail_start_study_course_loc
-            self.click_button(*full_screen_loc)
-            self.course_field_operation(turtle_code(), 'abc')
-            self.__check_course_operation(course_name, full_screen=True)
-            self.click_button(*ElementSelector.course_detail_full_screen_return_course_loc)  # 点击退出全屏
+        if teacher and not preview:
+            # 选择章节，可考虑复数定位元素列表->遍历列表点击每个小节
+            chap_elem_list = self.elements_list(*ElementSelector.course_detail_choose_chap_loc, loading=True)  # 章节知识点
+            for c in range(2, len(chap_elem_list) + 1):  # 遍历点击章节，第一个默认展开，从第二个开始
+                self.click_button(f'//div[@class="courseDetail_course-catalogue__3rF7c"]/div[2]/div[{c}]', f'第{c}章')
+                time.sleep(0.2)
+            sec_elem_list = self.elements_list(*ElementSelector.course_detail_choose_section_loc)  # 小节知识点
+            for s in range(2, len(sec_elem_list)):  # 遍历点击小节，从第二个开始
+                self.click_button(
+                    f'//div[@class="courseDetail_course-catalogue__3rF7c"]/descendant::li[{s}]/div[3]/div/div[1]',
+                    f'第{s}节', wait=True)
+                self.__check_course_operation(course_name)
 
     def __send_course(self):
         """
@@ -589,10 +614,11 @@ class BaseTestCase(BaseCase):
         """
         hover_loc, _ = ElementSelector.course_detail_send_course_name_loc
         self.wait_for_element_visible(hover_loc)
-        self.click_button(*ElementSelector.course_detail_send_course_name_loc)
+        self.click_button(*ElementSelector.course_detail_send_course_name_loc, loading=True)
         self.click_button(*ElementSelector.course_detail_send_course_loc)
         self.click_button(*ElementSelector.confirm_btn_contains_text)
-        self.__assert_equal('发送成功', ElementSelector.succ_tip_loc)
+        if self.__wait_for_loading():
+            self.__assert_equal('发送成功', ElementSelector.succ_tip_loc)
 
     def student_check_course_loop(self):
         """
@@ -672,7 +698,9 @@ class BaseTestCase(BaseCase):
                 self.switch_to_default_content()
         if '视频' == btn:
             try:
-                self.element_visible(*ElementSelector.course_detail_video_content_loc)
+                video_loc = ElementSelector.course_detail_full_screen_video_loc \
+                    if full_screen else ElementSelector.course_detail_video_content_loc
+                self.element_visible(*video_loc)
             except ElementNotVisibleException:
                 log(self.step_log_path, '没有视频资源')
 
@@ -1710,31 +1738,12 @@ class BaseTestCase(BaseCase):
         """
         for i in range(2):
             self.wait_for_element_absent(
-                '//div[@class="el-loading-mask is-fullscreen"]'
-            )
-            self.wait_for_element_absent(
-                '//div[@class="el-loading-mask is-fullscreen '
-                'el-loading-fade-leave-active el-loading-fade-leave-to"]'
-            )
-            self.wait_for_element_absent(
-                '//div[@class="el-loading-mask is-fullscreen '
-                'el-loading-fade-enter-active el-loading-fade-enter-to"]'
-            )
-            self.wait_for_element_absent(
-                '.el-loading-parent--relative'
+                '//div[@class="ant-spin ant-spin-spinning ant-spin-show-text"]'
             )
             time.sleep(0.25)
 
         return self.wait_for_element_absent(
-            '//div[@class="el-loading-mask is-fullscreen"]'
-        ) and self.wait_for_element_absent(
-            '//div[@class="el-loading-mask is-fullscreen '
-            'el-loading-fade-leave-active el-loading-fade-leave-to"]'
-        ) and self.wait_for_element_absent(
-            '//div[@class="el-loading-mask is-fullscreen '
-            'el-loading-fade-enter-active el-loading-fade-enter-to"]'
-        ) and self.wait_for_element_absent(
-            '.el-loading-parent--relative'
+            '//div[@class="ant-spin ant-spin-spinning ant-spin-show-text"]'
         )
 
     def __upload_file(self, input_element, file_type):
