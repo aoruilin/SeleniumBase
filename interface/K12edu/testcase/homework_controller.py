@@ -388,13 +388,14 @@ class HomeworkController(unittest.TestCase):
         教师删除作业
         :return:
         """
-        url = f'{self.ip}/homework/tchHwDelete'
-        data = {
-            "classId": self.teacher_class_id_list[-1],
-            "hwId": self.teacher_homework_id_list[0]
-        }
-        res = requests.post(url=url, headers=self.teacher_headers, json=data)
-        assert_res(res.text)
+        for i in range(12):
+            url = f'{self.ip}/homework/tchHwDelete'
+            data = {
+                "classId": self.teacher_class_id_list[-1],
+                "hwId": self.teacher_homework_id_list[i]
+            }
+            res = requests.post(url=url, headers=self.teacher_headers, json=data)
+            assert_res(res.text)
 
     def test_18_student_homework_list(self):
         """

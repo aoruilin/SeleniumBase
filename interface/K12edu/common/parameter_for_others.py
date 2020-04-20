@@ -614,10 +614,9 @@ class ParameterForOthers:
         else:
             return [i['studentNo'] for i in data_list]
 
-    def student_get_problem_id_list(self, choice=False):
+    def student_get_problem_id_list(self):
         """
         学生获取作业题目id
-        :param choice: 是否获取选择题
         :return:
         """
         url = f'{self.ip}/homework/stuHwProblemList'
@@ -1011,7 +1010,7 @@ class ParameterForOthers:
         else:
             return [i['id'] for i in data_list]
 
-print(ParameterForOthers(identity='teacher').get_class_list(get_all=True))
+# print(ParameterForOthers(identity='teacher').get_class_list(get_all=True))
 # print(ParameterForOthers(identity='student').student_get_problem_id_list())
 # p = ParameterForOthers(identity='teacher')
 # print(p.__dict__)
