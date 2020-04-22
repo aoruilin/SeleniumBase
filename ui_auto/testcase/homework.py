@@ -7,7 +7,7 @@ from ui_auto.page_object.element_loc import ElementSelector
 from ui_auto.page_object.page_operation import BaseTestCase
 
 
-class HomeworkLoop(BaseTestCase):
+class TestHomework(BaseTestCase):
     file_name = __file__
     name = __name__
     case_log_path = log_path(file_name, name)
@@ -22,20 +22,39 @@ class HomeworkLoop(BaseTestCase):
     teacher_name = Data().teacher_name_for_edu()
 
     @log_decorator(case_log_path)
-    def test_homework_loop_01(self):
+    def test_01_homework_loop(self):
         self.step_log_path = self.case_log_path
+        # 教师操作
         self.login(**self.teacher_data)
         self.click_button(*ElementSelector.bar_homework_loc)
         self.add_homework_loop()
-        # self.add_homework_wrong()
         # self.date_selection('作业', Data().homework_name)   # 日期筛选全部砍掉了，先保留代码免得后面又加回来
-        # self.search_input(Data().homework_name)
+        # 学生操作
         self.get_new_driver()
         self.login(**self.student_data)
         self.click_button(*ElementSelector.bar_homework_loc)
         self.student_do_homework_loop()
         # self.date_selection('作业', Data().homework_name, student=True)
-        # self.search_input(Data().homework_name)
+
+    @log_decorator(case_log_path)
+    def test_02_add_homework_wrong(self):
+        self.step_log_path = self.case_log_path
+        self.login(**self.teacher_data)
+        self.click_button(*ElementSelector.bar_homework_loc)
+        self.add_homework_wrong()
+
+    @log_decorator(case_log_path)
+    def test_03_homework_search(self):
+        self.step_log_path = self.case_log_path
+        # 教师操作
+        self.login(**self.teacher_data)
+        self.click_button(*ElementSelector.bar_homework_loc)
+        self.search_input('自动')
+        # 学生操作
+        self.get_new_driver()
+        self.login(**self.student_data)
+        self.click_button(*ElementSelector.bar_homework_loc)
+        self.search_input('自动')
 
 
 if __name__ == "__main__":

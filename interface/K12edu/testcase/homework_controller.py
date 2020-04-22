@@ -1,5 +1,6 @@
 import time
 import unittest
+import pytest
 from itertools import chain
 
 import requests
@@ -22,7 +23,7 @@ class HomeworkController(unittest.TestCase):
         self.student_headers = self.student_parm.headers
 
         self.point_id_tup = self.teacher_parm.get_point_id()
-        self.all_point_id = self.teacher_parm.get_all_point_id(1)
+        self.all_point_resource_id_list = self.teacher_parm.get_all_point_resource_id(1)
         self.teacher_class_id_list = self.teacher_parm.get_class_list(get_all=True)
         self.student_class_id_list = self.student_parm.get_class_list(get_all=True)
         self.series_id_list = self.teacher_parm.get_series_list(2)
@@ -84,7 +85,8 @@ class HomeworkController(unittest.TestCase):
         :return:
         """
         series_id = 1
-        all_point_id_list = self.teacher_parm.get_all_point_id(series_id)
+        all_point_resource_id_list = self.teacher_parm.get_all_point_resource_id(series_id)
+        all_point_id_list = [id_dic['id'] for id_dic in all_point_resource_id_list]
         for point_id in all_point_id_list:
             param = {
                 'hw_name': f'S{series_id}的{point_id}',
@@ -108,7 +110,8 @@ class HomeworkController(unittest.TestCase):
         :return:
         """
         for series_id in self.series_id_list:
-            all_point_id_list = self.teacher_parm.get_all_point_id(series_id)
+            all_point_resource_id_list = self.teacher_parm.get_all_point_resource_id(series_id)
+            all_point_id_list = [id_dic['id'] for id_dic in all_point_resource_id_list]
             for point_id in all_point_id_list:
                 param = {
                     'hw_name': f'S{series_id}的{point_id}',

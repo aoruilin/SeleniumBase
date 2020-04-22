@@ -1,5 +1,6 @@
 import time
 import unittest
+from pprint import pprint
 
 import requests
 
@@ -24,7 +25,7 @@ class CourseController(unittest.TestCase):
 
         self.course_id_list = self.teacher_parm.get_user_course_list()
         self.point_id_tup = self.teacher_parm.get_point_id()
-        self.all_point_id = self.teacher_parm.get_all_point_id(1)
+        self.all_point_resource_id_list = self.teacher_parm.get_all_point_resource_id(1)
         self.class_id_list = self.teacher_parm.get_class_list(get_all=True)
         self.series_id_list = self.teacher_parm.get_series_list()
 
@@ -112,7 +113,8 @@ class CourseController(unittest.TestCase):
         老师查看学生练习
         :return:
         """
-        for point_id in self.all_point_id:
+        all_point_id = [id_dic['id'] for id_dic in self.all_point_resource_id_list]
+        for point_id in all_point_id:
             url = f'{self.ip}/course/teacher/' \
                   f'{self.course_id_list[0]}/{self.class_id_list[-1]}/{point_id}/practises'
             res = requests.get(url=url, headers=self.teacher_headers)
@@ -123,20 +125,21 @@ class CourseController(unittest.TestCase):
                 data_dic = data_ret['data']
                 print(f"{data_dic['practisedCount']}/{data_dic['practiseCount']},{data_dic['avgCorrectRate']}")
                 practises_data = data_dic['practises']
-                print(
+                pprint(
                     [
                         {i['name']: i['correctRate'], 'subject': [{p['name']: p['result']}
-                                                                  for p in
-                                                                  practises_data['subjects']]}
-                        for i
-                        in practises_data
+                                                                  for p in i['subjects']]}
+                        for i in practises_data
                     ]
                 )
                 print('#################################################')
             except TypeError:
-                print(f'接口"/course/user/tag/course/points"报错，返回{data_ret["msg"]}')
+                msg = '接口正常，没有数据' \
+                    if data_ret['msg'] == '操作成功' else \
+                    f'接口/common/classes报错，返回{data_ret["msg"]}'
+                print(msg)
             except KeyError:
-                print(f'接口"/course/user/tag/course/points"返回{data_ret}')
+                print(f'接口"/practises"返回{data_ret}')
 
     def test_07_teacher_classes(self):
         """

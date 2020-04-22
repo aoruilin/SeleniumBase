@@ -6,7 +6,7 @@ class ElementSelector:
     confirm_btn_contains_text = '//span[contains(text(),"确")]/parent::button', '确定按钮'
     confirm_btn_equal_text = '//div[text()="确定"]', '确定按钮'
     cancel_btn_contains_loc = '//span[contains(text(),"取 消")]/parent::button', '取消按钮'
-    succ_tip_loc = '//div[@class="ant-message"]/descendant::span[3]', '成功提示'
+    tip_loc = '//div[@class="ant-message"]/descendant::span[3]', '成功提示'
     back_on_top_loc = '//div[@class="ant-back-top-icon"]', '回到顶部'
 
     choose_first_series_loc = f'//div[text()="S{PointIdIndex().level_one_index}"]', \
@@ -350,7 +350,7 @@ class ElementSelector:
         '//div[@class="studentWork_home-work-section-right__2c92h"]/descendant::td[8]', '等级'
 
     """发布作业"""
-    add_homework_homework_name_input_loc = '//form[@id="workForm"]/div[1]/div[2]/div/div/input', '作业名称输入框'
+    add_homework_homework_name_input_loc = '//input[@id="workForm_hwName"]', '作业名称输入框'
     add_homework_choice_series_loc = '//form[@id="workForm"]/div[2]/div[2]', '选择系列下拉框'
     add_homework_choice_point_id_loc = '//span[contains(text(),"选取知识点")]/parent::button', '选取知识点按钮'
     add_homework_choice_point_id_sel_know_loc = '//input' \
@@ -378,6 +378,7 @@ class ElementSelector:
                                           '/div[6]/descendant::span[6]', '发布班级'
     add_homework_post_btn_loc = '//span[contains(text(),"立即")]/parent::button', '作业立即发布'
     add_homework_publish_fail_tip_loc = '', '发布作业失败提示'  # 待定(如果和发布课程相同则去掉)
+    add_homework_mandatory_tip_loc = '//div[@class="ant-form-item-explain"]/div', '必填项提示'
 
     """作业详情"""
     homework_detail_answer_btn_loc = '//div[@class="el-tabs__nav is-top"]/div[2]', '参考答案按钮'  # 待定

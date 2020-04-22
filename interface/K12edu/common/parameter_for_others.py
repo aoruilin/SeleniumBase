@@ -254,11 +254,14 @@ class ParameterForOthers:
             except TypeError:
                 print(f'接口/pc/common/getPointList报错，返回{point_list_ret["msg"]}')
 
-    def get_all_point_id(self, series_id):
+    def get_all_point_resource_id(self, series_id):
         """
         获取一个系列所有的pointID
+        :param series_id:
         :return:
         """
+        from operator import is_not
+
         url = f'{self.ip}/common/points/{series_id}'
         response = requests.get(url=url, headers=self.headers)
         point_list_ret = response.json()
@@ -270,9 +273,10 @@ class ParameterForOthers:
         except KeyError:
             print(f'接口common/points返回{point_list_ret}')
         else:
-            point_id_list = [[c['id'] for c in child_id_list] for child_id_list in id_list]
+            point_id_list = [[{'id': c['id'], 'resource_id': c['resourceId']}
+                              for c in child_id_list] for child_id_list in id_list]
             all_id_list = list(chain(*point_id_list))
-            return all_id_list
+            return list(filter(lambda x: is_not(x['resource_id'], None), all_id_list))
 
     def get_point_id_checkpoint(self, get_all=False):  # 没改
         """
@@ -1010,7 +1014,7 @@ class ParameterForOthers:
         else:
             return [i['id'] for i in data_list]
 
-# print(ParameterForOthers(identity='teacher').get_class_list(get_all=True))
+# print(ParameterForOthers(identity='teacher').get_all_point_resource_id(1))
 # print(ParameterForOthers(identity='student').student_get_problem_id_list())
 # p = ParameterForOthers(identity='teacher')
 # print(p.__dict__)

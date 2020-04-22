@@ -18,9 +18,9 @@ class TestGetOfflineFile(unittest.TestCase):
         series_list = self.parameter.get_series_list()
         for s in series_list:
             os.makedirs(f'E://offline_series{s}', exist_ok=True)
-            resource_id_list = self.parameter.get_series_resource_plan_id(series=s)
-            for r in resource_id_list:
-                url = f'{self.ip}/pc/offline/ossUrl/{r}'
+            all_point_resource_id_list = self.parameter.get_all_point_resource_id(s)
+            for r in all_point_resource_id_list:
+                url = f'{self.ip}/teachcenter/coursemanage/offline/{r["id"]}/{r["resource_id"]}'
                 response = requests.get(url=url, headers=self.headers)
                 time.sleep(1.5)
                 data_ret = response.json()
@@ -32,5 +32,5 @@ class TestGetOfflineFile(unittest.TestCase):
                 else:
                     data_url = data_ret['data']
                     download = requests.get(url=data_url, headers=self.headers)
-                    with open(f'E://offline_series{s}/{r}.zip', 'wb') as zip_file:
+                    with open(f'E://offline_series{s}/{r["resource_id"]}.zip', 'wb') as zip_file:
                         zip_file.write(download.content)

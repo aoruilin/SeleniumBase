@@ -7,7 +7,7 @@ from ui_auto.page_object.element_loc import ElementSelector
 from ui_auto.page_object.page_operation import BaseTestCase
 
 
-class TestCheckCourse(BaseTestCase):
+class TestCourse(BaseTestCase):
     file_name, name = __file__, __name__
     case_log_path = log_path(file_name, name)
     d = Data()
@@ -33,3 +33,6 @@ class TestCheckCourse(BaseTestCase):
         self.switch_window(0)
         self.del_course()
 
+
+if __name__ == '__main__':
+    unittest.main()
