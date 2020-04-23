@@ -423,88 +423,82 @@ class ElementSelector:
     uni_teach_result_text_loc = '//div[@class="code-result-des"]', '教学版运行结果'
 
     """AI体验"""
-    image_identify_tab_loc = '//div[contains(text(),"图")]', '图像识别tab'  # 待定
+    image_identify_tab_loc = '//div[contains(text(),"图")]', '图像识别tab'
 
-    upload_pic_loc = '//div[@class="upload-tag"]/img', '上传图片按钮'  # 待定
-    output_text_loc = '//div[@class="board-output-inner"]', '识别结果输出区'  # 待定
-    car_pic_loc = '//div[@class="right-container fl"]/div/div[7]/div/img', '系统车牌图片'  # 待定
+    upload_pic_loc = '//div[@class="upload-btn-wrap"]/div[1]', '上传图片按钮'
+    output_text_loc = '//div[@class="shibie-wrap-center-msg"]', '识别结果输出区'
+    car_pic_loc = '//div[@class="image-recognition-header"]/descendant::li[8]', '系统车牌图片'
 
-    word_input_loc = '//input[@class="el-input__inner"]', '主题词输入框'  # 待定
-    generate_btn_loc = '//span[contains(text(),"生成")]', '生成按钮'  # 待定
-    subject_word_loc = '//div[@class="el-row"]/div[5]/div', '系统主题词'  # 待定
-    poetry_title_loc = '//div[@class="title"]', '古诗标题'  # 待定
-    couples_title_loc = '//div[@class="center"]', '春联标题'  # 待定
-    couples_text_loc = '//div[@class="couplet-background"]', '春联文本'  # 待定
-    copy_btn_loc = '', '复制按钮'  # 待定
+    word_input_loc = '//input[@class="ant-input ant-input-lg"]', '主题词输入框'
+    generate_btn_loc = '//span[contains(text(),"生成")]/parent::button', '生成按钮'
+    subject_word_loc = '//div[@class="writingPoetry_writing-poetry-header__1FfIm"]/descendant::li[1]', '系统主题词'
+    poetry_title_loc = '//div[@class="writingPoetry_title__25LHJ"]', '古诗标题'
+    couples_title_loc = '//span[@class="springFestivalCouplets_border__3RsNR"]', '春联标题'
+    couples_text_loc = '//div[@class="springFestivalCouplets_left__2ywVC"]/div', '春联文本'
+    copy_btn_loc = '//span[contains(text(),"复制")]/parent::button', '复制按钮'
 
     """试炼场标准编辑"""
-    draft_name_input_loc = '//div[@class="operate-save"]/div[1]/input', '草稿名称input框'  # 待定
-    save_btn_loc = '//div[text()="保存"]', '保存按钮'  # 待定
-    confirm_save_btn_loc = '//div[@class="footer"]', '弹框确定按钮'  # 待定
-    ace_text_input_loc = '//div[@class="ace-box"]/div/div/div/textarea', '试炼场游标'  # 待定
-    run_code_btn_loc = '//i[@class="iconfont iconpractice_icon_move"]', '试炼场运行代码按钮'  # 待定
-    text_out_area_loc = '//div[@class="data-input-inner"]', '试炼场文本输出区'  # 待定
-    pygame_canvas_loc = 'myPygameCanvas', 'pygame弹窗'  # 待定
-    close_pygame_btn_loc = '//div[@class="pygame-wrap"]/div[1]/div/div/button', 'pygame弹窗关闭按钮'  # 待定
-    save_confirm_btn_loc = '//div[@class="footer"]', '保存成功提示弹窗确定按钮'  # 待定
-    add_file_btn_loc = '//i[@class="iconfont iconpractice_icon_add"]', '添加文件按钮'  # 待定
-    create_file_input_loc = '//div[@class="file-input"]/div/input', '创建文件名称输入框'  # 待定
-    add_file_confirm_btn_loc = '//div[@class="el-dialog dialogFile"]/div[3]/div/button[2]', '创建文件确定按钮'  # 待定
-    main_file_tab_loc = '//span[contains(text(),"main")]', 'main文件tab'  # 待定
-    head_file_loc = '//div[@class="file-choose"]/div/span', '顶部文件按钮'  # 待定
-    my_draft_btn_loc = '//div[@class="my-draft"]', '草稿'  # 待定
-    first_draft_loc = '//div[@class="draft-content"]/div[1]/div[1]/div[1]', '打开草稿列表第一个草稿名称'  # 待定
-    type_choose_loc = '//div[@class="type-choose"]/div/span', '编辑模式选择'  # 待定
+    code_input_area_loc = '.ace_content', '试炼场编辑器区域'
+    draft_name_input_loc = '//div[@class="operate-save active"]/div[1]/input', '草稿名称input框'
+    save_btn_loc = '//div[contains(text(),"保存")]', '保存按钮'
+    save_success_tip_loc = '//div[@class="el-message el-message--success"]/p', '保存成功提示'
+    ace_text_input_loc = '//div[@class="ace-box"]/div/div/div/textarea', '试炼场游标'
+    run_code_btn_loc = '//i[@class="iconfont iconIcon_Move"]', '试炼场运行代码按钮'
+    text_out_area_loc = '//div[@class="data-input-inner"]', '试炼场文本输出区'
+    pygame_canvas_loc = 'myPygameCanvas', 'pygame弹窗'
+    close_pygame_btn_loc = '//div[@class="pygame-wrap"]/div[1]/div/div/button', 'pygame弹窗关闭按钮'
+    add_file_btn_loc = '//i[@class="iconfont iconpractice_icon_add"]', '添加文件按钮'
+    create_file_input_loc = '//div[@class="file-input"]/div/input', '创建文件名称输入框'
+    add_file_confirm_btn_loc = '//div[@class="el-dialog dialogFile"]/div[3]/div/button[2]', '创建文件确定按钮'
+    main_file_tab_loc = '//span[contains(text(),"main")]', 'main文件tab'
+    head_file_loc = '//div[@class="file-choose"]/div/span', '顶部文件按钮'
+    my_draft_btn_loc = '//div[@class="my-draft"]', '草稿'
+    first_draft_loc = '//div[@class="draft-content"]/div[1]/div[1]/div[1]', '打开草稿列表第一个草稿名称'
+    type_choose_loc = '//div[@class="type-choose"]/div/span', '编辑模式选择'
 
     """试炼场创客编辑"""
-    ck_type_loc = '//li[contains(text(),"创客编辑")]', '创客编辑模式'  # 待定
-    ck_type_output_loc = '//div[@id="example"]/canvas', '创客编辑输出'  # 待定
-    robot_config_btn_loc = '//span[contains(text(),"机器人")]', '机器人配置按钮'  # 待定
+    ck_type_loc = '//li[contains(text(),"创客编辑")]', '创客编辑模式'
+    ck_type_output_loc = '//div[@id="example"]/canvas', '创客编辑输出'
+    robot_config_btn_loc = '//span[contains(text(),"设备")]', '机器人配置按钮'
     robot_box_loc = '//div[@class="robot-content-box"]/ul/li[1]/div[1]', '机器人选择'  # 待定
     connect_robot_btn_loc = '//div[@class="robot-content-box"]/ul/li[1]/div[1]/div/div', '连接机器人按钮'  # 待定
     close_robot_config_btn_loc = '//span[contains(text(),"配置机器人")]/following-sibling::button', '关闭配置机器人'  # 待定
     robot_img_loc = '//div[@class="el-image robot-img"]', '机器人画面'  # 待定
 
     """发布作品"""
-    submit_work_btn_loc = '//span[contains(text(),"发布作品")]', '发布作品按钮'  # 待定
-    work_name_input_loc = '//div[@class="el-input el-input--medium"]/input', '作品发布名称输入框'  # 待定
+    submit_work_btn_loc = '//span[contains(text(),"发布作品")]', '发布作品按钮'
+    work_name_input_loc = '//div[@class="el-input el-input--medium el-input--suffix"]/input', '作品发布名称输入框'
 
     """素材库"""
-    tools_box_loc = 'div.head-right > div:nth-of-type(2) > div > span > i:nth-of-type(2)'  # , '工具箱'  # 待定
-    material_lib_loc = '.zsi1.iconfont.iconpractic_icon_source'  # , '素材库'  # 待定
-    add_classify_btn = '.my-meterial-add-btn', '我的素材添加分类按钮'  # 待定
-    classify_name_input = '//div[@class="my-meterial-list"]/div[2]/div/input', '添加素材名称输入框'  # 待定
-    confirm_classify_btn = '//div[@class="my-meterial-list"]/div[2]/span[1]', '添加素材确定按钮'  # 待定
-    upload_material_btn_loc = '//div[contains(text(),"上传")]', '上传素材按钮'  # 待定
-    edit_name_btn_loc = '//div[@class="my-meterial-container"]/div/div/div[1]/div[2]/div[1]/i', '编辑名称按钮'  # 待定
-    delete_material_btn_loc = '//div[@class="my-meterial-container"]/div[1]/div[1]/div[1]/div[2]/i', '删除素材按钮'  # 待定
-    material_name_input_loc = '//div[@class="el-row"]/div[1]/div[1]/div[2]/div[2]/div/input', '素材名称输入框'  # 待定
-    upload_confirm_btn_loc = '//div[@class="el-message-box__btns"]/button[2]', '确定按钮'  # 待定
-    material_img_loc = 'div.my-meterial-container > div > div:nth-of-type(1) > div:nth-of-type(1) > ' \
-                       'div:nth-of-type(1) > div'  # 素材图片  # 待定
-    material_name_loc = '//div[@class="my-meterial-container"]/div/div/div[1]/div[2]'  # , '素材名称'  # 待定
-    classify_handle_loc = '.handle-meterial-type'  # 素材分类操作  # 待定
+    tools_box_loc = 'div.head-right > div:nth-of-type(2) > div > span > i:nth-of-type(2)'  # , '工具箱'
+    material_lib_loc = '.zsi1.iconfont.iconPractice_Icon_Material'  # , '素材库'
+    add_classify_btn = '.my-meterial-add-btn', '我的素材添加分类按钮'
+    classify_name_input = '//div[@class="content-box"]/div/div/input', '添加素材名称输入框'
+    confirm_classify_btn = '//span[text()="确定"]', '添加素材确定按钮'
+    upload_material_btn_loc = '//div[contains(text(),"上传")]', '上传素材按钮'
+    edit_classify_btn = '//div[contains(text(),"重新")]', '素材分类重新命名'
+    edit_name_btn_loc = '//div[contains(text(),"重命名")]', '编辑名称按钮'
+    delete_material_btn_loc = '//div[contains(text(),"重命名")]/parent::li/following-sibling::li', '删除素材按钮'
+    material_name_input_loc = '//div[@class="content-box"]/descendant::input', '素材名称输入框'
+    upload_confirm_btn_loc = '//span[text()="确定"]', '确定按钮'
+    material_img_loc = 'div.my-meterial-container > ul > li:nth-of-type(2) > ' \
+                       'div:nth-of-type(1) > div:nth-of-type(1)'  # 素材图片
+    material_name_loc = '//div[@class="my-meterial-container"]/ul/li[2]/div[1]/div[2]/div/div'  # , '素材名称'
+    classify_handle_loc = '.handle-meterial-type'  # 素材分类操作
 
     """创作空间学生提交作品"""
-    my_draft_tab_loc = '', '我的草稿tab'
-    draft_btn_loc = '//div[text()="草稿"]', '草稿按钮'  # 待定
-    publish_draft_btn_loc = '//div[@class="el-row"]/div[1]/div/div/div[1]/div/div[3]/div[2]/span', '草稿发布按钮'  # 待定
-    my_works_tab_loc = '//li[contains(text(),"我的作品")]', '我的作品tab'  # 待定
-    public_work_btn_loc = '//span[contains(text(),"发布")]', '发布作品按钮'
-    my_work_name_input_loc = '//label[contains(text(),"作品名称")]/parent::div/div/div/input', '作品名称输入框'  # 待定
-    work_introduction_input_loc = '//label[contains(text(),"作品简介")]/parent::div/div/div/textarea', '作品简介输入框'  # 待定
+    works_hall_my_works_tab_loc = '//div[contains(text(),"我的作品")]', '我的作品tab'
 
-    add_work_cursor_loc = '//textarea[@class="ace_text-input"]', '发布作品编辑器游标'
-    add_work_picture_btn_loc = '//form[@class="el-form el-form--label-left"]' \
-                               '/div[4]/div/div/div/div/div[1]/div', '添加作品图示按钮'
-    add_author_picture_btn_loc = '//form[@class="el-form el-form--label-left"]' \
-                                 '/div[8]/div/div/div/div/div[1]/div', '添加作者风采按钮'
-    sel_class_loc = '//form/div[5]/div/div/div/span/span/i', '作者班级下拉框'
-    first_class_loc = '//div[@class="el-select-dropdown el-popper"]/div/div/ul/li[1]/span', '下拉框第一个班级'
-    sel_audit_teacher_loc = '//form/div[10]/div/div/div/div/div/span/span', '审核教师下拉框'
-    sel_teacher_input_loc = '//form/div[10]/div/div/div/div/div/input', '审核老师input'
-    submit_audit_btn_loc = '//div[contains(text(),"提交审核")]', '提交审核按钮'
-    # succ_tip_loc = '//p[@class="el-message__content"]'#'提交成功提示'
+    my_creation_draft_btn_loc = '//span[text()="草稿"]/parent::label', '草稿按钮'
+    my_creation_publish_draft_btn_loc = \
+        '//div[@class="flex flex-pack-justify flex-wrap"]/div[1]/div/div[2]/div/div/span[2]', '草稿发布按钮'
+
+    works_publish_my_work_name_input_loc = \
+        '//label[contains(text(),"作品名称")]/parent::div/following-sibling::div/div/div/input', '作品名称输入框'
+    works_publish_work_introduction_input_loc = \
+        '//label[contains(text(),"作品描述")]/parent::div/following-sibling::div/descendant::textarea', \
+        '作品描述输入框'
+    works_publish_btn_loc = '//span[contains(text(),"发 布")]/parent::button', '发布作品按钮'
 
     """教师审核作品"""
     student_work_tab_loc = '//li[contains(text(),"学生")]', '学生作品tab按钮'

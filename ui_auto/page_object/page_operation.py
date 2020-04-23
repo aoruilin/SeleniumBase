@@ -189,14 +189,16 @@ class BaseTestCase(BaseCase):
         self.click_button(*ElementSelector.login_btn_loc)
         # 登录有帮助引导，直接忽略
         try:
-            self.click_button(*ElementSelector.index_help_ignore_loc, loading=True)
+            # 点击头像
+            self.click_button(*ElementSelector.index_portrait_loc, loading=True)
         except ElementNotVisibleException:
             log(self.step_log_path, '不是第一次登录，没有新手指引')
-        # 点击头像
-        self.click_button(*ElementSelector.index_portrait_loc, loading=True)
-        # 检查头像下拉框用户名字
-        self.__assert_equal(name, ElementSelector.index_portrait_name_loc)
-        self.click_button(*ElementSelector.index_portrait_loc)
+            self.click_button(*ElementSelector.index_help_ignore_loc, loading=True)
+            self.click_button(*ElementSelector.index_portrait_loc, loading=True)
+        finally:
+            # 检查头像下拉框用户名字
+            self.__assert_equal(name, ElementSelector.index_portrait_name_loc)
+            self.click_button(*ElementSelector.index_portrait_loc)
 
     def login_for_uni_teach(self, username, name, password, teacher_assert=False, student_assert=False):
         self.open_the(self.url_for_uni)
@@ -1166,11 +1168,11 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         if self.__wait_for_loading():
-            self.change_text(*ElementSelector.my_work_name_input_loc, text=work_name)
+            self.change_text(*ElementSelector.works_publish_my_work_name_input_loc, text=work_name)
         if test_field:
             self.click_button(*ElementSelector.confirm_btn_equal_text)
         else:
-            self.click_button(*ElementSelector.confirm_btn_contais_text)
+            self.click_button(*ElementSelector.works_publish_btn_loc)
         if self.__wait_for_loading():
             self.wait_text('发布成功，可在作品大厅进行查看', *ElementSelector.tip_loc)
 
@@ -1496,6 +1498,8 @@ class BaseTestCase(BaseCase):
         :param model: 传入turtle或pygame
         :return: None
         """
+        if self.__wait_for_loading():
+            self.wait_element_visible(*ElementSelector.code_input_area_loc)
         code_input_element = self.take_element(*ElementSelector.ace_text_input_loc)
         code_input_element.clear()
         if 'turtle' == model:
@@ -1523,7 +1527,7 @@ class BaseTestCase(BaseCase):
                 log(self.step_log_path, e)
         self.change_text(*ElementSelector.draft_name_input_loc, text=f'{model}测试')
         self.click_button(*ElementSelector.save_btn_loc)
-        self.click_button(*ElementSelector.save_confirm_btn_loc)
+        self.__assert_equal('草稿保存成功，请在 “文件-打开” 或 “草稿” 中查看。', ElementSelector.save_success_tip_loc)
 
     def multiple_files_test_field(self, file_name, draft_name, output):
         """
@@ -1534,7 +1538,6 @@ class BaseTestCase(BaseCase):
         :param output: 预期输出
         :return: None
         """
-        self.switch_window(1)
         self.click_button(*ElementSelector.add_file_btn_loc)
         self.send_text(*ElementSelector.create_file_input_loc, text=file_name)
         self.click_button(*ElementSelector.add_file_confirm_btn_loc)
@@ -1552,7 +1555,7 @@ class BaseTestCase(BaseCase):
             log(self.step_log_path, f'{e}运行失败，输出错误')
         self.change_text(*ElementSelector.draft_name_input_loc, text=draft_name)
         self.click_button(*ElementSelector.save_btn_loc)
-        self.click_button(*ElementSelector.save_confirm_btn_loc)
+        self.__assert_equal('草稿保存成功，请在 “文件-打开” 或 “草稿” 中查看。', ElementSelector.save_success_tip_loc)
 
     def open_file(self, output):
         """
@@ -1561,7 +1564,6 @@ class BaseTestCase(BaseCase):
         :param output: 预期输出
         :return: None
         """
-        self.switch_window(1)
         self.click_button(*ElementSelector.my_draft_btn_loc, loading=True)
         draft_name = self.take_text(*ElementSelector.first_draft_loc)
         self.click_button(*ElementSelector.first_draft_loc)
@@ -1589,7 +1591,6 @@ class BaseTestCase(BaseCase):
 
         :return: None
         """
-        self.switch_window(1)
         self.click_button(*ElementSelector.type_choose_loc, loading=True)
         self.click_button(*ElementSelector.ck_type_loc)
         code = three_dimensional_code()
@@ -1603,7 +1604,7 @@ class BaseTestCase(BaseCase):
             log(self.step_log_path, f'{e}3D建模异常，没有输出')
         self.change_text(*ElementSelector.draft_name_input_loc, text='3D建模测试')
         self.click_button(*ElementSelector.save_btn_loc, loading=True)
-        self.click_button(*ElementSelector.save_confirm_btn_loc)
+        self.__assert_equal('草稿保存成功，请在 “文件-打开” 或 “草稿” 中查看。', ElementSelector.save_success_tip_loc)
 
     def robot(self):
         """
@@ -1673,14 +1674,14 @@ class BaseTestCase(BaseCase):
 
         :return: None
         """
-        self.switch_window(1)
         if self.__wait_for_loading():
             self.hover_and_click(ElementSelector.tools_box_loc,
                                  ElementSelector.material_lib_loc)
         self.click_button(*ElementSelector.add_classify_btn)
         self.send_text(*ElementSelector.classify_name_input, text='分类测试')
         self.click_button(*ElementSelector.confirm_classify_btn)
-        self.click_button(*ElementSelector.upload_material_btn_loc, loading=True)
+        self.click_button(*ElementSelector.upload_material_btn_loc,
+                          loading=True, wait=True)
         upload_file_by_auto_it('jpg')
         try:
             self.__assert_equal('上传成功!', ElementSelector.tip_loc)
@@ -1722,6 +1723,12 @@ class BaseTestCase(BaseCase):
             self.__assert_equal('删除素材成功', ElementSelector.tip_loc)
         except Exception as e:
             log(self.step_log_path, f'{e}删除素材异常')
+
+    def del_classify(self):
+        """
+        试炼场删除素材分类
+        :return:
+        """
 
     def __input_code(self, code, code_input):
         self.send_text(code_input, text=(Keys.CONTROL, 'a'))
