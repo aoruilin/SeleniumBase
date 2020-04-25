@@ -1,4 +1,5 @@
 import unittest
+import pytest
 
 from ui_auto.base.data import Data
 from ui_auto.base.logs import get_log_path, log_path
@@ -7,6 +8,7 @@ from ui_auto.page_object.element_loc import ElementSelector
 from ui_auto.page_object.page_operation import BaseTestCase
 
 
+@pytest.mark.run(order=2)
 class TestCourse(BaseTestCase):
     file_name, name = __file__, __name__
     case_log_path = log_path(file_name, name)

@@ -81,8 +81,8 @@ def wrong_code():
 def pygame_code():
     code = "import pygame\n\n" \
            "from pygame.locals import *\n" \
-           "background_image = 'userupload/sucai/3702/20200114/pygamebg.jpg'\n" \
-           "mouse_image = 'userupload/sucai/3702/20200224/Snipaste_2019-07-23_17-44-01.png'\n" \
+           "background_image = 'userupload/sucai/9816/2019-11-8/pygameBG.jpg'\n" \
+           "mouse_image = 'userupload/sucai/9816/pygamemouse.png'\n" \
            "pygame.init()\n" \
            "screen = pygame.display.set_mode((640, 480), 0, 32)\n" \
            "pygame.display.set_caption('hello world')\n" \

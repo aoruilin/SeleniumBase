@@ -187,10 +187,12 @@ class BaseTestCase(BaseCase):
         self.change_text(*ElementSelector.password_input_loc, text=password)
         self.click_button(*ElementSelector.save_login_loc)
         self.click_button(*ElementSelector.login_btn_loc)
+        self.wait_for_element(*ElementSelector.index_portrait_loc)
         # 登录有帮助引导，直接忽略
         try:
             # 点击头像
-            self.click_button(*ElementSelector.index_portrait_loc, loading=True)
+            self.click_button(*ElementSelector.index_portrait_loc,
+                              loading=True, wait=True)
         except ElementNotVisibleException:
             log(self.step_log_path, '不是第一次登录，没有新手指引')
             self.click_button(*ElementSelector.index_help_ignore_loc, loading=True)
@@ -217,15 +219,13 @@ class BaseTestCase(BaseCase):
         self.open_the(self.url_for_edu)
         self.change_text(*ElementSelector.username_input_loc, text='152084519491')
         self.change_text(*ElementSelector.password_input_loc, text='123456')
-        self.click_button(*ElementSelector.save_login_loc)
         self.click_button(*ElementSelector.login_btn_loc)
 
-        self.__assert_equal('用户不存在', ElementSelector.wrong_login_tip_loc)
+        self.__assert_equal('账号不存在', ElementSelector.wrong_login_tip_loc)
         self.element_not_visible(*ElementSelector.wrong_login_tip_loc)
 
         self.change_text(*ElementSelector.username_input_loc, text='13900000088')
         self.change_text(*ElementSelector.password_input_loc, text='1234567')
-        self.click_button(*ElementSelector.save_login_loc)
         self.click_button(*ElementSelector.login_btn_loc)
 
         self.__assert_equal('用户名/密码错误', ElementSelector.wrong_login_tip_loc)
@@ -686,7 +686,8 @@ class BaseTestCase(BaseCase):
         btn_list = ['课件', '视频', '讲义']
         for btn in btn_list:
             try:
-                btn_loc = f'//span[text()="{btn}"]' if full_screen else f'//div[text()="{btn}"]'
+                btn_loc = f'//span[text()="{btn}"]/parent::span/preceding-sibling::span/div/div[2]/span' \
+                    if full_screen else f'//div[text()="{btn}"]'
                 self.click_button(btn_loc, wait=True)
                 if full_screen:  # 全屏模式继续点击课件名称
                     self.click_button(f'//span[text()="{btn}"]'
@@ -1159,20 +1160,16 @@ class BaseTestCase(BaseCase):
     #             except Exception as e:
     #                 log(self.step_log_path, f'{e}做过的题不在题目列表中，题目列表异常')
 
-    def add_work(self, work_name, test_field=False):
+    def add_work(self, work_name):
         """
         学生作品发布
 
         :param work_name: 发布的作品名称
-        :param test_field: 是否从试炼场进入
         :return: None
         """
         if self.__wait_for_loading():
             self.change_text(*ElementSelector.works_publish_my_work_name_input_loc, text=work_name)
-        if test_field:
-            self.click_button(*ElementSelector.confirm_btn_equal_text)
-        else:
-            self.click_button(*ElementSelector.works_publish_btn_loc)
+        self.click_button(*ElementSelector.works_publish_btn_loc)
         if self.__wait_for_loading():
             self.wait_text('发布成功，可在作品大厅进行查看', *ElementSelector.tip_loc)
 
@@ -1209,13 +1206,13 @@ class BaseTestCase(BaseCase):
 
         :return: None
         """
-        self.click_button(*ElementSelector.feedback_btn_loc, loading=True)
+        self.click_button(*ElementSelector.fill_feedback_btn_loc, loading=True)
         self.send_text(*ElementSelector.content_textarea_loc, text='意见反馈测试')
         self.click(*ElementSelector.feedback_upload_pic_loc)
         upload_file_by_auto_it('jpg')
         if self.__wait_for_loading():
-            self.click_button(*ElementSelector.submit_btn_loc)
-            self.__assert_equal('许愿信提交成功！', ElementSelector.tip_loc)
+            self.click_button(*ElementSelector.confirm_btn_contains_text)
+            self.__assert_equal('反馈成功！', ElementSelector.tip_loc)
 
     def ai_experience(self):
         """
@@ -1224,7 +1221,7 @@ class BaseTestCase(BaseCase):
         :return: None
         """
         self.click_button(*ElementSelector.image_identify_tab_loc, loading=True)
-        self.click_button(*ElementSelector.upload_pic_loc)
+        self.click_button(*ElementSelector.upload_pic_loc, loading=True)
         upload_file_by_auto_it('jpg')
 
         self.__pic_image_identify_operation()
@@ -1233,10 +1230,14 @@ class BaseTestCase(BaseCase):
 
         word = '叮当码'
         for tab in range(1, 3):
-            self.click_button(f'//div[@class="item-change-box clearfix"]/div[{tab}]',
+            self.click_button(f'//div[@class="ant-tabs-nav ant-tabs-nav-animated"]/div[1]/div[{tab}]',
                               msg=f'切换第{tab}个tab')
-            self.change_text(*ElementSelector.word_input_loc, text=word)
-            self.click_button(*ElementSelector.generate_btn_loc)
+            input_loc = ElementSelector.poetry_word_input_loc \
+                if tab == 1 else ElementSelector.spring_festival_word_input_loc
+            generate_btn_loc = ElementSelector.poetry_word_generate_btn_loc \
+                if tab == 1 else ElementSelector.spring_festival_generate_btn_loc
+            self.change_text(*input_loc, text=word)
+            self.click_button(*generate_btn_loc)
             if tab == 1:
                 try:
                     if self.__wait_for_loading():
@@ -1249,6 +1250,7 @@ class BaseTestCase(BaseCase):
                         log(self.step_log_path, f'{e}创作诗句异常')
             else:
                 try:
+                    self.wait_for_element(*ElementSelector.couples_title_loc)
                     actual_title = self.take_text(*ElementSelector.couples_title_loc)
                     if all([actual_title]):
                         pass
@@ -1256,10 +1258,12 @@ class BaseTestCase(BaseCase):
                         log(self.step_log_path, '异常：春联标题没有文本')
                 except BaseException as e:
                     log(self.step_log_path, f'{e}创作春联异常')
-            self.slow_click(*ElementSelector.subject_word_loc)
+            subject_word_loc = ElementSelector.poetry_subject_word_loc \
+                if tab == 1 else ElementSelector.spring_festival_subject_word_loc
+            self.slow_click(*subject_word_loc)
             actual_word = None
             if self.__wait_for_loading():
-                actual_word = self.take_text(*ElementSelector.subject_word_loc)
+                actual_word = self.take_text(*subject_word_loc)
             if tab == 1:
                 self.wait_text(actual_word, *ElementSelector.poetry_title_loc)
             else:
@@ -1267,8 +1271,12 @@ class BaseTestCase(BaseCase):
                     couple_text = self.take_text(*ElementSelector.couples_text_loc)
                     c_list = couple_text.split('\n')
                     if any(c_list):
-                        for a in actual_word:
-                            assert (a in c_list)
+                        n = 0
+                        while n < len(actual_word) - 1:
+                            if actual_word[n] not in c_list:
+                                n += 1
+                            if actual_word[n] in c_list:
+                                break
                     else:
                         log(self.step_log_path, '异常：没有春联文本')
                 except BaseException as e:
@@ -1279,10 +1287,10 @@ class BaseTestCase(BaseCase):
         car_license_output = '车牌号为：'
         pic_tag_output = '这个是'
         fail_output = '上传图片无法识别'
-        btn_text_list = ['人脸', '车牌', '图片标签']
+        btn_text_list = ['人脸', '车牌', '图片']
         for t in btn_text_list:
             if self.__wait_for_loading():
-                self.click_button(f'//span[contains(text(),"{t}")]',
+                self.click_button(f'//span[contains(text(),"{t}")]/parent::button',
                                   msg=f'{t}识别')
                 try:
                     if '人脸' == t:
@@ -1487,7 +1495,7 @@ class BaseTestCase(BaseCase):
             self.click_and_jump(1, *ElementSelector.test_field_btn_loc)
             self.change_text(*ElementSelector.draft_name_input_loc, text=n)
             self.click_button(*ElementSelector.save_btn_loc, loading=True)
-            self.click_button(*ElementSelector.confirm_save_btn_loc)
+            self.__assert_equal('草稿保存成功，请在 “文件-打开” 或 “草稿” 中查看。', ElementSelector.save_success_tip_loc)
             self.driver.close()
             self.switch_window(0)
 
@@ -1652,9 +1660,7 @@ class BaseTestCase(BaseCase):
         :param work_name: 发布的作品名称
         :return: None
         """
-        name_input_elem = self.take_element(*ElementSelector.work_name_input_loc)
-        name_input_elem.clear()
-        name_input_elem.send_keys(work_name)
+        self.change_text(*ElementSelector.draft_name_input_loc, text=work_name)
         code = turtle_code()
         code_input_element = self.take_element(*ElementSelector.ace_text_input_loc)
         code_input_element.clear()
@@ -1665,8 +1671,14 @@ class BaseTestCase(BaseCase):
         except ElementNotVisibleException:
             log(self.step_log_path, '试炼场代码运行异常')
         self.click_button(*ElementSelector.save_btn_loc)
-        self.click_button(*ElementSelector.confirm_save_btn_loc)
+        self.__assert_equal('草稿保存成功，请在 “文件-打开” 或 “草稿” 中查看。', ElementSelector.save_success_tip_loc)
         self.click_button(*ElementSelector.submit_work_btn_loc)
+        self.click_button(*ElementSelector.work_describe_input_loc)
+        self.send_text(*ElementSelector.work_describe_input_loc, '测试试炼场发布作品')
+        self.element_not_visible(*ElementSelector.save_success_tip_loc)
+        self.click_button(*ElementSelector.confirm_btn_equal_text)
+        if self.__wait_for_loading():
+            self.wait_text('发布成功，可在作品大厅进行查看', *ElementSelector.save_success_tip_loc)
 
     def upload_material(self):
         """

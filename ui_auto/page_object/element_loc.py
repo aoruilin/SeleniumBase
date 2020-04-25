@@ -49,7 +49,7 @@ class ElementSelector:
     checkpoint_course_loc = '//span[contains(text(),"主题")]', '主题授课按钮'
     test_field_btn_loc = '//span[contains(text(),"试炼场")]', '试炼场按钮'
     creative_space_loc = '//span[contains(text(),"创作空间")]', '创作空间'
-    ai_experience_loc = '//div[@class="picture-ai"]', 'AI体验'
+    ai_experience_loc = '//div[@class="home_article__307Jr"]', 'AI体验'
     teach_management_btn_loc = '//span[contains(text(),"教学")]', '教学管理按钮'
 
     uni_teach_start_course_btn_loc = '//span[contains(text(),"上课")]', '高校版上课按钮'
@@ -65,11 +65,8 @@ class ElementSelector:
 
     """意见反馈"""
     fill_feedback_btn_loc = '//span[contains(text(),"填写反馈")]/parent::button', '填写反馈'
-
-    feedback_btn_loc = '//div[contains(text(),"意见")]', '意见反馈'
     content_textarea_loc = '//textarea[@class="ant-input"]', '内容输入框'
     feedback_upload_pic_loc = '//div[contains(text(),"上传")]', '上传图片按钮'
-    submit_btn_loc = '//span[contains(text(),"确 定")]/parent::button', '确定按钮'
 
     """头像下拉选项"""
     index_portrait_loc = '//div[@class="headercustom_avatar__3qY6R"]/span', '头像'
@@ -203,8 +200,9 @@ class ElementSelector:
         '"ant-select courseCompile_class-select__36btN ant-select-lg ant-select-multiple ant-select-show-search"]', \
         '发布班级'
 
-    add_course_choose_first_class_loc = f'//div[text()="{Data().pro_class_name_for_edu()}"]', \
-                                        '选择下拉框第一个班级'  # 待定，后期加到操作代码
+    add_course_choose_first_class_loc = \
+        f'//div[@class="ant-select-item-option-content" and text()="{Data().pro_class_name_for_edu()}"]', \
+        '选择下拉框第一个班级'  # 待定，后期加到操作代码
     add_course_delete_first_class_loc = '//span[@class="ant-select-selection-item-remove"]/span', '删除列表第一个班级'  # 发布作业共用
     add_course_preview_course_loc = '//span[contains(text(),"预览")]', '预览课程'
     add_course_course_plan_switch_loc = '//button[@class="ant-switch"]', '计划授课开关'
@@ -270,7 +268,7 @@ class ElementSelector:
     course_detail_first_chap_loc = '//div[@class="courseDetail_course-catalogue__3rF7c"]/div[2]/div[1]/div[1]', \
                                    '第一章'
     course_detail_send_course_name_loc = '//span[contains(text(),"1.")]/parent::div/parent::div', '知识点课程名称'
-    course_detail_send_course_loc = '//span[text()="发送"]/parent::div', '课程发送按钮'
+    course_detail_send_course_loc = '//span[text()="发布"]/parent::div', '课程发送按钮'
     course_detail_full_screen_course_loc = '//span[contains(text(),"全屏")]/parent::button', '全屏授课'
     course_detail_start_study_course_loc = '//span[contains(text(),"学习")]/parent::button', '开始学习'
     course_detail_full_screen_return_course_loc = '//span[contains(text(),"返回")]/parent::button', '全屏模式返回课程'  # 待定
@@ -425,13 +423,20 @@ class ElementSelector:
     """AI体验"""
     image_identify_tab_loc = '//div[contains(text(),"图")]', '图像识别tab'
 
-    upload_pic_loc = '//div[@class="upload-btn-wrap"]/div[1]', '上传图片按钮'
+    upload_pic_loc = '//div[@class="upload-btn"]', '上传图片按钮'
     output_text_loc = '//div[@class="shibie-wrap-center-msg"]', '识别结果输出区'
     car_pic_loc = '//div[@class="image-recognition-header"]/descendant::li[8]', '系统车牌图片'
 
-    word_input_loc = '//input[@class="ant-input ant-input-lg"]', '主题词输入框'
-    generate_btn_loc = '//span[contains(text(),"生成")]/parent::button', '生成按钮'
-    subject_word_loc = '//div[@class="writingPoetry_writing-poetry-header__1FfIm"]/descendant::li[1]', '系统主题词'
+    poetry_word_input_loc = '//div[@class="writingPoetry_writing-poetry-header__1FfIm"]/input', '写诗主题词输入框'
+    spring_festival_word_input_loc = \
+        '//div[@class="springFestivalCouplets_spring-festival-couplets-header__2MsVy"]/input', '春联主题词输入框'
+    poetry_word_generate_btn_loc = '//div[@class="writingPoetry_writing-poetry-header__1FfIm"]/button', '诗歌生成按钮'
+    spring_festival_generate_btn_loc = \
+        '//div[@class="springFestivalCouplets_spring-festival-couplets-header__2MsVy"]/button', '春联生成按钮'
+    poetry_subject_word_loc = '//div[@class="writingPoetry_writing-poetry-header__1FfIm"]/descendant::li[1]', \
+                              '诗歌系统主题词'
+    spring_festival_subject_word_loc = \
+        '//div[@class="springFestivalCouplets_spring-festival-couplets-header__2MsVy"]/descendant::li[1]', '春联系统主题词'
     poetry_title_loc = '//div[@class="writingPoetry_title__25LHJ"]', '古诗标题'
     couples_title_loc = '//span[@class="springFestivalCouplets_border__3RsNR"]', '春联标题'
     couples_text_loc = '//div[@class="springFestivalCouplets_left__2ywVC"]/div', '春联文本'
@@ -441,7 +446,7 @@ class ElementSelector:
     code_input_area_loc = '.ace_content', '试炼场编辑器区域'
     draft_name_input_loc = '//div[@class="operate-save active"]/div[1]/input', '草稿名称input框'
     save_btn_loc = '//div[contains(text(),"保存")]', '保存按钮'
-    save_success_tip_loc = '//div[@class="el-message el-message--success"]/p', '保存成功提示'
+    save_success_tip_loc = '//div[@class="el-message el-message--success"]/p', '试炼场成功提示'
     ace_text_input_loc = '//div[@class="ace-box"]/div/div/div/textarea', '试炼场游标'
     run_code_btn_loc = '//i[@class="iconfont iconIcon_Move"]', '试炼场运行代码按钮'
     text_out_area_loc = '//div[@class="data-input-inner"]', '试炼场文本输出区'
@@ -465,9 +470,11 @@ class ElementSelector:
     close_robot_config_btn_loc = '//span[contains(text(),"配置机器人")]/following-sibling::button', '关闭配置机器人'  # 待定
     robot_img_loc = '//div[@class="el-image robot-img"]', '机器人画面'  # 待定
 
-    """发布作品"""
+    """试炼场发布作品"""
     submit_work_btn_loc = '//span[contains(text(),"发布作品")]', '发布作品按钮'
     work_name_input_loc = '//div[@class="el-input el-input--medium el-input--suffix"]/input', '作品发布名称输入框'
+    work_describe_input_loc = '//label[contains(text(),"作品简介")]/following-sibling::div/descendant::textarea', \
+                              '作品描述输入框'
 
     """素材库"""
     tools_box_loc = 'div.head-right > div:nth-of-type(2) > div > span > i:nth-of-type(2)'  # , '工具箱'

@@ -1,4 +1,5 @@
 import unittest
+import pytest
 
 from ui_auto.base.data import Data
 from ui_auto.base.logs import get_log_path, log_path
@@ -7,6 +8,7 @@ from ui_auto.page_object.element_loc import ElementSelector
 from ui_auto.page_object.page_operation import BaseTestCase
 
 
+@pytest.mark.run(order=4)
 class TestFieldCase(BaseTestCase):
     file_name = __file__
     name = __name__
@@ -62,6 +64,18 @@ class TestFieldCase(BaseTestCase):
 
     @log_decorator(case_log_path)
     def test_06(self):
+        """
+        试炼场发布作品
+        :return:
+        """
+        work_name = Data().work_name
+        self.step_log_path = self.case_log_path
+        self.login(**self.student_data)
+        self.click_and_jump(1, *ElementSelector.test_field_btn_loc)
+        self.submit_work(work_name)
+
+    @log_decorator(case_log_path)
+    def test_07(self):
         """素材库"""
         self.step_log_path = self.case_log_path
         self.login(**self.student_data)
@@ -70,7 +84,7 @@ class TestFieldCase(BaseTestCase):
         # self.edit_material_name(Data().material_name)
         # self.delete_material()
 
-    # def test_07(self):
+    # def test_08(self):
     #     """机器人"""
     #     self.login(**self.teacher_data, teacher_assert=True)
     #     self.click_and_jump(1, *ElementSelector.test_field_btn_loc)

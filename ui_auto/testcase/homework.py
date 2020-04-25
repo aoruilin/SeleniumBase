@@ -1,4 +1,5 @@
 import unittest
+import pytest
 
 from ui_auto.base.data import Data
 from ui_auto.base.logs import log_path
@@ -7,6 +8,7 @@ from ui_auto.page_object.element_loc import ElementSelector
 from ui_auto.page_object.page_operation import BaseTestCase
 
 
+@pytest.mark.run(order=3)
 class TestHomework(BaseTestCase):
     file_name = __file__
     name = __name__
