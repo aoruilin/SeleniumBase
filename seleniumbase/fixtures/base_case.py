@@ -1,11 +1,8 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 The BaseCase class is the main gateway for using The SeleniumBase Framework.
 It inherits Python's unittest.TestCase class, and runs with Pytest or Nose.
 All tests using BaseCase automatically launch WebDriver browsers for tests.
-BaseCase类是使用SeleniumBase框架的主要网关。
-它继承了Python的unittest。类，并使用Pytest或Nose运行。
-所有使用BaseCase的测试都会自动启动用于测试的WebDriver浏览器。
 
 Usage:
 
@@ -23,10 +20,6 @@ SeleniumBase methods expand and improve on existing WebDriver commands.
 Improvements include making WebDriver more robust, reliable, and flexible.
 Page elements are given enough time to load before WebDriver acts on them.
 Code becomes greatly simplified and easier to maintain.
-SeleniumBase方法扩展和改进了现有的WebDriver命令。
-改进包括使WebDriver更加健壮、可靠和灵活。
-在WebDriver对页面元素进行操作之前，页面元素有足够的时间来加载。
-代码变得非常简单，易于维护。
 """
 
 import codecs
@@ -46,6 +39,7 @@ from selenium.common.exceptions import (StaleElementReferenceException,
 from selenium.common import exceptions as selenium_exceptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.remote_connection import LOGGER
 from selenium.webdriver.support.ui import Select
 from seleniumbase import config as sb_config
 from seleniumbase.common import decorators
@@ -61,33 +55,37 @@ from seleniumbase.fixtures import constants
 from seleniumbase.fixtures import js_utils
 from seleniumbase.fixtures import page_actions
 from seleniumbase.fixtures import page_utils
+from seleniumbase.fixtures import shared_utils
 from seleniumbase.fixtures import xpath_to_css
 logging.getLogger("requests").setLevel(logging.ERROR)
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 urllib3.disable_warnings()
+LOGGER.setLevel(logging.WARNING)
+ECI_Exception = selenium_exceptions.ElementClickInterceptedException
 ENI_Exception = selenium_exceptions.ElementNotInteractableException
 
 
 class BaseCase(unittest.TestCase):
-    """
+    '''
     A base test case that wraps methods for enhanced usage.
     You can also add your own methods here.
-    封装用于增强使用的方法的基本测试用例。
-    您还可以在这里添加自己的方法。
-    """
+    '''
 
     def __init__(self, *args, **kwargs):
         super(BaseCase, self).__init__(*args, **kwargs)
         self.driver = None
         self.environment = None
         self.env = None  # Add a shortened version of self.environment
-        self.step_log_path = None
         self.__last_url_of_delayed_assert = "data:,"
         self.__last_page_load_url = "data:,"
         self.__last_page_screenshot = None
         self.__last_page_screenshot_png = None
+        self.__added_pytest_html_extra = None
         self.__delayed_assert_count = 0
         self.__delayed_assert_failures = []
+        self.__device_width = None
+        self.__device_height = None
+        self.__device_pixel_ratio = None
         # Requires self._* instead of self.__* for external class use
         self._html_report_extra = []  # (Used by pytest_plugin.py)
         self._default_driver = None
@@ -95,35 +93,26 @@ class BaseCase(unittest.TestCase):
         self._tour_steps = {}
 
     def open(self, url):
-        """
-        Navigates the current browser window to the specified page.
-        将当前浏览器窗口导航到指定的页面。
-        """
+        """ Navigates the current browser window to the specified page. """
         self.__last_page_load_url = None
+        if url.startswith("://"):
+            # Convert URLs such as "://google.com" into "https://google.com"
+            url = "https" + url
         self.driver.get(url)
         if settings.WAIT_FOR_RSC_ON_PAGE_LOADS:
             self.wait_for_ready_state_complete()
         self.__demo_mode_pause_if_active()
 
     def open_url(self, url):
-        """
-        Same as open() - Original saved for backwards compatibility.
-        和open()一样，打开指定URL
-        """
+        """ Same as open() - Original saved for backwards compatibility. """
         self.open(url)
 
     def get(self, url):
-        """
-        Same as open() - WebDriver uses this method name.
-        和open()一样，打开指定URL
-        """
+        """ Same as open() - WebDriver uses this method name. """
         self.open(url)
 
     def visit(self, url):
-        """
-        Same as open() - Some JS frameworks use this method name.
-         和open()一样，打开指定URL
-         """
+        """ Same as open() - Some JS frameworks use this method name. """
         self.open(url)
 
     def click(self, selector, by=By.CSS_SELECTOR, timeout=None, delay=0):
@@ -147,7 +136,7 @@ class BaseCase(unittest.TestCase):
             self.driver, selector, by, timeout=timeout)
         self.__demo_mode_highlight_if_active(selector, by)
         if not self.demo_mode:
-            self.__scroll_to_element(element)
+            self.__scroll_to_element(element, selector, by)
         pre_action_url = self.driver.current_url
         if delay and delay > 0:
             time.sleep(delay)
@@ -193,31 +182,22 @@ class BaseCase(unittest.TestCase):
             self.__slow_mode_pause_if_active()
 
     def slow_click(self, selector, by=By.CSS_SELECTOR, timeout=None):
-        """
-        Similar to click(), but pauses for a brief moment before clicking.
-        When used in combination with setting the user-agent, you can often
-        bypass bot-detection by tricking websites into thinking that you're
-        not a bot. (Useful on websites that block web automation tools.)
-        To set the user-agent, use: ``--agent=AGENT``.
-        Here's an example message from GitHub's bot-blocker:
-        ``You have triggered an abuse detection mechanism...``
-        类似于click()，但在单击之前暂停片刻。
-        当与设置用户代理一起使用时，通常可以这样做
-        通过欺骗网站，让它们以为你是机器人，从而绕过机器人检测
-        不是一个机器人。(在屏蔽网络自动化工具的网站上很有用。)
-        要设置用户代理，请使用:' '——agent= agent ' '。
-        以下是来自GitHub的博特-blocker的示例消息:
-        “你触发了一个虐待检测机制……”
-        """
+        """ Similar to click(), but pauses for a brief moment before clicking.
+            When used in combination with setting the user-agent, you can often
+            bypass bot-detection by tricking websites into thinking that you're
+            not a bot. (Useful on websites that block web automation tools.)
+            To set the user-agent, use: ``--agent=AGENT``.
+            Here's an example message from GitHub's bot-blocker:
+            ``You have triggered an abuse detection mechanism...`` """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
             timeout = self.__get_new_timeout(timeout)
         if not self.demo_mode:
-            self.click(selector, by=by, timeout=timeout, delay=1.85)
+            self.click(selector, by=by, timeout=timeout, delay=1.05)
         else:
             # Demo Mode already includes a small delay
-            self.click(selector, by=by, timeout=timeout, delay=0.55)
+            self.click(selector, by=by, timeout=timeout, delay=0.25)
 
     def double_click(self, selector, by=By.CSS_SELECTOR, timeout=None):
         from selenium.webdriver.common.action_chains import ActionChains
@@ -231,7 +211,7 @@ class BaseCase(unittest.TestCase):
             self.driver, selector, by, timeout=timeout)
         self.__demo_mode_highlight_if_active(selector, by)
         if not self.demo_mode:
-            self.__scroll_to_element(element)
+            self.__scroll_to_element(element, selector, by)
         pre_action_url = self.driver.current_url
         try:
             actions = ActionChains(self.driver)
@@ -259,12 +239,8 @@ class BaseCase(unittest.TestCase):
 
     def click_chain(self, selectors_list, by=By.CSS_SELECTOR,
                     timeout=None, spacing=0):
-        """
-        This method clicks on a list of elements in succession.
-        'spacing' is the amount of time to wait between clicks. (sec)
-        此方法连续单击元素列表。
-        “间隔”是指点击之间等待的时间。
-        """
+        """ This method clicks on a list of elements in succession.
+            'spacing' is the amount of time to wait between clicks. (sec) """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -276,14 +252,9 @@ class BaseCase(unittest.TestCase):
 
     def type(self, selector, text, by=By.CSS_SELECTOR,
              timeout=None, retry=False):
-        """
-        The short version of update_text(), which clears existing text
-        and adds new text into the text field.
-        We want to keep the other version for backward compatibility.
-        update_text()的简短版本，它清除现有的文本
-        并将新文本添加到文本字段中。
-        为了向后兼容，我们希望保留另一个版本
-        """
+        """ The short version of update_text(), which clears existing text
+            and adds new text into the text field.
+            We want to keep the other version for backward compatibility. """
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
         if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
@@ -294,9 +265,7 @@ class BaseCase(unittest.TestCase):
 
     def input(self, selector, text, by=By.CSS_SELECTOR,
               timeout=None, retry=False):
-        """
-        Same as update_text().
-        """
+        """ Same as update_text(). """
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
         if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
@@ -320,20 +289,6 @@ class BaseCase(unittest.TestCase):
             by - the type of selector to search by (Default: CSS Selector)
             timeout - how long to wait for the selector to be visible
             retry - if True, use JS if the Selenium text update fails
-
-            此方法使用新文本更新元素的文本字段。
-            有多个部分:
-            *等待元素可见。
-            *等待元素交互。
-            *清除文本字段。
-            输入新文本。
-            *按Enter/Submit(如果文本以“\n”结尾)。
-            @Params
-            selector——文本字段的选择器
-            new_value—要在文本字段中键入的新值
-            by -要搜索的选择器类型by(默认:CSS选择器)
-            timeout——等待选择器可见需要多长时间
-            retry—如果为True，则在Selenium文本更新失败时使用JS
         """
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
@@ -345,7 +300,7 @@ class BaseCase(unittest.TestCase):
             selector, by=by, timeout=timeout)
         self.__demo_mode_highlight_if_active(selector, by)
         if not self.demo_mode:
-            self.__scroll_to_element(element)
+            self.__scroll_to_element(element, selector, by)
         try:
             element.clear()
         except (StaleElementReferenceException, ENI_Exception):
@@ -361,6 +316,8 @@ class BaseCase(unittest.TestCase):
             pass  # Clearing the text field first isn't critical
         self.__demo_mode_pause_if_active(tiny=True)
         pre_action_url = self.driver.current_url
+        if type(new_value) is int or type(new_value) is float:
+            new_value = str(new_value)
         try:
             if not new_value.endswith('\n'):
                 element.send_keys(new_value)
@@ -403,9 +360,7 @@ class BaseCase(unittest.TestCase):
 
     def add_text(self, selector, text, by=By.CSS_SELECTOR, timeout=None):
         """ The more-reliable version of driver.send_keys()
-            Similar to update_text(), but won't clear the text field first.
-            更可靠的driver.send_keys()版本
-            类似于update_text()，但不会首先清除文本字段。"""
+            Similar to update_text(), but won't clear the text field first. """
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
         if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
@@ -416,7 +371,7 @@ class BaseCase(unittest.TestCase):
             selector, by=by, timeout=timeout)
         self.__demo_mode_highlight_if_active(selector, by)
         if not self.demo_mode:
-            self.__scroll_to_element(element)
+            self.__scroll_to_element(element, selector, by)
         pre_action_url = self.driver.current_url
         try:
             if not text.endswith('\n'):
@@ -462,10 +417,7 @@ class BaseCase(unittest.TestCase):
         self.add_text(selector, text, by=by, timeout=timeout)
 
     def submit(self, selector, by=By.CSS_SELECTOR):
-        """
-        Alternative to self.driver.find_element_by_*(SELECTOR).submit()
-        替代self.driver.find_element_by_*(SELECTOR).submit()
-        """
+        """ Alternative to self.driver.find_element_by_*(SELECTOR).submit() """
         if page_utils.is_xpath_selector(selector):
             by = By.XPATH
         element = self.wait_for_element_visible(
@@ -479,10 +431,7 @@ class BaseCase(unittest.TestCase):
         self.wait_for_ready_state_complete()
 
     def refresh(self):
-        """
-        The shorter version of self.refresh_page()
-        self.refresh_page()的简短版本
-        """
+        """ The shorter version of self.refresh_page() """
         self.refresh_page()
 
     def get_current_url(self):
@@ -494,17 +443,13 @@ class BaseCase(unittest.TestCase):
 
     def get_page_title(self):
         self.wait_for_ready_state_complete()
-        self.wait_for_element_present("title", timeout=settings.MINI_TIMEOUT)
+        self.wait_for_element_present("title", timeout=settings.SMALL_TIMEOUT)
+        time.sleep(0.03)
         return self.driver.title
 
     def get_title(self):
-        """
-        The shorter version of self.get_page_title()
-        self.get_page_title()的简短版本
-        """
-        self.wait_for_ready_state_complete()
-        self.wait_for_element_present("title", timeout=settings.MINI_TIMEOUT)
-        return self.driver.title
+        """ The shorter version of self.get_page_title() """
+        return self.get_page_title()
 
     def go_back(self):
         self.__last_page_load_url = None
@@ -549,14 +494,9 @@ class BaseCase(unittest.TestCase):
                                                by=By.PARTIAL_LINK_TEXT)
 
     def is_link_text_present(self, link_text):
-        """
-        Returns True if the link text appears in the HTML of the page.
-        The element doesn't need to be visible,
-        such as elements hidden inside a dropdown selection.
-        如果链接文本出现在页面的HTML中，则返回True。
-        元素不需要是可见的，
-        例如隐藏在下拉选择中的元素。
-        """
+        """ Returns True if the link text appears in the HTML of the page.
+            The element doesn't need to be visible,
+            such as elements hidden inside a dropdown selection. """
         soup = self.get_beautiful_soup()
         html_links = soup.find_all('a')
         for html_link in html_links:
@@ -565,14 +505,9 @@ class BaseCase(unittest.TestCase):
         return False
 
     def is_partial_link_text_present(self, link_text):
-        """
-        Returns True if the link text appears in the HTML of the page.
-        The element doesn't need to be visible,
-        such as elements hidden inside a dropdown selection.
-        如果链接文本出现在页面的HTML中，则返回True。
-        元素不需要是可见的，
-        例如隐藏在下拉选择中的元素。
-        """
+        """ Returns True if the partial link appears in the HTML of the page.
+            The element doesn't need to be visible,
+            such as elements hidden inside a dropdown selection. """
         soup = self.get_beautiful_soup()
         html_links = soup.find_all('a')
         for html_link in html_links:
@@ -581,14 +516,9 @@ class BaseCase(unittest.TestCase):
         return False
 
     def get_link_attribute(self, link_text, attribute, hard_fail=True):
-        """
-        Finds a link by link text and then returns the attribute's value.
-        If the link text or attribute cannot be found, an exception will
-        get raised if hard_fail is True (otherwise None is returned).
-        逐个链接文本查找链接，然后返回属性值。
-        如果无法找到链接文本或属性，则会出现异常
-        如果hard_fail为真，则引发(否则不返回任何值)。
-        """
+        """ Finds a link by link text and then returns the attribute's value.
+            If the link text or attribute cannot be found, an exception will
+            get raised if hard_fail is True (otherwise None is returned). """
         soup = self.get_beautiful_soup()
         html_links = soup.find_all('a')
         for html_link in html_links:
@@ -598,35 +528,28 @@ class BaseCase(unittest.TestCase):
                     return attribute_value
                 if hard_fail:
                     raise Exception(
-                        '找不到链接文本{%s}的属性{%s}！'
-                        % (link_text, attribute))
+                        'Unable to find attribute {%s} from link text {%s}!'
+                        % (attribute, link_text))
                 else:
                     return None
         if hard_fail:
-            raise Exception("找不到链接文本{%s}！" % link_text)
+            raise Exception("Link text {%s} was not found!" % link_text)
         else:
             return None
 
     def get_link_text_attribute(self, link_text, attribute, hard_fail=True):
-        """
-            Same as self.get_link_attribute()
+        """ Same as self.get_link_attribute()
             Finds a link by link text and then returns the attribute's value.
             If the link text or attribute cannot be found, an exception will
-            get raised if hard_fail is True (otherwise None is returned).
-            和self.get_link_attribute()一样
-        """
+            get raised if hard_fail is True (otherwise None is returned). """
         return self.get_link_attribute(link_text, attribute, hard_fail)
 
     def get_partial_link_text_attribute(self, link_text, attribute,
                                         hard_fail=True):
-        """
-        Finds a link by link text and then returns the attribute's value.
-        If the link text or attribute cannot be found, an exception will
-        get raised if hard_fail is True (otherwise None is returned).
-        逐个链接文本查找链接，然后返回属性值。
-        如果无法找到链接文本或属性，则会出现异常
-        如果hard_fail为真，则引发(否则不返回任何值)。
-        """
+        """ Finds a link by partial link text and then returns the attribute's
+            value. If the partial link text or attribute cannot be found, an
+            exception will get raised if hard_fail is True (otherwise None
+            is returned). """
         soup = self.get_beautiful_soup()
         html_links = soup.find_all('a')
         for html_link in html_links:
@@ -636,21 +559,19 @@ class BaseCase(unittest.TestCase):
                     return attribute_value
                 if hard_fail:
                     raise Exception(
-                        '无法从局部Partial Link text {%s} 中找到属性{%s}！'
-                        % (link_text, attribute))
+                        'Unable to find attribute {%s} from '
+                        'partial link text {%s}!'
+                        % (attribute, link_text))
                 else:
                     return None
         if hard_fail:
             raise Exception(
-                "找不到 Partial Link text {%s} ！" % link_text)
+                "Partial Link text {%s} was not found!" % link_text)
         else:
             return None
 
     def click_link_text(self, link_text, timeout=None):
-        """
-        This method clicks link text on a page
-        此方法单击页面上的链接文本
-        """
+        """ This method clicks link text on a page """
         # If using phantomjs, might need to extract and open the link directly
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
@@ -739,10 +660,7 @@ class BaseCase(unittest.TestCase):
         self.click_link_text(link_text, timeout=timeout)
 
     def click_partial_link_text(self, partial_link_text, timeout=None):
-        """
-        This method clicks the partial link text on a page.
-        此方法单击页面上的部分链接文本。
-        """
+        """ This method clicks the partial link text on a page. """
         # If using phantomjs, might need to extract and open the link directly
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
@@ -771,10 +689,10 @@ class BaseCase(unittest.TestCase):
                             self.open(link)
                             return
                     raise Exception(
-                        '无法解析partial link_text {%s} 的链接！'
-                        % partial_link_text)
+                        'Could not parse link from partial link_text '
+                        '{%s}' % partial_link_text)
             raise Exception(
-                "找不到Partial link text {%s} ！" % partial_link_text)
+                "Partial link text {%s} was not found!" % partial_link_text)
         if not self.is_partial_link_text_present(partial_link_text):
             self.wait_for_partial_link_text_present(
                 partial_link_text, timeout=timeout)
@@ -870,10 +788,7 @@ class BaseCase(unittest.TestCase):
 
     def get_attribute(self, selector, attribute, by=By.CSS_SELECTOR,
                       timeout=None):
-        """
-        This method uses JavaScript to get the value of an attribute.
-        此方法使用JavaScript获取属性值。
-        """
+        """ This method uses JavaScript to get the value of an attribute. """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -894,17 +809,13 @@ class BaseCase(unittest.TestCase):
         if attribute_value is not None:
             return attribute_value
         else:
-            raise Exception("元素 {%s} 没有属性 {%s}!" % (
+            raise Exception("Element {%s} has no attribute {%s}!" % (
                 selector, attribute))
 
     def set_attribute(self, selector, attribute, value, by=By.CSS_SELECTOR,
                       timeout=None):
-        """
-        This method uses JavaScript to set/update an attribute.
-        Only the first matching selector from querySelector() is used.
-        此方法使用JavaScript设置/更新属性。
-        只使用querySelector()的第一个匹配选择器。
-        """
+        """ This method uses JavaScript to set/update an attribute.
+            Only the first matching selector from querySelector() is used. """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -1003,7 +914,6 @@ class BaseCase(unittest.TestCase):
     def get_property_value(self, selector, property, by=By.CSS_SELECTOR,
                            timeout=None):
         """ Returns the property value of a page element's computed style.
-            返回页面元素的计算样式的属性值
             Example:
                 opacity = self.get_property_value("html body a", "opacity")
                 self.assertTrue(float(opacity) > 0, "Element not visible!") """
@@ -1035,10 +945,7 @@ class BaseCase(unittest.TestCase):
             return ""  # Return an empty string if the property doesn't exist
 
     def get_image_url(self, selector, by=By.CSS_SELECTOR, timeout=None):
-        """
-        Extracts the URL from an image element on the page.
-        从页面上的图像元素提取URL
-        """
+        """ Extracts the URL from an image element on the page. """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -1048,10 +955,11 @@ class BaseCase(unittest.TestCase):
 
     def find_elements(self, selector, by=By.CSS_SELECTOR, limit=0):
         """ Returns a list of matching WebElements.
-            If "limit" is set and > 0, will only return that many elements.
-            如果设置了“limit”，并且>0，则只返回那么多元素。"""
-        self.wait_for_ready_state_complete()
+            Elements could be either hidden or visible on the page.
+            If "limit" is set and > 0, will only return that many elements. """
         selector, by = self.__recalculate_selector(selector, by)
+        self.wait_for_ready_state_complete()
+        time.sleep(0.07)
         elements = self.driver.find_elements(by=by, value=selector)
         if limit and limit > 0 and len(elements) > limit:
             elements = elements[:limit]
@@ -1060,8 +968,9 @@ class BaseCase(unittest.TestCase):
     def find_visible_elements(self, selector, by=By.CSS_SELECTOR, limit=0):
         """ Returns a list of matching WebElements that are visible.
             If "limit" is set and > 0, will only return that many elements. """
-        self.wait_for_ready_state_complete()
         selector, by = self.__recalculate_selector(selector, by)
+        self.wait_for_ready_state_complete()
+        time.sleep(0.07)
         v_elems = page_actions.find_visible_elements(self.driver, selector, by)
         if limit and limit > 0 and len(v_elems) > limit:
             v_elems = v_elems[:limit]
@@ -1070,59 +979,72 @@ class BaseCase(unittest.TestCase):
     def click_visible_elements(self, selector, by=By.CSS_SELECTOR, limit=0):
         """ Finds all matching page elements and clicks visible ones in order.
             If a click reloads or opens a new page, the clicking will stop.
-            Works best for actions such as clicking all checkboxes on a page.
-            Example:  self.click_visible_elements('input[type="checkbox"]')
+            If no matching elements appear, an Exception will be raised.
             If "limit" is set and > 0, will only click that many elements.
-            查找所有匹配的页面元素并按顺序单击可见元素。
-            如果单击重新加载或打开一个新页面，单击将停止。
-            最适合单击页面上的所有复选框等操作。
-            例如:self.click_visible_elements(“输入(type = "复选框")”)
-            如果设置了“limit”并且>为0，则只会单击那么多元素"""
+            Also clicks elements that become visible from previous clicks.
+            Works best for actions such as clicking all checkboxes on a page.
+            Example:  self.click_visible_elements('input[type="checkbox"]') """
+        selector, by = self.__recalculate_selector(selector, by)
+        self.wait_for_element_present(
+            selector, by=by, timeout=settings.SMALL_TIMEOUT)
         elements = self.find_elements(selector, by=by)
-        count = 0
         click_count = 0
         for element in elements:
             if limit and limit > 0 and click_count >= limit:
                 return
-            count += 1
-            if count == 1:
-                self.wait_for_ready_state_complete()
-                if self.is_element_visible(selector, by=by):
-                    self.click(selector, by=by)
+            try:
+                if element.is_displayed():
+                    self.__scroll_to_element(element)
+                    element.click()
                     click_count += 1
-            else:
+                    self.wait_for_ready_state_complete()
+            except ECI_Exception:
+                continue  # ElementClickInterceptedException (Overlay likely)
+            except (StaleElementReferenceException, ENI_Exception):
                 self.wait_for_ready_state_complete()
+                time.sleep(0.03)
                 try:
                     if element.is_displayed():
                         self.__scroll_to_element(element)
                         element.click()
                         click_count += 1
+                        self.wait_for_ready_state_complete()
                 except (StaleElementReferenceException, ENI_Exception):
-                    self.wait_for_ready_state_complete()
-                    time.sleep(0.05)
-                    try:
-                        if element.is_displayed():
-                            self.__scroll_to_element(element)
-                            element.click()
-                            click_count += 1
-                    except (StaleElementReferenceException, ENI_Exception):
-                        return  # Probably on new page / Elements are all stale
+                    return  # Probably on new page / Elements are all stale
+
+    def click_nth_visible_element(self, selector, number, by=By.CSS_SELECTOR):
+        """ Finds all matching page elements and clicks the nth visible one.
+            Example:  self.click_nth_visible_element('[type="checkbox"]', 5)
+                        (Clicks the 5th visible checkbox on the page.) """
+        elements = self.find_visible_elements(selector, by=by)
+        if len(elements) < number:
+            raise Exception("Not enough matching {%s} elements of type {%s} to"
+                            " click number %s!" % (selector, by, number))
+        number = number - 1
+        if number < 0:
+            number = 0
+        element = elements[number]
+        self.wait_for_ready_state_complete()
+        try:
+            self.__scroll_to_element(element)
+            element.click()
+        except (StaleElementReferenceException, ENI_Exception):
+            self.wait_for_ready_state_complete()
+            time.sleep(0.05)
+            self.__scroll_to_element(element)
+            element.click()
 
     def click_if_visible(self, selector, by=By.CSS_SELECTOR):
         """ If the page selector exists and is visible, clicks on the element.
             This method only clicks on the first matching element found.
-            (Use click_visible_elements() to click all matching elements.)
-            如果页面选择器存在且可见，则单击元素。
-            此方法仅单击找到的第一个匹配元素。
-            (使用click_visible_elements()单击所有匹配的元素。)"""
+            (Use click_visible_elements() to click all matching elements.) """
         self.wait_for_ready_state_complete()
         if self.is_element_visible(selector, by=by):
             self.click(selector, by=by)
 
     def is_element_in_an_iframe(self, selector, by=By.CSS_SELECTOR):
         """ Returns True if the selector's element is located in an iframe.
-            Otherwise returns False.
-            如果选择器的元素位于iframe中，则返回True，否则返回假"""
+            Otherwise returns False. """
         selector, by = self.__recalculate_selector(selector, by)
         if self.is_element_present(selector, by=by):
             return False
@@ -1134,6 +1056,9 @@ class BaseCase(unittest.TestCase):
                 iframe_identifier = iframe['name']
             elif iframe.has_attr('id') and len(iframe['id']) > 0:
                 iframe_identifier = iframe['id']
+            elif iframe.has_attr('class') and len(iframe['class']) > 0:
+                iframe_class = " ".join(iframe["class"])
+                iframe_identifier = '[class="%s"]' % iframe_class
             else:
                 continue
             self.switch_to_frame(iframe_identifier)
@@ -1144,14 +1069,10 @@ class BaseCase(unittest.TestCase):
         return False
 
     def switch_to_frame_of_element(self, selector, by=By.CSS_SELECTOR):
-        """ Set driver control to the iframe of the element (assuming the
+        """ Set driver control to the iframe containing element (assuming the
             element is in a single-nested iframe) and returns the iframe name.
             If element is not in an iframe, returns None, and nothing happens.
-            May not work if multiple iframes are nested within each other.
-            将驱动程序控件设置为元素的iframe(假设
-            元素位于单嵌套的iframe中)，并返回iframe名称。
-            如果元素不在iframe中，则返回None，并且什么也不会发生。
-            如果多个iframe相互嵌套，可能无法工作"""
+            May not work if multiple iframes are nested within each other. """
         selector, by = self.__recalculate_selector(selector, by)
         if self.is_element_present(selector, by=by):
             return None
@@ -1163,13 +1084,26 @@ class BaseCase(unittest.TestCase):
                 iframe_identifier = iframe['name']
             elif iframe.has_attr('id') and len(iframe['id']) > 0:
                 iframe_identifier = iframe['id']
+            elif iframe.has_attr('class') and len(iframe['class']) > 0:
+                iframe_class = " ".join(iframe["class"])
+                iframe_identifier = '[class="%s"]' % iframe_class
             else:
                 continue
-            self.switch_to_frame(iframe_identifier)
-            if self.is_element_present(selector, by=by):
-                return iframe_identifier
+            try:
+                self.switch_to_frame(iframe_identifier, timeout=1)
+                if self.is_element_present(selector, by=by):
+                    return iframe_identifier
+            except Exception:
+                pass
             self.switch_to_default_content()
-        return None
+        try:
+            self.switch_to_frame(selector, timeout=1)
+            return selector
+        except Exception:
+            if self.is_element_present(selector, by=by):
+                return ""
+            raise Exception("Could not switch to iframe containing "
+                            "element {%s}!" % selector)
 
     def hover_on_element(self, selector, by=By.CSS_SELECTOR):
         selector, by = self.__recalculate_selector(selector, by)
@@ -1180,7 +1114,6 @@ class BaseCase(unittest.TestCase):
             selector, by=by, timeout=settings.SMALL_TIMEOUT)
         self.__demo_mode_highlight_if_active(selector, by)
         self.scroll_to(selector, by=by)
-        # self.driver.w3c = False
         time.sleep(0.05)  # Settle down from scrolling before hovering
         return page_actions.hover_on_element(self.driver, selector)
 
@@ -1188,9 +1121,7 @@ class BaseCase(unittest.TestCase):
                         hover_by=By.CSS_SELECTOR, click_by=By.CSS_SELECTOR,
                         timeout=None):
         """ When you want to hover over an element or dropdown menu,
-            and then click an element that appears after that.
-            当你想把鼠标悬停在一个元素或下拉菜单上时，
-            然后单击后面出现的元素"""
+            and then click an element that appears after that. """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -1199,6 +1130,7 @@ class BaseCase(unittest.TestCase):
             hover_selector, hover_by)
         hover_selector = self.convert_to_css_selector(
             hover_selector, hover_by)
+        hover_by = By.CSS_SELECTOR
         click_selector, click_by = self.__recalculate_selector(
             click_selector, click_by)
         dropdown_element = self.wait_for_element_visible(
@@ -1239,9 +1171,7 @@ class BaseCase(unittest.TestCase):
                                click_by=By.CSS_SELECTOR,
                                timeout=None):
         """ When you want to hover over an element or dropdown menu,
-            and then double-click an element that appears after that.
-            把鼠标悬停在一个元素或下拉菜单上，
-            然后双击之后出现的元素"""
+            and then double-click an element that appears after that. """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -1290,19 +1220,19 @@ class BaseCase(unittest.TestCase):
                         timeout=None):
         """ Selects an HTML <select> option by specification.
             Option specifications are by "text", "index", or "value".
-            Defaults to "text" if option_by is unspecified or unknown.
-            根据指定选择HTML <选择>选项。
-            选项规范是由“文本”、“索引”或“值”组成的。
-            如果option_by未指定或未知，则默认为“text”"""
+            Defaults to "text" if option_by is unspecified or unknown. """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
             timeout = self.__get_new_timeout(timeout)
         if page_utils.is_xpath_selector(dropdown_selector):
             dropdown_by = By.XPATH
-        element = self.wait_for_element_visible(
+        self.wait_for_ready_state_complete()
+        element = self.wait_for_element_present(
             dropdown_selector, by=dropdown_by, timeout=timeout)
-        self.__demo_mode_highlight_if_active(dropdown_selector, dropdown_by)
+        if self.is_element_visible(dropdown_selector, by=dropdown_by):
+            self.__demo_mode_highlight_if_active(
+                dropdown_selector, dropdown_by)
         pre_action_url = self.driver.current_url
         try:
             if option_by == "index":
@@ -1314,7 +1244,7 @@ class BaseCase(unittest.TestCase):
         except (StaleElementReferenceException, ENI_Exception):
             self.wait_for_ready_state_complete()
             time.sleep(0.05)
-            element = self.wait_for_element_visible(
+            element = self.wait_for_element_present(
                 dropdown_selector, by=dropdown_by, timeout=timeout)
             if option_by == "index":
                 Select(element).select_by_index(option)
@@ -1338,11 +1268,7 @@ class BaseCase(unittest.TestCase):
         """ Selects an HTML <select> option by option text.
             @Params
             dropdown_selector - the <select> selector
-            option - the text of the option
-            通过选项文本选择HTML下拉框选项。
-            @Params
-            dropdown_selector:下拉选择器
-            option:选项的文本"""
+            option - the text of the option """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -1357,8 +1283,7 @@ class BaseCase(unittest.TestCase):
         """ Selects an HTML <select> option by option index.
             @Params
             dropdown_selector - the <select> selector
-            option - the index number of the option
-            通过选项索引选择下拉选项"""
+            option - the index number of the option """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -1373,8 +1298,7 @@ class BaseCase(unittest.TestCase):
         """ Selects an HTML <select> option by option value.
             @Params
             dropdown_selector - the <select> selector
-            option - the value property of the option
-            通过选项属性value选择下拉选项"""
+            option - the value property of the option """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -1394,15 +1318,11 @@ class BaseCase(unittest.TestCase):
     def safe_execute_script(self, script):
         """ When executing a script that contains a jQuery command,
             it's important that the jQuery library has been loaded first.
-            This method will load jQuery if it wasn't already loaded.
-            当执行包含jQuery命令的脚本时，
-            首先加载jQuery库是很重要的。
-            如果尚未加载jQuery，此方法将加载它"""
+            This method will load jQuery if it wasn't already loaded. """
         try:
             self.execute_script(script)
         except Exception:
             # The likely reason this fails is because: "jQuery is not defined"
-            # 失败的原因可能是:“jQuery没有定义”
             self.activate_jquery()  # It's a good thing we can define it here
             self.execute_script(script)
 
@@ -1415,8 +1335,13 @@ class BaseCase(unittest.TestCase):
         self.__demo_mode_pause_if_active()
 
     def switch_to_frame(self, frame, timeout=None):
-        """ Sets driver control to the specified browser frame.
-            将驱动程序控件设置为指定的浏览器框架"""
+        """
+        Wait for an iframe to appear, and switch to it. This should be
+        usable as a drop-in replacement for driver.switch_to.frame().
+        @Params
+        frame - the frame element, name, id, index, or selector
+        timeout - the time to wait for the alert in seconds
+        """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -1427,16 +1352,11 @@ class BaseCase(unittest.TestCase):
         """ Brings driver control outside the current iframe.
             (If driver control is inside an iframe, the driver control
             will be set to one level above the current frame. If the driver
-            control is not currenly in an iframe, nothing will happen.)
-            将driver置于当前iframe之外。
-            如果driver在iframe中，则driver
-            将被设置为当前帧之上的一级。如果driver
-            当前不在iframe中，什么也不会发生。"""
+            control is not currenly in an iframe, nothing will happen.) """
         self.driver.switch_to.default_content()
 
     def open_new_window(self, switch_to=True):
-        """ Opens a new browser tab/window and switches to it by default.
-            打开一个新的浏览器标签/窗口，并在默认情况下切换到它"""
+        """ Opens a new browser tab/window and switches to it by default. """
         self.driver.execute_script("window.open('');")
         time.sleep(0.01)
         if switch_to:
@@ -1455,16 +1375,14 @@ class BaseCase(unittest.TestCase):
     def get_new_driver(self, browser=None, headless=None,
                        servername=None, port=None, proxy=None, agent=None,
                        switch_to=True, cap_file=None, disable_csp=None,
-                       enable_sync=None, user_data_dir=None,
-                       extension_zip=None, extension_dir=None):
+                       enable_sync=None, no_sandbox=None, disable_gpu=None,
+                       incognito=None, user_data_dir=None, extension_zip=None,
+                       extension_dir=None, is_mobile=False,
+                       d_width=None, d_height=None, d_p_r=None):
         """ This method spins up an extra browser for tests that require
             more than one. The first browser is already provided by tests
             that import base_case.BaseCase from seleniumbase. If parameters
             aren't specified, the method uses the same as the default driver.
-            该方法为需要的测试生成一个额外的浏览器
-            不止一个。测试已经提供了第一个浏览器
-            从seleniumbase BaseCase导入base_case。如果参数
-            未指定，该方法使用与默认驱动程序相同的方法。
             @Params
             browser - the browser to use. (Ex: "chrome", "firefox")
             headless - the option to run webdriver in headless mode
@@ -1474,24 +1392,33 @@ class BaseCase(unittest.TestCase):
             switch_to - the option to switch to the new driver (default = True)
             cap_file - the file containing desired capabilities for the browser
             disable_csp - an option to disable Chrome's Content Security Policy
-            enable_sync - the option to enable the "Chrome Sync" feature
+            enable_sync - the option to enable the Chrome Sync feature (Chrome)
+            no_sandbox - the option to enable the "No-Sandbox" feature (Chrome)
+            disable_gpu - the option to enable Chrome's "Disable GPU" feature
+            incognito - the option to enable Chrome's Incognito mode (Chrome)
             user_data_dir - Chrome's User Data Directory to use (Chrome-only)
             extension_zip - A Chrome Extension ZIP file to use (Chrome-only)
             extension_dir - A Chrome Extension folder to use (Chrome-only)
+            is_mobile - the option to use the mobile emulator (Chrome-only)
+            d_width - the device width of the mobile emulator (Chrome-only)
+            d_height - the device height of the mobile emulator (Chrome-only)
+            d_p_r - the device pixel ratio of the mobile emulator (Chrome-only)
         """
         if self.browser == "remote" and self.servername == "localhost":
-            raise Exception('不能在本地主机上使用“远程”浏览器驱动程序!'
-                            '是要连接到远程网格服务器比如BrowserStack或Sauce Labs吗?'
-                            '在这种情况下，你必须在命令行上指定“服务器”和“端口”参数'
-                            '例如: '
+            raise Exception('Cannot use "remote" browser driver on localhost!'
+                            ' Did you mean to connect to a remote Grid server'
+                            ' such as BrowserStack or Sauce Labs? In that'
+                            ' case, you must specify the "server" and "port"'
+                            ' parameters on the command line! '
+                            'Example: '
                             '--server=user:key@hub.browserstack.com --port=80')
         browserstack_ref = (
             'https://browserstack.com/automate/capabilities')
         sauce_labs_ref = (
             'https://wiki.saucelabs.com/display/DOCS/Platform+Configurator#/')
         if self.browser == "remote" and not self.cap_file:
-            raise Exception('需要指定一个所需的功能文件时'
-                            '使用 "--browser=remote". Add "--cap_file=FILE". '
+            raise Exception('Need to specify a desired capabilities file when '
+                            'using "--browser=remote". Add "--cap_file=FILE". '
                             'File should be in the Python format used by: '
                             '%s OR '
                             '%s '
@@ -1521,6 +1448,12 @@ class BaseCase(unittest.TestCase):
             disable_csp = self.disable_csp
         if enable_sync is None:
             enable_sync = self.enable_sync
+        if no_sandbox is None:
+            no_sandbox = self.no_sandbox
+        if disable_gpu is None:
+            disable_gpu = self.disable_gpu
+        if incognito is None:
+            incognito = self.incognito
         if user_data_dir is None:
             user_data_dir = self.user_data_dir
         if extension_zip is None:
@@ -1532,10 +1465,18 @@ class BaseCase(unittest.TestCase):
         #    disable_csp = True
         if cap_file is None:
             cap_file = self.cap_file
+        if is_mobile is None:
+            is_mobile = False
+        if d_width is None:
+            d_width = self.__device_width
+        if d_height is None:
+            d_height = self.__device_height
+        if d_p_r is None:
+            d_p_r = self.__device_pixel_ratio
         valid_browsers = constants.ValidBrowsers.valid_browsers
         if browser_name not in valid_browsers:
-            raise Exception("Browser: {%s} 不是有效的浏览器选项。 "
-                            "有效的选项 = {%s}" % (browser, valid_browsers))
+            raise Exception("Browser: {%s} is not a valid browser option. "
+                            "Valid options = {%s}" % (browser, valid_browsers))
         # Launch a web browser
         from seleniumbase.core import browser_launcher
         new_driver = browser_launcher.get_driver(browser_name=browser_name,
@@ -1548,16 +1489,25 @@ class BaseCase(unittest.TestCase):
                                                  cap_file=cap_file,
                                                  disable_csp=disable_csp,
                                                  enable_sync=enable_sync,
+                                                 no_sandbox=no_sandbox,
+                                                 disable_gpu=disable_gpu,
+                                                 incognito=incognito,
                                                  user_data_dir=user_data_dir,
                                                  extension_zip=extension_zip,
-                                                 extension_dir=extension_dir)
+                                                 extension_dir=extension_dir,
+                                                 mobile_emulator=is_mobile,
+                                                 device_width=d_width,
+                                                 device_height=d_height,
+                                                 device_pixel_ratio=d_p_r)
         self._drivers_list.append(new_driver)
         if switch_to:
             self.driver = new_driver
             if self.headless:
                 # Make sure the invisible browser window is big enough
+                width = settings.HEADLESS_START_WIDTH
+                height = settings.HEADLESS_START_HEIGHT
                 try:
-                    self.set_window_size(1440, 1880)
+                    self.set_window_size(width, height)
                     self.wait_for_ready_state_complete()
                 except Exception:
                     # This shouldn't fail, but in case it does,
@@ -1565,9 +1515,9 @@ class BaseCase(unittest.TestCase):
                     # WebDrivers can get closed during tearDown().
                     pass
             else:
-                if self.browser == 'chrome':
-                    width = 1250
-                    height = 840
+                if self.browser == 'chrome' or self.browser == 'edge':
+                    width = settings.CHROME_START_WIDTH
+                    height = settings.CHROME_START_HEIGHT
                     try:
                         if self.maximize_option:
                             self.driver.maximize_window()
@@ -1585,12 +1535,6 @@ class BaseCase(unittest.TestCase):
                             self.wait_for_ready_state_complete()
                         except Exception:
                             pass  # Keep existing browser resolution
-                elif self.browser == 'edge':
-                    try:
-                        self.driver.maximize_window()
-                        self.wait_for_ready_state_complete()
-                    except Exception:
-                        pass  # Keep existing browser resolution
             if self.start_page and len(self.start_page) >= 4:
                 if page_utils.is_valid_url(self.start_page):
                     self.open(self.start_page)
@@ -1602,30 +1546,94 @@ class BaseCase(unittest.TestCase):
 
     def switch_to_driver(self, driver):
         """ Sets self.driver to the specified driver.
-            You may need this if using self.get_new_driver() in your code.
-            切换到指定的driver，如果代码中使用了self.get_new_driver()应该会用到"""
+            You may need this if using self.get_new_driver() in your code. """
         self.driver = driver
 
     def switch_to_default_driver(self):
-        """ Sets self.driver to the default/original driver.
-            切换回默认的driver"""
+        """ Sets self.driver to the default/original driver. """
         self.driver = self._default_driver
 
     def save_screenshot(self, name, folder=None):
-        """ The screenshot will be in PNG format.
-            截图，png格式"""
+        """ The screenshot will be in PNG format. """
         return page_actions.save_screenshot(self.driver, name, folder)
 
     def save_page_source(self, name, folder=None):
         """ Saves the page HTML to the current directory (or given subfolder).
             If the folder specified doesn't exist, it will get created.
-            将页面HTML保存到当前目录(或给定的子文件夹)。
-            如果指定的文件夹不存在，将创建它。
             @Params
-            name - The file name to save the current page's HTML to./文件名
-            folder - The folder to save the file to. (Default = current folder)/文件夹
+            name - The file name to save the current page's HTML to.
+            folder - The folder to save the file to. (Default = current folder)
         """
         return page_actions.save_page_source(self.driver, name, folder)
+
+    def save_cookies(self, name="cookies.txt"):
+        """ Saves the page cookies to the "saved_cookies" folder. """
+        cookies = self.driver.get_cookies()
+        json_cookies = json.dumps(cookies)
+        if name.endswith('/'):
+            raise Exception("Invalid filename for Cookies!")
+        if '/' in name:
+            name = name.split('/')[-1]
+        if len(name) < 1:
+            raise Exception("Filename for Cookies is too short!")
+        if not name.endswith(".txt"):
+            name = name + ".txt"
+        folder = constants.SavedCookies.STORAGE_FOLDER
+        abs_path = os.path.abspath('.')
+        file_path = abs_path + "/%s" % folder
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        cookies_file_path = "%s/%s" % (file_path, name)
+        cookies_file = codecs.open(cookies_file_path, "w+")
+        cookies_file.writelines(json_cookies)
+        cookies_file.close()
+
+    def load_cookies(self, name="cookies.txt"):
+        """ Loads the page cookies from the "saved_cookies" folder. """
+        if name.endswith('/'):
+            raise Exception("Invalid filename for Cookies!")
+        if '/' in name:
+            name = name.split('/')[-1]
+        if len(name) < 1:
+            raise Exception("Filename for Cookies is too short!")
+        if not name.endswith(".txt"):
+            name = name + ".txt"
+        folder = constants.SavedCookies.STORAGE_FOLDER
+        abs_path = os.path.abspath('.')
+        file_path = abs_path + "/%s" % folder
+        cookies_file_path = "%s/%s" % (file_path, name)
+        f = open(cookies_file_path, 'r')
+        json_cookies = f.read().strip()
+        f.close()
+        cookies = json.loads(json_cookies)
+        for cookie in cookies:
+            if 'expiry' in cookie:
+                del cookie['expiry']
+            self.driver.add_cookie(cookie)
+
+    def delete_all_cookies(self):
+        """ Deletes all cookies in the web browser.
+            Does NOT delete the saved cookies file. """
+        self.driver.delete_all_cookies()
+
+    def delete_saved_cookies(self, name="cookies.txt"):
+        """ Deletes the cookies file from the "saved_cookies" folder.
+            Does NOT delete the cookies from the web browser. """
+        if name.endswith('/'):
+            raise Exception("Invalid filename for Cookies!")
+        if '/' in name:
+            name = name.split('/')[-1]
+        if len(name) < 1:
+            raise Exception("Filename for Cookies is too short!")
+        if not name.endswith(".txt"):
+            name = name + ".txt"
+        folder = constants.SavedCookies.STORAGE_FOLDER
+        abs_path = os.path.abspath('.')
+        file_path = abs_path + "/%s" % folder
+        cookies_file_path = "%s/%s" % (file_path, name)
+        if os.path.exists(cookies_file_path):
+            if cookies_file_path.endswith('.txt'):
+                os.remove(cookies_file_path)
 
     def wait_for_ready_state_complete(self, timeout=None):
         try:
@@ -1663,11 +1671,22 @@ class BaseCase(unittest.TestCase):
             timeout = self.__get_new_timeout(timeout)
         js_utils.wait_for_angularjs(self.driver, timeout, **kwargs)
 
+    def sleep(self, seconds):
+        if not sb_config.time_limit:
+            time.sleep(seconds)
+        else:
+            start_ms = time.time() * 1000.0
+            stop_ms = start_ms + (seconds * 1000.0)
+            for x in range(int(seconds * 5)):
+                shared_utils.check_if_time_limit_exceeded()
+                now_ms = time.time() * 1000.0
+                if now_ms >= stop_ms:
+                    break
+                time.sleep(0.2)
+
     def activate_jquery(self):
         """ If "jQuery is not defined", use this method to activate it for use.
-            This happens because jQuery is not always defined on web sites.
-            如果“jQuery未定义”，请使用此方法激活它以供使用。
-            这是因为jQuery并不总是在web站点上定义。"""
+            This happens because jQuery is not always defined on web sites. """
         js_utils.activate_jquery(self.driver)
 
     def __are_quotes_escaped(self, string):
@@ -1679,8 +1698,6 @@ class BaseCase(unittest.TestCase):
     def bring_to_front(self, selector, by=By.CSS_SELECTOR):
         """ Updates the Z-index of a page element to bring it into view.
             Useful when getting a WebDriverException, such as the one below:
-            更新页元素的z索引以使其进入视图。
-            在获取WebDriverException时非常有用，如下所示:
                 { Element is not clickable at point (#, #).
                   Other element would receive the click: ... } """
         if page_utils.is_xpath_selector(selector):
@@ -1711,11 +1728,9 @@ class BaseCase(unittest.TestCase):
         self.update_text(selector, new_value, by=by)
 
     def highlight(self, selector, by=By.CSS_SELECTOR,
-                  loops=settings.HIGHLIGHTS, scroll=True):
+                  loops=None, scroll=True):
         """ This method uses fancy JavaScript to highlight an element.
             Used during demo_mode.
-            此方法使用JavaScript高亮显示元素。
-            demo_mode期间使用。
             @Params
             selector - the selector of the element to find
             by - the type of selector to search by (Default: CSS)
@@ -1726,6 +1741,8 @@ class BaseCase(unittest.TestCase):
         selector, by = self.__recalculate_selector(selector, by)
         element = self.wait_for_element_visible(
             selector, by=by, timeout=settings.SMALL_TIMEOUT)
+        if not loops:
+            loops = settings.HIGHLIGHTS
         if scroll:
             try:
                 self.__slow_scroll_to_element(element)
@@ -1784,8 +1801,7 @@ class BaseCase(unittest.TestCase):
         js_utils.highlight_with_jquery(self.driver, selector, loops, o_bs)
 
     def scroll_to(self, selector, by=By.CSS_SELECTOR, timeout=None):
-        ''' Fast scroll to destination
-            快速滚动'''
+        ''' Fast scroll to destination '''
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -1796,13 +1812,13 @@ class BaseCase(unittest.TestCase):
         element = self.wait_for_element_visible(
             selector, by=by, timeout=timeout)
         try:
-            self.__scroll_to_element(element)
+            self.__scroll_to_element(element, selector, by)
         except (StaleElementReferenceException, ENI_Exception):
             self.wait_for_ready_state_complete()
             time.sleep(0.05)
             element = self.wait_for_element_visible(
                 selector, by=by, timeout=timeout)
-            self.__scroll_to_element(element)
+            self.__scroll_to_element(element, selector, by)
 
     def slow_scroll_to(self, selector, by=By.CSS_SELECTOR, timeout=None):
         ''' Slow motion scroll to destination '''
@@ -1822,6 +1838,24 @@ class BaseCase(unittest.TestCase):
                 selector, by=by, timeout=timeout)
             self.__slow_scroll_to_element(element)
 
+    def scroll_to_top(self):
+        scroll_script = "window.scrollTo(0, 0);"
+        try:
+            self.execute_script(scroll_script)
+            time.sleep(0.012)
+            return True
+        except Exception:
+            return False
+
+    def scroll_to_bottom(self):
+        scroll_script = "window.scrollTo(0, 10000);"
+        try:
+            self.execute_script(scroll_script)
+            time.sleep(0.012)
+            return True
+        except Exception:
+            return False
+
     def click_xpath(self, xpath):
         # Technically self.click() will automatically detect an xpath selector,
         # so self.click_xpath() is just a longer name for the same action.
@@ -1829,9 +1863,7 @@ class BaseCase(unittest.TestCase):
 
     def js_click(self, selector, by=By.CSS_SELECTOR, all_matches=False):
         """ Clicks an element using pure JS. Does not use jQuery.
-            If "all_matches" is False, only the first match is clicked.
-            使用纯JS单击元素。不使用jQuery。
-            如果“all_matches”为False，则只会单击第一个匹配项。"""
+            If "all_matches" is False, only the first match is clicked. """
         selector, by = self.__recalculate_selector(selector, by)
         if by == By.LINK_TEXT:
             message = (
@@ -1847,7 +1879,7 @@ class BaseCase(unittest.TestCase):
         if self.is_element_visible(selector, by=by):
             self.__demo_mode_highlight_if_active(selector, by)
             if not self.demo_mode:
-                self.__scroll_to_element(element)
+                self.__scroll_to_element(element, selector, by)
         css_selector = self.convert_to_css_selector(selector, by=by)
         css_selector = re.escape(css_selector)
         css_selector = self.__escape_quotes_if_needed(css_selector)
@@ -1858,13 +1890,11 @@ class BaseCase(unittest.TestCase):
         self.__demo_mode_pause_if_active()
 
     def js_click_all(self, selector, by=By.CSS_SELECTOR):
-        """ Clicks all matching elements using pure JS. (No jQuery)
-            使用纯JS单击所有匹配的元素。(没有jQuery)"""
+        """ Clicks all matching elements using pure JS. (No jQuery) """
         self.js_click(selector, by=By.CSS_SELECTOR, all_matches=True)
 
     def jquery_click(self, selector, by=By.CSS_SELECTOR):
-        """ Clicks an element using jQuery. Different from using pure JS.
-            使用jQuery单击元素。不同于使用纯JS。"""
+        """ Clicks an element using jQuery. Different from using pure JS. """
         selector, by = self.__recalculate_selector(selector, by)
         self.wait_for_element_present(
             selector, by=by, timeout=settings.SMALL_TIMEOUT)
@@ -1877,8 +1907,7 @@ class BaseCase(unittest.TestCase):
         self.__demo_mode_pause_if_active()
 
     def jquery_click_all(self, selector, by=By.CSS_SELECTOR):
-        """ Clicks all matching elements using jQuery.
-            使用jQuery单击所有匹配的元素。"""
+        """ Clicks all matching elements using jQuery. """
         selector, by = self.__recalculate_selector(selector, by)
         self.wait_for_element_present(
             selector, by=by, timeout=settings.SMALL_TIMEOUT)
@@ -1890,8 +1919,7 @@ class BaseCase(unittest.TestCase):
         self.__demo_mode_pause_if_active()
 
     def hide_element(self, selector, by=By.CSS_SELECTOR):
-        """ Hide the first element on the page that matches the selector.
-            隐藏页面上与选择器匹配的第一个元素。"""
+        """ Hide the first element on the page that matches the selector. """
         selector, by = self.__recalculate_selector(selector, by)
         selector = self.convert_to_css_selector(selector, by=by)
         selector = self.__make_css_match_first_element_only(selector)
@@ -1899,16 +1927,14 @@ class BaseCase(unittest.TestCase):
         self.safe_execute_script(hide_script)
 
     def hide_elements(self, selector, by=By.CSS_SELECTOR):
-        """ Hide all elements on the page that match the selector.
-            隐藏页面上与选择器匹配的所有元素。"""
+        """ Hide all elements on the page that match the selector. """
         selector, by = self.__recalculate_selector(selector, by)
         selector = self.convert_to_css_selector(selector, by=by)
         hide_script = """jQuery('%s').hide()""" % selector
         self.safe_execute_script(hide_script)
 
     def show_element(self, selector, by=By.CSS_SELECTOR):
-        """ Show the first element on the page that matches the selector.
-            显示页面上与选择器匹配的第一个元素。"""
+        """ Show the first element on the page that matches the selector. """
         selector, by = self.__recalculate_selector(selector, by)
         selector = self.convert_to_css_selector(selector, by=by)
         selector = self.__make_css_match_first_element_only(selector)
@@ -1916,16 +1942,14 @@ class BaseCase(unittest.TestCase):
         self.safe_execute_script(show_script)
 
     def show_elements(self, selector, by=By.CSS_SELECTOR):
-        """ Show all elements on the page that match the selector.
-            显示页面上与选择器匹配的所有元素。"""
+        """ Show all elements on the page that match the selector. """
         selector, by = self.__recalculate_selector(selector, by)
         selector = self.convert_to_css_selector(selector, by=by)
         show_script = """jQuery('%s').show(0)""" % selector
         self.safe_execute_script(show_script)
 
     def remove_element(self, selector, by=By.CSS_SELECTOR):
-        """ Remove the first element on the page that matches the selector.
-            删除页面上与选择器匹配的第一个元素。"""
+        """ Remove the first element on the page that matches the selector. """
         selector, by = self.__recalculate_selector(selector, by)
         selector = self.convert_to_css_selector(selector, by=by)
         selector = self.__make_css_match_first_element_only(selector)
@@ -1933,14 +1957,14 @@ class BaseCase(unittest.TestCase):
         self.safe_execute_script(remove_script)
 
     def remove_elements(self, selector, by=By.CSS_SELECTOR):
-        """ Remove all elements on the page that match the selector.
-            删除页面上与选择器匹配的所有元素。"""
+        """ Remove all elements on the page that match the selector. """
         selector, by = self.__recalculate_selector(selector, by)
         selector = self.convert_to_css_selector(selector, by=by)
         remove_script = """jQuery('%s').remove()""" % selector
         self.safe_execute_script(remove_script)
 
     def ad_block(self):
+        self.wait_for_ready_state_complete()
         from seleniumbase.config import ad_block_list
         for css_selector in ad_block_list.AD_BLOCK_LIST:
             css_selector = re.escape(css_selector)
@@ -1960,9 +1984,7 @@ class BaseCase(unittest.TestCase):
 
     def get_beautiful_soup(self, source=None):
         """ BeautifulSoup is a toolkit for dissecting an HTML document
-            and extracting what you need. It's great for screen-scraping!
-            BeautifulSoup是一个剖析HTML文档的工具包
-            提取你需要的东西。这是伟大的屏幕刮!"""
+            and extracting what you need. It's great for screen-scraping! """
         from bs4 import BeautifulSoup
         if not source:
             self.wait_for_ready_state_complete()
@@ -1973,8 +1995,6 @@ class BaseCase(unittest.TestCase):
     def get_unique_links(self):
         """ Get all unique links in the html of the page source.
             Page links include those obtained from:
-            获取页面源代码的html中的所有唯一链接。
-            页面链接包括:
             "a"->"href", "img"->"src", "link"->"href", and "script"->"src". """
         page_url = self.get_current_url()
         soup = self.get_beautiful_soup(self.get_page_source())
@@ -1985,9 +2005,6 @@ class BaseCase(unittest.TestCase):
         """ Get the status code of a link.
             If the timeout is exceeded, will return a 404.
             For a list of available status codes, see:
-            获取链接的状态码。
-            如果超时，将返回404。
-            有关可用状态代码的列表，请参见:
             https://en.wikipedia.org/wiki/List_of_HTTP_status_codes """
         status_code = page_utils._get_link_status_code(
             link, allow_redirects=allow_redirects, timeout=timeout)
@@ -2000,7 +2017,6 @@ class BaseCase(unittest.TestCase):
 
     def assert_no_404_errors(self, multithreaded=True):
         """ Assert no 404 errors from page links obtained from:
-            断言从以下链接获得的页面链接没有404错误:
             "a"->"href", "img"->"src", "link"->"href", and "script"->"src". """
         all_links = self.get_unique_links()
         links = []
@@ -2025,18 +2041,136 @@ class BaseCase(unittest.TestCase):
             and then prints out those links with their status codes.
             Format:  ["link"  ->  "status_code"]  (per line)
             Page links include those obtained from:
-            查找页面源的html中的所有惟一链接
-            然后打印出这些链接及其状态码。
-            格式:["link" -> "status_code"](每行)
-            网页链接包括:
             "a"->"href", "img"->"src", "link"->"href", and "script"->"src". """
         page_url = self.get_current_url()
         soup = self.get_beautiful_soup(self.get_page_source())
         page_utils._print_unique_links_with_status_codes(page_url, soup)
 
+    def __fix_unicode_conversion(self, text):
+        """ Fixing Chinese characters when converting from PDF to HTML. """
+        if sys.version_info[0] < 3:
+            # Update encoding for Python 2 users
+            reload(sys)  # noqa
+            sys.setdefaultencoding('utf8')
+        text = text.replace(u'\u2f8f', u'\u884c')
+        text = text.replace(u'\u2f45', u'\u65b9')
+        text = text.replace(u'\u2f08', u'\u4eba')
+        text = text.replace(u'\u2f70', u'\u793a')
+        return text
+
+    def get_pdf_text(self, pdf, page=None, maxpages=None,
+                     password=None, codec='utf-8', wrap=False, nav=False,
+                     override=False):
+        """ Gets text from a PDF file.
+            PDF can be either a URL or a file path on the local file system.
+            @Params
+            pdf - The URL or file path of the PDF file.
+            page - The page number (or a list of page numbers) of the PDF.
+                    If a page number is provided, looks only at that page.
+                        (1 is the first page, 2 is the second page, etc.)
+                    If no page number is provided, returns all PDF text.
+            maxpages - Instead of providing a page number, you can provide
+                       the number of pages to use from the beginning.
+            password - If the PDF is password-protected, enter it here.
+            codec - The compression format for character encoding.
+                    (The default codec used by this method is 'utf-8'.)
+            wrap - Replaces ' \n' with ' ' so that individual sentences
+                   from a PDF don't get broken up into seperate lines when
+                   getting converted into text format.
+            nav - If PDF is a URL, navigates to the URL in the browser first.
+                  (Not needed because the PDF will be downloaded anyway.)
+            override - If the PDF file to be downloaded already exists in the
+                       downloaded_files/ folder, that PDF will be used
+                       instead of downloading it again. """
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            from pdfminer.high_level import extract_text
+        if not password:
+            password = ''
+        if not maxpages:
+            maxpages = 0
+        if not pdf.lower().endswith('.pdf'):
+            raise Exception("%s is not a PDF file! (Expecting a .pdf)" % pdf)
+        file_path = None
+        if page_utils.is_valid_url(pdf):
+            if nav:
+                if self.get_current_url() != pdf:
+                    self.open(pdf)
+            file_name = pdf.split('/')[-1]
+            file_path = self.get_downloads_folder() + '/' + file_name
+            if not os.path.exists(file_path):
+                self.download_file(pdf)
+            elif override:
+                self.download_file(pdf)
+        else:
+            if not os.path.exists(pdf):
+                raise Exception("%s is not a valid URL or file path!" % pdf)
+            file_path = os.path.abspath(pdf)
+        page_search = None  # (Pages are delimited by '\x0c')
+        if type(page) is list:
+            pages = page
+            page_search = []
+            for page in pages:
+                page_search.append(page - 1)
+        elif type(page) is int:
+            page = page - 1
+            if page < 0:
+                page = 0
+            page_search = [page]
+        else:
+            page_search = None
+        pdf_text = extract_text(
+            file_path, password='', page_numbers=page_search,
+            maxpages=maxpages, caching=False, codec=codec)
+        pdf_text = self.__fix_unicode_conversion(pdf_text)
+        if wrap:
+            pdf_text = pdf_text.replace(' \n', ' ')
+        return pdf_text
+
+    def assert_pdf_text(self, pdf, text, page=None, maxpages=None,
+                        password=None, codec='utf-8', wrap=True, nav=False,
+                        override=False):
+        """ Asserts text in a PDF file.
+            PDF can be either a URL or a file path on the local file system.
+            @Params
+            pdf - The URL or file path of the PDF file.
+            text - The expected text to verify in the PDF.
+            page - The page number of the PDF to use (optional).
+                    If a page number is provided, looks only at that page.
+                        (1 is the first page, 2 is the second page, etc.)
+                    If no page number is provided, looks at all the pages.
+            maxpages - Instead of providing a page number, you can provide
+                       the number of pages to use from the beginning.
+            password - If the PDF is password-protected, enter it here.
+            codec - The compression format for character encoding.
+                    (The default codec used by this method is 'utf-8'.)
+            wrap - Replaces ' \n' with ' ' so that individual sentences
+                   from a PDF don't get broken up into seperate lines when
+                   getting converted into text format.
+            nav - If PDF is a URL, navigates to the URL in the browser first.
+                  (Not needed because the PDF will be downloaded anyway.)
+            override - If the PDF file to be downloaded already exists in the
+                       downloaded_files/ folder, that PDF will be used
+                       instead of downloading it again. """
+        text = self.__fix_unicode_conversion(text)
+        if not codec:
+            codec = 'utf-8'
+        pdf_text = self.get_pdf_text(
+            pdf, page=page, maxpages=maxpages, password=password, codec=codec,
+            wrap=wrap, nav=nav, override=override)
+        if type(page) is int:
+            if text not in pdf_text:
+                raise Exception("PDF [%s] is missing expected text [%s] on "
+                                "page [%s]!" % (pdf, text, page))
+        else:
+            if text not in pdf_text:
+                raise Exception("PDF [%s] is missing expected text [%s]!"
+                                "" % (pdf, text))
+        return True
+
     def create_folder(self, folder):
-        """ Creates a folder of the given name if it doesn't already exist.
-            如果给定名称不存在，则创建该名称的文件夹。"""
+        """ Creates a folder of the given name if it doesn't already exist. """
         if folder.endswith("/"):
             folder = folder[:-1]
         if len(folder) < 1:
@@ -2052,9 +2186,6 @@ class BaseCase(unittest.TestCase):
         """ This method is used to choose a file to upload to a website.
             It works by populating a file-chooser "input" field of type="file".
             A relative file_path will get converted into an absolute file_path.
-            此方法用于选择要上载到网站的文件。
-            它的工作方式是填充一个文件选择器“input”字段，类型为=“file”。
-            相对的file_path将被转换为绝对路径。
 
             Example usage:
                 self.choose_file('input[type="file"]', "my_dir/my_file.txt")
@@ -2070,9 +2201,7 @@ class BaseCase(unittest.TestCase):
 
     def save_element_as_image_file(self, selector, file_name, folder=None):
         """ Take a screenshot of an element and save it as an image file.
-            If no folder is specified, will save it to the current folder.
-            获取元素的屏幕快照并将其保存为图像文件。
-            如果没有指定文件夹，将其保存到当前文件夹。"""
+            If no folder is specified, will save it to the current folder. """
         element = self.wait_for_element_visible(selector)
         element_png = element.screenshot_as_png
         if len(file_name.split('.')[0]) < 1:
@@ -2094,19 +2223,16 @@ class BaseCase(unittest.TestCase):
     def download_file(self, file_url, destination_folder=None):
         """ Downloads the file from the url to the destination folder.
             If no destination folder is specified, the default one is used.
-            (The default downloads folder = "./downloaded_files")
-            将文件从url下载到目标文件夹。
-            如果没有指定目标文件夹，则使用默认文件夹。
-            (默认的下载文件夹= "./downloaded_files")"""
+            (The default downloads folder = "./downloaded_files") """
         if not destination_folder:
             destination_folder = constants.Files.DOWNLOADS_FOLDER
+        if not os.path.exists(destination_folder):
+            os.makedirs(destination_folder)
         page_utils._download_file_to(file_url, destination_folder)
 
     def save_file_as(self, file_url, new_file_name, destination_folder=None):
         """ Similar to self.download_file(), except that you get to rename the
-            file being downloaded to whatever you want.
-            类似于self.download_file()，只是需要重命名
-            文件被下载到你想要的任何地方。"""
+            file being downloaded to whatever you want. """
         if not destination_folder:
             destination_folder = constants.Files.DOWNLOADS_FOLDER
         page_utils._download_file_to(
@@ -2115,37 +2241,29 @@ class BaseCase(unittest.TestCase):
     def save_data_as(self, data, file_name, destination_folder=None):
         """ Saves the data specified to a file of the name specified.
             If no destination folder is specified, the default one is used.
-            (The default downloads folder = "./downloaded_files")
-            将指定的数据保存到指定名称的文件中。
-            如果没有指定目标文件夹，则使用默认文件夹。
-            (默认的下载文件夹= "./downloaded_files")"""
+            (The default downloads folder = "./downloaded_files") """
         if not destination_folder:
             destination_folder = constants.Files.DOWNLOADS_FOLDER
         page_utils._save_data_as(data, destination_folder, file_name)
 
     def get_downloads_folder(self):
         """ Returns the OS path of the Downloads Folder.
-            (Works with Chrome and Firefox only, for now.)
-            返回下载文件夹的操作系统路径。
-            (目前只适用于Chrome和Firefox。)"""
+            (Works with Chrome and Firefox only, for now.) """
         return download_helper.get_downloads_folder()
 
     def get_path_of_downloaded_file(self, file):
-        """ Returns the OS path of the downloaded file.
-            返回下载文件的操作系统路径。"""
+        """ Returns the OS path of the downloaded file. """
         return os.path.join(self.get_downloads_folder(), file)
 
     def is_downloaded_file_present(self, file):
-        """ Checks if the file exists in the Downloads Folder.
-            检查下载文件夹中是否存在该文件。"""
+        """ Checks if the file exists in the Downloads Folder. """
         return os.path.exists(self.get_path_of_downloaded_file(file))
 
     def assert_downloaded_file(self, file):
-        """ Asserts that the file exists in the Downloads Folder.
-            断言文件存在于下载文件夹中。"""
+        """ Asserts that the file exists in the Downloads Folder. """
         self.assertTrue(os.path.exists(self.get_path_of_downloaded_file(file)),
-                        "在文件夹 [%s] 中未找到文件 [%s] !"
-                        "" % (self.get_downloads_folder(), file))
+                        "File [%s] was not found in the downloads folder [%s]!"
+                        "" % (file, self.get_downloads_folder()))
         if self.demo_mode:
             messenger_post = ("ASSERT DOWNLOADED FILE: [%s]" % file)
             js_utils.post_messenger_success_message(
@@ -2180,12 +2298,11 @@ class BaseCase(unittest.TestCase):
                 self.driver, messenger_post, self.message_duration)
 
     def assert_title(self, title):
-        """ Asserts that the web page title matches the expected title.
-            断言web页面标题与预期的标题匹配。"""
+        """ Asserts that the web page title matches the expected title. """
         expected = title
-        actual = self.get_title()
-        self.assertEqual(expected, actual, "期望的页面标题 [%s] "
-                         "和实际的页面标题 [%s] 不匹配!"
+        actual = self.get_page_title()
+        self.assertEqual(expected, actual, "Expected page title [%s] "
+                         "does not match the actual page title [%s]!"
                          "" % (expected, actual))
         if self.demo_mode:
             messenger_post = ("ASSERT TITLE = {%s}" % title)
@@ -2195,9 +2312,6 @@ class BaseCase(unittest.TestCase):
         """ Asserts that there are no JavaScript "SEVERE"-level page errors.
             Works ONLY for Chrome (non-headless) and Chrome-based browsers.
             Does NOT work on Firefox, Edge, IE, and some other browsers:
-            断言不存在JavaScript“严重”级别的页面错误。
-            只适用于Chrome(非无头)和基于Chrome的浏览器。
-            不能在Firefox, Edge, IE和其他一些浏览器上工作:
                 * See https://github.com/SeleniumHQ/selenium/issues/1161
             Based on the following Stack Overflow solution:
                 * https://stackoverflow.com/a/41150512/7058266 """
@@ -2218,10 +2332,56 @@ class BaseCase(unittest.TestCase):
         if len(errors) > 0:
             current_url = self.get_current_url()
             raise Exception(
-                "JavaScript 报错 found on %s => %s" % (current_url, errors))
-        if self.demo_mode and self.browser == 'chrome':
-            messenger_post = ("ASSERT NO JS ERRORS")
-            self.__highlight_with_assert_success(messenger_post, "html")
+                "JavaScript errors found on %s => %s" % (current_url, errors))
+        if self.demo_mode:
+            if (self.browser == 'chrome' or self.browser == 'edge'):
+                messenger_post = ("ASSERT NO JS ERRORS")
+                self.__highlight_with_assert_success(messenger_post, "html")
+
+    def __activate_html_inspector(self):
+        self.wait_for_ready_state_complete()
+        time.sleep(0.05)
+        js_utils.activate_html_inspector(self.driver)
+
+    def inspect_html(self):
+        """ Inspects the Page HTML with HTML-Inspector.
+            (https://github.com/philipwalton/html-inspector)
+            (https://cdnjs.com/libraries/html-inspector)
+            Prints the results and also returns them. """
+        self.__activate_html_inspector()
+        script = ("""HTMLInspector.inspect();""")
+        self.execute_script(script)
+        time.sleep(0.1)
+        browser_logs = []
+        try:
+            browser_logs = self.driver.get_log('browser')
+        except (ValueError, WebDriverException):
+            # If unable to get browser logs, skip the assert and return.
+            return("(Unable to Inspect HTML! -> Only works on Chrome!)")
+        messenger_library = "//cdnjs.cloudflare.com/ajax/libs/messenger"
+        url = self.get_current_url()
+        header = '\n* HTML Inspection Results: %s' % url
+        results = [header]
+        row_count = 0
+        for entry in browser_logs:
+            message = entry['message']
+            if "0:6053 " in message:
+                message = message.split("0:6053")[1]
+            message = message.replace("\\u003C", "<")
+            if message.startswith(' "') and message.count('"') == 2:
+                message = message.split('"')[1]
+            message = "X - " + message
+            if messenger_library not in message:
+                if message not in results:
+                    results.append(message)
+                    row_count += 1
+        if row_count > 0:
+            results.append('* (See the Console output for details!)')
+        else:
+            results.append('* (No issues detected!)')
+        results = '\n'.join(results)
+        print(results)
+        return(results)
 
     def get_google_auth_password(self, totp_key=None):
         """ Returns a time-based one-time password based on the
@@ -2231,13 +2391,6 @@ class BaseCase(unittest.TestCase):
             Google Auth passwords expire and change at 30-second intervals.
             If the fetched password expires in the next 1.5 seconds, waits
             for a new one before returning it (may take up to 1.5 seconds).
-            返回基于时间的一次性密码
-            谷歌认证密码算法。与Authy一起工作。
-            如果未指定“totp_key”，则默认使用
-            提供seleniumbase / config / settings.py
-            谷歌验证密码每隔30秒失效和更改一次。
-            如果获取的密码在接下来的1.5秒内过期，则等待
-            在返回一个新的之前(可能需要1.5秒)。
             See https://pyotp.readthedocs.io/en/latest/ for details. """
         import pyotp
         if not totp_key:
@@ -2265,11 +2418,7 @@ class BaseCase(unittest.TestCase):
         """ This method converts a selector to a CSS_SELECTOR.
             jQuery commands require a CSS_SELECTOR for finding elements.
             This method should only be used for jQuery/JavaScript actions.
-            Pure JavaScript doesn't support using a:contains("LINK_TEXT").
-            此方法将选择器转换为CSS_SELECTOR。
-            jQuery命令需要一个CSS_SELECTOR来查找元素。
-            此方法只能用于jQuery/JavaScript操作。
-            纯JavaScript不支持使用:contains(“LINK_TEXT”)。"""
+            Pure JavaScript doesn't support using a:contains("LINK_TEXT"). """
         if by == By.CSS_SELECTOR:
             return selector
         elif by == By.ID:
@@ -2292,8 +2441,7 @@ class BaseCase(unittest.TestCase):
                     selector, by))
 
     def set_value(self, selector, new_value, by=By.CSS_SELECTOR, timeout=None):
-        """ This method uses JavaScript to update a text field.
-            此方法使用JavaScript更新文本字段。"""
+        """ This method uses JavaScript to update a text field. """
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
         if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
@@ -2335,11 +2483,7 @@ class BaseCase(unittest.TestCase):
         """ This method uses jQuery to update a text field.
             If the new_value string ends with the newline character,
             WebDriver will finish the call, which simulates pressing
-            {Enter/Return} after the text is entered.
-            此方法使用jQuery更新文本字段。
-            如果new_value字符串以换行符结束，
-            WebDriver将完成模拟按下的调用
-            {输入/返回}在文本输入后。"""
+            {Enter/Return} after the text is entered. """
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
         if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
@@ -2361,6 +2505,26 @@ class BaseCase(unittest.TestCase):
         if new_value.endswith('\n'):
             element.send_keys('\n')
         self.__demo_mode_pause_if_active()
+
+    def set_time_limit(self, time_limit):
+        if time_limit:
+            try:
+                sb_config.time_limit = float(time_limit)
+            except Exception:
+                sb_config.time_limit = None
+        else:
+            sb_config.time_limit = None
+        if sb_config.time_limit and sb_config.time_limit > 0:
+            sb_config.time_limit_ms = int(sb_config.time_limit * 1000.0)
+            self.time_limit = sb_config.time_limit
+        else:
+            self.time_limit = None
+            sb_config.time_limit = None
+            sb_config.time_limit_ms = None
+
+    def skip(self, reason=""):
+        """ Mark the test as Skipped. """
+        self.skipTest(reason)
 
     ############
 
@@ -2815,7 +2979,6 @@ class BaseCase(unittest.TestCase):
     def set_messenger_theme(self, theme="default", location="default",
                             max_messages="default"):
         """ Sets a theme for posting messages.
-            设置发布消息的主题。
             Themes: ["flat", "future", "block", "air", "ice"]
             Locations: ["top_left", "top_center", "top_right",
                         "bottom_left", "bottom_center", "bottom_right"]
@@ -2832,7 +2995,6 @@ class BaseCase(unittest.TestCase):
 
     def post_message(self, message, duration=None, pause=True, style="info"):
         """ Post a message on the screen with Messenger.
-            用Messenger在屏幕上发布消息。
             Arguments:
                 message: The message to display.
                 duration: The time until the message vanishes. (Default: 2.55s)
@@ -2855,7 +3017,6 @@ class BaseCase(unittest.TestCase):
 
     def post_success_message(self, message, duration=None, pause=True):
         """ Post a success message on the screen with Messenger.
-            使用Messenger在屏幕上发布一条成功消息。
             Arguments:
                 message: The success message to display.
                 duration: The time until the message vanishes. (Default: 2.55s)
@@ -2874,7 +3035,6 @@ class BaseCase(unittest.TestCase):
 
     def post_error_message(self, message, duration=None, pause=True):
         """ Post an error message on the screen with Messenger.
-            用Messenger在屏幕上发布一条错误消息。
             Arguments:
                 message: The error message to display.
                 duration: The time until the message vanishes. (Default: 2.55s)
@@ -2896,10 +3056,7 @@ class BaseCase(unittest.TestCase):
     def generate_referral(self, start_page, destination_page):
         """ This method opens the start_page, creates a referral link there,
             and clicks on that link, which goes to the destination_page.
-            (This generates real traffic for testing analytics software.)
-             这个方法打开start_page，在那里创建一个引用链接，
-            然后单击指向destination_page的链接。
-            (这为测试分析软件产生了真正的流量。)"""
+            (This generates real traffic for testing analytics software.) """
         if not page_utils.is_valid_url(destination_page):
             raise Exception(
                 "Exception: destination_page {%s} is not a valid URL!"
@@ -2930,8 +3087,7 @@ class BaseCase(unittest.TestCase):
             pass
 
     def generate_traffic(self, start_page, destination_page, loops=1):
-        """ Similar to generate_referral(), but can do multiple loops.
-            类似于generate_reference()，但是可以执行多个循环。"""
+        """ Similar to generate_referral(), but can do multiple loops. """
         for loop in range(loops):
             self.generate_referral(start_page, destination_page)
             time.sleep(0.05)
@@ -2941,12 +3097,7 @@ class BaseCase(unittest.TestCase):
             one website page that will take you to the next page.
             (When you want to create a referral to a website for traffic
             generation without increasing the bounce rate, you'll want to visit
-            at least one additional page on that site with a button click.)
-            使用此方法将创建按钮链接的操作链接起来
-            一个网页将带你到下一个网页。
-            (当你想创建一个网站流量参考
-            生成不增加弹跳率，你会想要访问
-            该站点上至少有一个附加页面带有按钮单击。)"""
+            at least one additional page on that site with a button click.) """
         if not type(pages) is tuple and not type(pages) is list:
             raise Exception(
                 "Exception: Expecting a list of website pages for chaining!")
@@ -2972,9 +3123,7 @@ class BaseCase(unittest.TestCase):
     def wait_for_element_present(self, selector, by=By.CSS_SELECTOR,
                                  timeout=None):
         """ Waits for an element to appear in the HTML of a page.
-            The element does not need be visible (it may be hidden).
-            等待元素出现在页面的HTML中。
-            元素不需要是可见的(它可能是隐藏的)。"""
+            The element does not need be visible (it may be hidden). """
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
         if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
@@ -2986,9 +3135,7 @@ class BaseCase(unittest.TestCase):
     def wait_for_element_visible(self, selector, by=By.CSS_SELECTOR,
                                  timeout=None):
         """ Waits for an element to appear in the HTML of a page.
-            The element must be visible (it cannot be hidden).
-            等待元素出现在页面的HTML中。
-            元素必须是可见的(不能隐藏)。"""
+            The element must be visible (it cannot be hidden). """
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
         if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
@@ -2998,8 +3145,7 @@ class BaseCase(unittest.TestCase):
             self.driver, selector, by, timeout)
 
     def wait_for_element(self, selector, by=By.CSS_SELECTOR, timeout=None):
-        """ The shorter version of wait_for_element_visible()
-            wait_for_element_visible()的简短版本"""
+        """ The shorter version of wait_for_element_visible() """
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
         if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
@@ -3008,9 +3154,7 @@ class BaseCase(unittest.TestCase):
 
     def get_element(self, selector, by=By.CSS_SELECTOR, timeout=None):
         """ Same as wait_for_element_present() - returns the element.
-            The element does not need be visible (it may be hidden).
-            与wait_for_element_present()相同——返回元素。
-            元素不需要是可见的(它可能是隐藏的)。"""
+            The element does not need be visible (it may be hidden). """
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
         if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
@@ -3022,11 +3166,7 @@ class BaseCase(unittest.TestCase):
         """ Similar to wait_for_element_present(), but returns nothing.
             Waits for an element to appear in the HTML of a page.
             The element does not need be visible (it may be hidden).
-            Returns True if successful. Default timeout = SMALL_TIMEOUT.
-            类似于wait_for_element_present()，但是什么也不返回。
-            等待元素出现在页面的HTML中。
-            元素不需要是可见的(它可能是隐藏的)。
-            如果成功返回True。默认超时= SMALL_TIMEOUT。"""
+            Returns True if successful. Default timeout = SMALL_TIMEOUT. """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -3045,10 +3185,7 @@ class BaseCase(unittest.TestCase):
     def assert_element(self, selector, by=By.CSS_SELECTOR, timeout=None):
         """ Similar to wait_for_element_visible(), but returns nothing.
             As above, will raise an exception if nothing can be found.
-            Returns True if successful. Default timeout = SMALL_TIMEOUT.
-            类似于wait_for_element_visible()，但不返回任何内容。
-            如上所述，如果找不到任何东西，将引发异常。
-            如果成功返回True。默认超时= SMALL_TIMEOUT。"""
+            Returns True if successful. Default timeout = SMALL_TIMEOUT. """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -3064,9 +3201,7 @@ class BaseCase(unittest.TestCase):
     def assert_element_visible(self, selector, by=By.CSS_SELECTOR,
                                timeout=None):
         """ Same as self.assert_element()
-            As above, will raise an exception if nothing can be found.
-            类似self.assert_element ()
-            如上所述，如果找不到任何东西，将引发异常。"""
+            As above, will raise an exception if nothing can be found. """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -3173,10 +3308,11 @@ class BaseCase(unittest.TestCase):
         start_ms = time.time() * 1000.0
         stop_ms = start_ms + (timeout * 1000.0)
         for x in range(int(timeout * 5)):
+            shared_utils.check_if_time_limit_exceeded()
             try:
                 if not self.is_link_text_present(link_text):
                     raise Exception(
-                        "没有找到 Link text {%s} !" % link_text)
+                        "Link text {%s} was not found!" % link_text)
                 return
             except Exception:
                 now_ms = time.time() * 1000.0
@@ -3184,8 +3320,8 @@ class BaseCase(unittest.TestCase):
                     break
                 time.sleep(0.2)
         raise Exception(
-            "%s 秒后 Link text {%s} 仍未出现！" % (
-                timeout, link_text))
+            "Link text {%s} was not present after %s seconds!" % (
+                link_text, timeout))
 
     def wait_for_partial_link_text_present(self, link_text, timeout=None):
         if not timeout:
@@ -3193,10 +3329,11 @@ class BaseCase(unittest.TestCase):
         start_ms = time.time() * 1000.0
         stop_ms = start_ms + (timeout * 1000.0)
         for x in range(int(timeout * 5)):
+            shared_utils.check_if_time_limit_exceeded()
             try:
                 if not self.is_partial_link_text_present(link_text):
                     raise Exception(
-                        "没有找到 Partial Link text {%s} !" % link_text)
+                        "Partial Link text {%s} was not found!" % link_text)
                 return
             except Exception:
                 now_ms = time.time() * 1000.0
@@ -3204,8 +3341,8 @@ class BaseCase(unittest.TestCase):
                     break
                 time.sleep(0.2)
         raise Exception(
-            "%s 秒后 Partial Link text {%s} 仍未出现!" % (
-                timeout, link_text))
+            "Partial Link text {%s} was not present after %s seconds!" % (
+                link_text, timeout))
 
     def wait_for_link_text_visible(self, link_text, timeout=None):
         if not timeout:
@@ -3286,11 +3423,7 @@ class BaseCase(unittest.TestCase):
         """ Waits for an element to no longer appear in the HTML of a page.
             A hidden element still counts as appearing in the page HTML.
             If an element with "hidden" status is acceptable,
-            use wait_for_element_not_visible() instead.
-            等待元素不再出现在页面的HTML中。
-            隐藏元素仍然被认为出现在页面HTML中。
-            如果带有“隐藏”状态的元素是可接受的，
-            使用wait_for_element_not_visible ()。"""
+            use wait_for_element_not_visible() instead. """
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
         if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
@@ -3304,10 +3437,7 @@ class BaseCase(unittest.TestCase):
                               timeout=None):
         """ Similar to wait_for_element_absent() - returns nothing.
             As above, will raise an exception if the element stays present.
-            Returns True if successful. Default timeout = SMALL_TIMEOUT.
-            类似于wait_for_element_abs()——不返回任何内容。
-            如上所述，如果元素仍然存在，将引发异常。
-            如果成功返回True。默认超时= SMALL_TIMEOUT"""
+            Returns True if successful. Default timeout = SMALL_TIMEOUT. """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -3321,10 +3451,7 @@ class BaseCase(unittest.TestCase):
                                      timeout=None):
         """ Waits for an element to no longer be visible on a page.
             The element can be non-existant in the HTML or hidden on the page
-            to qualify as not visible.
-            等待元素在页面上不再可见。
-            元素可以在HTML中不存在，也可以隐藏在页面中
-            限定为不可见。"""
+            to qualify as not visible. """
         if not timeout:
             timeout = settings.LARGE_TIMEOUT
         if self.timeout_multiplier and timeout == settings.LARGE_TIMEOUT:
@@ -3337,10 +3464,7 @@ class BaseCase(unittest.TestCase):
                                    timeout=None):
         """ Similar to wait_for_element_not_visible() - returns nothing.
             As above, will raise an exception if the element stays visible.
-            Returns True if successful. Default timeout = SMALL_TIMEOUT.
-            类似于wait_for_element_not_visible()——不返回任何内容。
-            如上所述，如果元素保持可见，将引发异常。
-            如果成功返回True。默认超时= SMALL_TIMEOUT。"""
+            Returns True if successful. Default timeout = SMALL_TIMEOUT. """
         if not timeout:
             timeout = settings.SMALL_TIMEOUT
         if self.timeout_multiplier and timeout == settings.SMALL_TIMEOUT:
@@ -3398,6 +3522,36 @@ class BaseCase(unittest.TestCase):
 
     ############
 
+    def __assert_eq(self, *args, **kwargs):
+        """ Minified assert_equal() using only the list diff. """
+        minified_exception = None
+        try:
+            self.assertEqual(*args, **kwargs)
+        except Exception as e:
+            str_e = str(e)
+            minified_exception = "\nAssertionError:\n"
+            lines = str_e.split('\n')
+            countdown = 3
+            countdown_on = False
+            for line in lines:
+                if countdown_on:
+                    minified_exception += line + '\n'
+                    countdown = countdown - 1
+                    if countdown == 0:
+                        countdown_on = False
+                elif line.startswith('F'):
+                    countdown_on = True
+                    countdown = 3
+                    minified_exception += line + '\n'
+                elif line.startswith('+') or line.startswith('-'):
+                    minified_exception += line + '\n'
+                elif line.startswith('?'):
+                    minified_exception += line + '\n'
+                elif line.strip().startswith('*'):
+                    minified_exception += line + '\n'
+        if minified_exception:
+            raise Exception(minified_exception)
+
     def check_window(self, name="default", level=0, baseline=False):
         """ ***  Automated Visual Testing with SeleniumBase  ***
 
@@ -3406,11 +3560,6 @@ class BaseCase(unittest.TestCase):
             creates a folder, saves the URL to a file, saves the current window
             screenshot to a file, and creates the following three files
             with the listed data saved:
-            第一次测试调用self.check_window()作为唯一的“name”
-            参数提供后，它将设置一个可视基线，即它
-            创建文件夹，将URL保存到文件中，保存当前窗口
-            屏幕截图到一个文件，并创建以下三个文件
-            保存列出的数据:
             tags_level1.txt  ->  HTML tags from the window
             tags_level2.txt  ->  HTML tags + attributes from the window
             tags_level3.txt  ->  HTML tags + attributes/values from the window
@@ -3418,26 +3567,16 @@ class BaseCase(unittest.TestCase):
             Baseline folders are named based on the test name and the name
             parameter passed to self.check_window(). The same test can store
             multiple baseline folders.
-            基线文件夹是根据测试名称和名称来命名的
-            参数传递给self.check_window()。相同的测试可以存储
-            多个基准文件夹。
 
             If the baseline is being set/reset, the "level" doesn't matter.
-            如果基线正在设置/重置，则“level”并不重要。
 
             After the first run of self.check_window(), it will compare the
             HTML tags of the latest window to the one from the initial run.
             Here's how the level system works:
-            在第一次运行self.check_window()之后，它将比较
-            从最初运行的窗口到最新窗口的HTML标记。
-            下面是关卡系统的工作原理:
             * level=0 ->
                 DRY RUN ONLY - Will perform a comparison to the baseline, and
                                print out any differences that are found, but
                                won't fail the test even if differences exist.
-                               将执行与基线的比较，并且
-                               打印出发现的任何差异，但是
-                               即使有差异也不会不及格。
             * level=1 ->
                 HTML tags are compared to tags_level1.txt
             * level=2 ->
@@ -3450,9 +3589,6 @@ class BaseCase(unittest.TestCase):
             As shown, Level-3 is the most strict, Level-1 is the least strict.
             If the comparisons from the latest window to the existing baseline
             don't match, the current test will fail, except for Level-0 tests.
-            如上所示，三级是最严格的，一级是最不严格的。
-            如果从最新窗口到现有基线的比较
-            不匹配，当前测试将失败，除了0级测试。
 
             You can reset the visual baseline on the command line by using:
                 --visual_baseline
@@ -3462,19 +3598,9 @@ class BaseCase(unittest.TestCase):
             tags of the latest run to the existing baseline. If there are any
             expected layout changes to a website that you're testing, you'll
             need to reset the baseline to prevent unnecessary failures.
-            你可以使用以下命令行重置视觉基线:
-            ——visual_baseline
-            只要在命令行上使用“——visual_baseline”
-            运行测试时，self.check_window()方法不能失败，因为
-            它将重建视觉基线，而不是比较html
-            最新运行到现有基线的标记。如果有的话
-            预期布局的变化，你正在测试的网站，你会
-            需要重置基线以防止不必要的失败。
 
             self.check_window() will fail with "Page Domain Mismatch Failure"
             if the page domain doesn't match the domain of the baseline.
-            self.check_window()将失败，“页面域不匹配失败”
-            如果页面域与基线域不匹配。
 
             If you want to use self.check_window() to compare a web page to
             a later version of itself from within the same test run, you can
@@ -3482,21 +3608,11 @@ class BaseCase(unittest.TestCase):
             self.check_window() in a test to use that as the baseline. This
             only makes sense if you're calling self.check_window() more than
             once with the same name parameter in the same test.
-            如果您想使用self.check_window()来比较web页面
-            在相同的测试运行中，您可以使用它自身的更新版本
-            在第一次调用时添加参数“baseline=True”
-            在测试中使用self.check_window()作为基线。这
-            只有在调用self.check_window()大于
-            在同一个测试中使用相同的name参数。
 
             Automated Visual Testing with self.check_window() is not very
             effective for websites that have dynamic content that changes
             the layout and structure of web pages. For those, you're much
             better off using regular SeleniumBase functional testing.
-            使用self.check_window()进行的自动化视觉测试不是很有效
-            有效的网站，有动态内容的变化
-            网页的布局和结构。对于那些，你做得太多了
-            最好使用常规的SeleniumBase功能测试。
 
             Example usage:
                 self.check_window(name="testing", level=0)
@@ -3513,13 +3629,14 @@ class BaseCase(unittest.TestCase):
         if level == "3":
             level = 3
         if level != 0 and level != 1 and level != 2 and level != 3:
-            raise Exception('参数 "level" 必须设置为： 0, 1, 2, or 3!')
+            raise Exception('Parameter "level" must be set to 0, 1, 2, or 3!')
 
         if self.demo_mode:
             raise Exception(
-                "WARNING: 使用 Demo Mode 会打破 layout tests "
-                "使用 check_window() 方法自定义 HTML 页面！\n"
-                "请在不使用 Demo Mode 下重新运行!")
+                "WARNING: Using Demo Mode will break layout tests "
+                "that use the check_window() method due to custom "
+                "HTML edits being made on the page!\n"
+                "Please rerun without using Demo Mode!")
 
         module = self.__class__.__module__
         if '.' in module and len(module.split('.')[-1]) > 1:
@@ -3597,40 +3714,41 @@ class BaseCase(unittest.TestCase):
             f.close()
 
             domain_fail = (
-                " 页面域不匹配错误："
+                "\nPage Domain Mismatch Failure: "
                 "Current Page Domain doesn't match the Page Domain of the "
                 "Baseline! Can't compare two completely different sites! "
                 "Run with --visual_baseline to reset the baseline!")
             level_1_failure = (
-                "\n\n*** Exception: <Level 1> Visual Diff Failure:\n"
-                "* HTML tags 和 baseline 不匹配!")
+                "\n*\n*** Exception: <Level 1> Visual Diff Failure:\n"
+                "* HTML tags don't match the baseline!")
             level_2_failure = (
-                "\n\n*** Exception: <Level 2> Visual Diff Failure:\n"
-                "* HTML tag attributes 和 baseline 不匹配!")
+                "\n*\n*** Exception: <Level 2> Visual Diff Failure:\n"
+                "* HTML tag attribute names don't match the baseline!")
             level_3_failure = (
-                "\n\n*** Exception: <Level 3> Visual Diff Failure:\n"
+                "\n*\n*** Exception: <Level 3> Visual Diff Failure:\n"
                 "* HTML tag attribute values don't match the baseline!")
 
             page_domain = self.get_domain_url(page_url)
             page_data_domain = self.get_domain_url(page_url_data)
             unittest.TestCase.maxDiff = 1000
-            if level == 1 or level == 2 or level == 3:
-                self.assertEqual(page_domain, page_data_domain, domain_fail)
-                self.assertEqual(level_1, level_1_data, level_1_failure)
+            if level != 0:
+                self.assertEqual(page_data_domain, page_domain, domain_fail)
             unittest.TestCase.maxDiff = None
-            if level == 2 or level == 3:
-                self.assertEqual(level_2, level_2_data, level_2_failure)
             if level == 3:
-                self.assertEqual(level_3, level_3_data, level_3_failure)
+                self.__assert_eq(level_3_data, level_3, level_3_failure)
+            if level == 2:
+                self.__assert_eq(level_2_data, level_2, level_2_failure)
+            unittest.TestCase.maxDiff = 1000
+            if level == 1:
+                self.__assert_eq(level_1_data, level_1, level_1_failure)
+            unittest.TestCase.maxDiff = None
             if level == 0:
                 try:
                     unittest.TestCase.maxDiff = 1000
                     self.assertEqual(
                         page_domain, page_data_domain, domain_fail)
-                    self.assertEqual(level_1, level_1_data, level_1_failure)
                     unittest.TestCase.maxDiff = None
-                    self.assertEqual(level_2, level_2_data, level_2_failure)
-                    self.assertEqual(level_3, level_3_data, level_3_failure)
+                    self.__assert_eq(level_3_data, level_3, level_3_failure)
                 except Exception as e:
                     print(e)  # Level-0 Dry Run (Only print the differences)
 
@@ -3653,50 +3771,41 @@ class BaseCase(unittest.TestCase):
     def __get_exception_message(self):
         """ This method extracts the message from an exception if there
             was an exception that occurred during the test, assuming
-            that the exception was in a try/except block and not thrown.
-            如果存在异常，此方法将从异常中提取消息
-            假设在测试期间发生了异常
-            异常在try/except块中，没有被抛出。"""
+            that the exception was in a try/except block and not thrown. """
         exception_info = sys.exc_info()[1]
         if hasattr(exception_info, 'msg'):
             exc_message = exception_info.msg
         elif hasattr(exception_info, 'message'):
             exc_message = exception_info.message
         else:
-            exc_message = '(Unknown Exception)'
+            exc_message = sys.exc_info()
         return exc_message
 
     def __get_improved_exception_message(self):
         """
         If Chromedriver is out-of-date, make it clear!
         Given the high popularity of the following StackOverflow article:
-        如果Chromedriver过时了，一定要弄清楚!
-        下面这篇StackOverflow的文章非常受欢迎:
         https://stackoverflow.com/questions/49162667/unknown-error-
                 call-function-result-missing-value-for-selenium-send-keys-even
         ... the original error message was not helpful. Tell people directly.
         (Only expected when using driver.send_keys() with an old Chromedriver.)
-        甚至可以调用selenium发送键的函数结果缺失值
-        …原始的错误消息没有帮助。直接告诉人们。
-        (只有在旧的Chromedriver中使用driver.send_keys()时才会出现这种情况。)
         """
         exc_message = self.__get_exception_message()
         maybe_using_old_chromedriver = False
         if "unknown error: call function result missing" in exc_message:
             maybe_using_old_chromedriver = True
         if self.browser == 'chrome' and maybe_using_old_chromedriver:
-            update = ("你的ChromeDriver版本可能过时了! "
-                      "请前往 "
+            update = ("Your version of ChromeDriver may be out-of-date! "
+                      "Please go to "
                       "https://sites.google.com/a/chromium.org/chromedriver/ "
-                      "下载最新版本并添加到系统环境变量中！ "
-                      "或使用: ``seleniumbase install chromedriver`` . "
-                      "原始异常信息: %s" % exc_message)
+                      "and download the latest version to your system PATH! "
+                      "Or use: ``seleniumbase install chromedriver`` . "
+                      "Original Exception Message: %s" % exc_message)
             exc_message = update
         return exc_message
 
     def __add_delayed_assert_failure(self):
-        """ Add a delayed_assert failure into a list for future processing.
-            将delayed_assert失败添加到列表中，以供将来处理。"""
+        """ Add a delayed_assert failure into a list for future processing. """
         current_url = self.driver.current_url
         message = self.__get_exception_message()
         self.__delayed_assert_failures.append(
@@ -3707,10 +3816,7 @@ class BaseCase(unittest.TestCase):
                                timeout=None):
         """ A non-terminating assertion for an element on a page.
             Failures will be saved until the process_delayed_asserts()
-            method is called from inside a test, likely at the end of it.
-            页面上元素的无终止断言。
-            将保存故障，直到process_delayed_()
-            方法从测试内部调用，很可能在测试结束时调用。"""
+            method is called from inside a test, likely at the end of it. """
         if not timeout:
             timeout = settings.MINI_TIMEOUT
         if self.timeout_multiplier and timeout == settings.MINI_TIMEOUT:
@@ -3735,10 +3841,7 @@ class BaseCase(unittest.TestCase):
                             timeout=None):
         """ A non-terminating assertion for text from an element on a page.
             Failures will be saved until the process_delayed_asserts()
-            method is called from inside a test, likely at the end of it.
-            页面上元素的文本的无终止断言。
-            将保存故障，直到process_delayed_()
-            方法从测试内部调用，很可能在测试结束时调用。"""
+            method is called from inside a test, likely at the end of it. """
         if not timeout:
             timeout = settings.MINI_TIMEOUT
         if self.timeout_multiplier and timeout == settings.MINI_TIMEOUT:
@@ -3769,17 +3872,7 @@ class BaseCase(unittest.TestCase):
             Might be more useful if this method is called after processing all
             the delayed asserts on a single html page so that the failure
             screenshot matches the location of the delayed asserts.
-            If "print_only" is set to True, the exception won't get raised.
-            与使用delayed_的任何测试一起使用
-            不终止的验证只会引发异常
-            调用此方法之后。
-            这对于在需要检查多个元素的页面非常有用
-            您希望在一次测试运行中找到尽可能多的bug
-            在同时抛出所有异常之前。
-            如果在处理完所有这些之后调用此方法，则可能更有用
-            在单个html页面上延迟的断言会导致失败
-            屏幕截图匹配延迟的断言的位置。
-            如果“print_only”设置为True，则不会引发异常。"""
+            If "print_only" is set to True, the exception won't get raised. """
         if self.__delayed_assert_failures:
             exception_output = ''
             exception_output += "\n*** DELAYED ASSERTION FAILURES FOR: "
@@ -3862,8 +3955,7 @@ class BaseCase(unittest.TestCase):
         return link
 
     def __click_dropdown_link_text(self, link_text, link_css):
-        """ When a link may be hidden under a dropdown menu, use this.
-            当一个链接可能隐藏在下拉菜单下时，使用这个。"""
+        """ When a link may be hidden under a dropdown menu, use this. """
         soup = self.get_beautiful_soup()
         drop_down_list = []
         for item in soup.select('li[class]'):
@@ -3960,7 +4052,7 @@ class BaseCase(unittest.TestCase):
         return False
 
     def __recalculate_selector(self, selector, by):
-        # Try to determine the type of selector automatically/尝试自动确定选择器的类型
+        # Try to determine the type of selector automatically
         if page_utils.is_xpath_selector(selector):
             by = By.XPATH
         if page_utils.is_link_text_selector(selector):
@@ -4013,7 +4105,7 @@ class BaseCase(unittest.TestCase):
             # Includes self.slow_scroll_to(selector, by=by) by default
             self.highlight(selector, by=by)
         elif self.slow_mode:
-            # Just do the slow scroll part of the highlight() method只需执行highlight()方法的慢滚动部分
+            # Just do the slow scroll part of the highlight() method
             selector, by = self.__recalculate_selector(selector, by)
             element = self.wait_for_element_visible(
                 selector, by=by, timeout=settings.SMALL_TIMEOUT)
@@ -4026,8 +4118,12 @@ class BaseCase(unittest.TestCase):
                     selector, by=by, timeout=settings.SMALL_TIMEOUT)
                 self.__slow_scroll_to_element(element)
 
-    def __scroll_to_element(self, element):
-        js_utils.scroll_to_element(self.driver, element)
+    def __scroll_to_element(self, element, selector=None, by=By.CSS_SELECTOR):
+        success = js_utils.scroll_to_element(self.driver, element)
+        if not success and selector:
+            self.wait_for_ready_state_complete()
+            element = page_actions.wait_for_element_visible(
+                self.driver, selector, by, timeout=settings.SMALL_TIMEOUT)
         self.__demo_mode_pause_if_active(tiny=True)
 
     def __slow_scroll_to_element(self, element):
@@ -4138,8 +4234,6 @@ class BaseCase(unittest.TestCase):
         """
         Be careful if a subclass of BaseCase overrides setUp()
         You'll need to add the following line to the subclass setUp() method:
-        如果BaseCase的子类覆盖setUp()，请小心
-        你需要添加以下行到子类setUp()方法:
         super(SubClassOfBaseCase, self).setUp()
         """
         self.masterqa_mode = masterqa_mode
@@ -4152,15 +4246,14 @@ class BaseCase(unittest.TestCase):
             self.is_pytest = False
         if self.is_pytest:
             # pytest-specific code
-            test_id = "%s.%s.%s" % (self.__class__.__module__,
-                                    self.__class__.__name__,
-                                    self._testMethodName)
+            test_id = self.__get_test_id()
             self.browser = sb_config.browser
             self.data = sb_config.data
             self.slow_mode = sb_config.slow_mode
             self.demo_mode = sb_config.demo_mode
             self.demo_sleep = sb_config.demo_sleep
             self.highlights = sb_config.highlights
+            self.time_limit = sb_config.time_limit
             self.environment = sb_config.environment
             self.env = self.environment  # Add a shortened version
             self.with_selenium = sb_config.with_selenium  # Should be True
@@ -4179,6 +4272,8 @@ class BaseCase(unittest.TestCase):
             self.port = sb_config.port
             self.proxy_string = sb_config.proxy_string
             self.user_agent = sb_config.user_agent
+            self.mobile_emulator = sb_config.mobile_emulator
+            self.device_metrics = sb_config.device_metrics
             self.cap_file = sb_config.cap_file
             self.settings_file = sb_config.settings_file
             self.database_env = sb_config.database_env
@@ -4188,10 +4283,14 @@ class BaseCase(unittest.TestCase):
             self.verify_delay = sb_config.verify_delay
             self.disable_csp = sb_config.disable_csp
             self.enable_sync = sb_config.enable_sync
+            self.no_sandbox = sb_config.no_sandbox
+            self.disable_gpu = sb_config.disable_gpu
+            self.incognito = sb_config.incognito
             self.user_data_dir = sb_config.user_data_dir
             self.extension_zip = sb_config.extension_zip
             self.extension_dir = sb_config.extension_dir
             self.maximize_option = sb_config.maximize_option
+            self._reuse_session = sb_config.reuse_session
             self.save_screenshot_after_test = sb_config.save_screenshot
             self.visual_baseline = sb_config.visual_baseline
             self.timeout_multiplier = sb_config.timeout_multiplier
@@ -4201,7 +4300,7 @@ class BaseCase(unittest.TestCase):
                 self.report_on = True
             self.use_grid = False
             if self.servername != "localhost":
-                # Use Selenium Grid (Use --server=127.0.0.1 for localhost Grid)
+                # Use Selenium Grid (Use --server="127.0.0.1" for a local Grid)
                 self.use_grid = True
             if self.with_db_reporting:
                 from seleniumbase.core.application_manager import (
@@ -4242,41 +4341,116 @@ class BaseCase(unittest.TestCase):
                 self.testcase_manager.insert_testcase_data(data_payload)
                 self.case_start_time = int(time.time() * 1000)
             if self.headless:
+                width = settings.HEADLESS_START_WIDTH
+                height = settings.HEADLESS_START_HEIGHT
                 try:
                     # from pyvirtualdisplay import Display  # Skip for own lib
                     from seleniumbase.virtual_display.display import Display
-                    self.display = Display(visible=0, size=(1440, 1880))
+                    self.display = Display(visible=0, size=(width, height))
                     self.display.start()
                     self.headless_active = True
                 except Exception:
                     # pyvirtualdisplay might not be necessary anymore because
                     # Chrome and Firefox now have built-in headless displays
                     pass
+        else:
+            # (Nosetests / Not Pytest)
+            pass  # Setup performed in plugins
 
         # Verify that SeleniumBase is installed successfully
         if not hasattr(self, "browser"):
-            raise Exception("""SeleniumBase plugins did not load! """
-                            """Please reinstall using:\n"""
-                            """ >>> "pip install -r requirements.txt" <<<\n"""
-                            """ >>> "python setup.py develop" <<< """)
+            raise Exception("""SeleniumBase plugins DID NOT load!\n\n"""
+                            """*** Please REINSTALL SeleniumBase using: >\n"""
+                            """    >>> "pip install -r requirements.txt"\n"""
+                            """    >>> "python setup.py install" """)
+
+        # Configure the test time limit (if used)
+        self.set_time_limit(self.time_limit)
+
+        # Set the start time for the test (in ms)
+        sb_config.start_time_ms = int(time.time() * 1000.0)
+
+        # Parse the settings file
         if self.settings_file:
             settings_parser.set_settings(self.settings_file)
 
-        # Launch WebDriver for both Pytest and Nosetests
-        self.driver = self.get_new_driver(browser=self.browser,
-                                          headless=self.headless,
-                                          servername=self.servername,
-                                          port=self.port,
-                                          proxy=self.proxy_string,
-                                          agent=self.user_agent,
-                                          switch_to=True,
-                                          cap_file=self.cap_file,
-                                          disable_csp=self.disable_csp,
-                                          enable_sync=self.enable_sync,
-                                          user_data_dir=self.user_data_dir,
-                                          extension_zip=self.extension_zip,
-                                          extension_dir=self.extension_dir)
-        self._default_driver = self.driver
+        # Mobile Emulator device metrics: CSS Width, CSS Height, & Pixel-Ratio
+        if self.device_metrics:
+            metrics_string = self.device_metrics
+            metrics_string = metrics_string.replace(' ', '')
+            metrics_list = metrics_string.split(',')
+            exception_string = (
+                'Invalid input for Mobile Emulator device metrics!\n'
+                'Expecting a comma-separated string with three\n'
+                'integer values for Width, Height, and Pixel-Ratio.\n'
+                'Example: --metrics="411,731,3" ')
+            if len(metrics_list) != 3:
+                raise Exception(exception_string)
+            try:
+                self.__device_width = int(metrics_list[0])
+                self.__device_height = int(metrics_list[1])
+                self.__device_pixel_ratio = int(metrics_list[2])
+                self.mobile_emulator = True
+            except Exception:
+                raise Exception(exception_string)
+        if self.mobile_emulator:
+            if not self.user_agent:
+                # Use the Pixel 3 user agent by default if not specified
+                self.user_agent = (
+                    "Mozilla/5.0 (Linux; Android 9; Pixel 3 XL) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/76.0.3809.132 Mobile Safari/537.36")
+
+        has_url = False
+        if self._reuse_session:
+            if not hasattr(sb_config, 'shared_driver'):
+                sb_config.shared_driver = None
+            if sb_config.shared_driver:
+                try:
+                    self._default_driver = sb_config.shared_driver
+                    self.driver = sb_config.shared_driver
+                    self._drivers_list = [sb_config.shared_driver]
+                    url = self.get_current_url()
+                    if len(url) > 3:
+                        has_url = True
+                except Exception:
+                    pass
+        if self._reuse_session and sb_config.shared_driver and has_url:
+            if self.start_page and len(self.start_page) >= 4:
+                if page_utils.is_valid_url(self.start_page):
+                    self.open(self.start_page)
+                else:
+                    new_start_page = "http://" + self.start_page
+                    if page_utils.is_valid_url(new_start_page):
+                        self.open(new_start_page)
+            else:
+                if self.get_current_url() != "data:,":
+                    self.open("data:,")
+        else:
+            # Launch WebDriver for both Pytest and Nosetests
+            self.driver = self.get_new_driver(browser=self.browser,
+                                              headless=self.headless,
+                                              servername=self.servername,
+                                              port=self.port,
+                                              proxy=self.proxy_string,
+                                              agent=self.user_agent,
+                                              switch_to=True,
+                                              cap_file=self.cap_file,
+                                              disable_csp=self.disable_csp,
+                                              enable_sync=self.enable_sync,
+                                              no_sandbox=self.no_sandbox,
+                                              disable_gpu=self.disable_gpu,
+                                              incognito=self.incognito,
+                                              user_data_dir=self.user_data_dir,
+                                              extension_zip=self.extension_zip,
+                                              extension_dir=self.extension_dir,
+                                              is_mobile=self.mobile_emulator,
+                                              d_width=self.__device_width,
+                                              d_height=self.__device_height,
+                                              d_p_r=self.__device_pixel_ratio)
+            self._default_driver = self.driver
+            if self._reuse_session:
+                sb_config.shared_driver = self.driver
 
     def __set_last_page_screenshot(self):
         """ self.__last_page_screenshot is only for pytest html report logs
@@ -4327,29 +4501,41 @@ class BaseCase(unittest.TestCase):
         self.testcase_manager.update_testcase_data(data_payload)
 
     def __add_pytest_html_extra(self):
-        try:
-            if self.with_selenium:
-                if not self.__last_page_screenshot:
-                    self.__set_last_page_screenshot()
-                if self.report_on:
-                    extra_url = {}
-                    extra_url['name'] = 'URL'
-                    extra_url['format'] = 'url'
-                    extra_url['content'] = self.get_current_url()
-                    extra_url['mime_type'] = None
-                    extra_url['extension'] = None
-                    extra_image = {}
-                    extra_image['name'] = 'Screenshot'
-                    extra_image['format'] = 'image'
-                    extra_image['content'] = self.__last_page_screenshot
-                    extra_image['mime_type'] = 'image/png'
-                    extra_image['extension'] = 'png'
-                    self._html_report_extra.append(extra_url)
-                    self._html_report_extra.append(extra_image)
-        except Exception:
-            pass
+        if not self.__added_pytest_html_extra:
+            try:
+                if self.with_selenium:
+                    if not self.__last_page_screenshot:
+                        self.__set_last_page_screenshot()
+                    if self.report_on:
+                        extra_url = {}
+                        extra_url['name'] = 'URL'
+                        extra_url['format'] = 'url'
+                        extra_url['content'] = self.get_current_url()
+                        extra_url['mime_type'] = None
+                        extra_url['extension'] = None
+                        extra_image = {}
+                        extra_image['name'] = 'Screenshot'
+                        extra_image['format'] = 'image'
+                        extra_image['content'] = self.__last_page_screenshot
+                        extra_image['mime_type'] = 'image/png'
+                        extra_image['extension'] = 'png'
+                        self.__added_pytest_html_extra = True
+                        self._html_report_extra.append(extra_url)
+                        self._html_report_extra.append(extra_image)
+            except Exception:
+                pass
 
     def __quit_all_drivers(self):
+        if self._reuse_session and sb_config.shared_driver:
+            if len(self._drivers_list) > 0:
+                sb_config.shared_driver = self._drivers_list[0]
+                self._default_driver = self._drivers_list[0]
+                self.switch_to_default_driver()
+            if len(self._drivers_list) > 1:
+                self._drivers_list = self._drivers_list[1:]
+            else:
+                self._drivers_list = []
+
         # Close all open browser windows
         self._drivers_list.reverse()  # Last In, First Out
         for driver in self._drivers_list:
@@ -4360,44 +4546,70 @@ class BaseCase(unittest.TestCase):
             except Exception:
                 pass
         self.driver = None
+        self._default_driver = None
         self._drivers_list = []
 
-    def tearDown(self):
-        """
-        Be careful if a subclass of BaseCase overrides setUp()
-        You'll need to add the following line to the subclass's tearDown():
-        如果BaseCase的子类覆盖setUp()，请小心
-        你需要添加以下行到子类的tearDown():
-        super(SubClassOfBaseCase, self).tearDown()
-        """
-        self.__slow_mode_pause_if_active()
+    def __has_exception(self):
         has_exception = False
         if sys.version_info[0] >= 3 and hasattr(self, '_outcome'):
             if hasattr(self._outcome, 'errors') and self._outcome.errors:
                 has_exception = True
         else:
             has_exception = sys.exc_info()[1] is not None
+        return has_exception
+
+    def __get_test_id(self):
+        test_id = "%s.%s.%s" % (self.__class__.__module__,
+                                self.__class__.__name__,
+                                self._testMethodName)
+        return test_id
+
+    def __create_log_path_as_needed(self, test_logpath):
+        if not os.path.exists(test_logpath):
+            try:
+                os.makedirs(test_logpath)
+            except Exception:
+                pass  # Only reachable during multi-threaded runs
+
+    def save_teardown_screenshot(self):
+        """ (Should ONLY be used at the start of custom tearDown() methods.)
+            This method takes a screenshot of the current web page for a
+            failing test (or when running your tests with --save-screenshot).
+            That way your tearDown() method can navigate away from the last
+            page where the test failed, and still get the correct screenshot
+            before performing tearDown() steps on other pages. If this method
+            is not included in your custom tearDown() method, a screenshot
+            will still be taken after the last step of your tearDown(), where
+            you should be calling "super(SubClassOfBaseCase, self).tearDown()"
+        """
+        if self.__has_exception() or self.save_screenshot_after_test:
+            test_id = self.__get_test_id()
+            test_logpath = self.log_path + "/" + test_id
+            self.__create_log_path_as_needed(test_logpath)
+            self.__set_last_page_screenshot()
+            if self.is_pytest:
+                self.__add_pytest_html_extra()
+
+    def tearDown(self):
+        """
+        Be careful if a subclass of BaseCase overrides setUp()
+        You'll need to add the following line to the subclass's tearDown():
+        super(SubClassOfBaseCase, self).tearDown()
+        """
+        self.__slow_mode_pause_if_active()
+        has_exception = self.__has_exception()
         if self.__delayed_assert_failures:
             print(
-                "\n在测试中使用self.delayed_assert_*()方法时，"
-                "记住，后面要调用self. process_delayed_(). "
+                "\nWhen using self.delayed_assert_*() methods in your tests, "
+                "remember to call self.process_delayed_asserts() afterwards. "
                 "Now calling in tearDown()...\nFailures Detected:")
             if not has_exception:
                 self.process_delayed_asserts()
             else:
                 self.process_delayed_asserts(print_only=True)
-        self.is_pytest = None
-        try:
-            # This raises an exception if the test is not coming from pytest
-            self.is_pytest = sb_config.is_pytest
-        except Exception:
-            # Not using pytest (probably nosetests)
-            self.is_pytest = False
         if self.is_pytest:
             # pytest-specific code
-            test_id = "%s.%s.%s" % (self.__class__.__module__,
-                                    self.__class__.__name__,
-                                    self._testMethodName)
+            test_id = self.__get_test_id()
             try:
                 with_selenium = self.with_selenium
             except Exception:
@@ -4414,12 +4626,15 @@ class BaseCase(unittest.TestCase):
                     file_name_used = file_name
                 fix_setup = "super(%s, self).setUp()" % class_name_used
                 fix_teardown = "super(%s, self).tearDown()" % class_name_used
-                message = ("你正在用你自己的setUp()方法覆盖 SeleniumBase 的 "
-                           "BaseCase setUp()方法, 这破坏了SeleniumBase."
-                           "要修复这个问题你可以去%s 文件的 %s 类添加setUp() "
-                           "方法开头下面一行代码：\n%s\n\n还要确认你添加了"
-                           "的下面一行代码到你的 tearDown() 方法：\n%s\n"
-                           % (file_name_used, class_name_used,
+                message = ("You're overriding SeleniumBase's BaseCase setUp() "
+                           "method with your own setUp() method, which breaks "
+                           "SeleniumBase. You can fix this by going to your "
+                           "%s class located in your %s file and adding the "
+                           "following line of code AT THE BEGINNING of your "
+                           "setUp() method:\n%s\n\nAlso make sure "
+                           "you have added the following line of code AT THE "
+                           "END of your tearDown() method:\n%s\n"
+                           % (class_name_used, file_name_used,
                               fix_setup, fix_teardown))
                 raise Exception(message)
             if with_selenium:
@@ -4429,11 +4644,7 @@ class BaseCase(unittest.TestCase):
                 if self.with_testing_base and not has_exception and (
                         self.save_screenshot_after_test):
                     test_logpath = self.log_path + "/" + test_id
-                    if not os.path.exists(test_logpath):
-                        try:
-                            os.makedirs(test_logpath)
-                        except Exception:
-                            pass  # Only reachable during multi-threaded runs
+                    self.__create_log_path_as_needed(test_logpath)
                     if not self.__last_page_screenshot_png:
                         self.__set_last_page_screenshot()
                     log_helper.log_screenshot(
@@ -4443,11 +4654,7 @@ class BaseCase(unittest.TestCase):
                     self.__add_pytest_html_extra()
                 if self.with_testing_base and has_exception:
                     test_logpath = self.log_path + "/" + test_id
-                    if not os.path.exists(test_logpath):
-                        try:
-                            os.makedirs(test_logpath)
-                        except Exception:
-                            pass  # Only reachable during multi-threaded runs
+                    self.__create_log_path_as_needed(test_logpath)
                     if ((not self.with_screen_shots) and (
                             not self.with_basic_test_info) and (
                             not self.with_page_source)):
@@ -4495,8 +4702,7 @@ class BaseCase(unittest.TestCase):
                 self.testcase_manager.update_execution_data(
                     self.execution_guid, runtime)
             if self.with_s3_logging and has_exception:
-                """ If enabled, upload logs to S3 during test exceptions. 
-                    如果启用，在测试异常期间将日志上传到S3。"""
+                """ If enabled, upload logs to S3 during test exceptions. """
                 from seleniumbase.core.s3_manager import S3LoggingBucket
                 s3_bucket = S3LoggingBucket()
                 guid = str(uuid.uuid4().hex)
@@ -4523,15 +4729,9 @@ class BaseCase(unittest.TestCase):
         else:
             # (Nosetests)
             if has_exception:
-                test_id = "%s.%s.%s" % (self.__class__.__module__,
-                                        self.__class__.__name__,
-                                        self._testMethodName)
+                test_id = self.__get_test_id()
                 test_logpath = self.log_path + "/" + test_id
-                if not os.path.exists(test_logpath):
-                    try:
-                        os.makedirs(test_logpath)
-                    except Exception:
-                        pass  # Only reachable during multi-threaded runs
+                self.__create_log_path_as_needed(test_logpath)
                 log_helper.log_test_failure_data(
                     self, test_logpath, self.driver, self.browser)
                 if len(self._drivers_list) > 0:
@@ -4543,15 +4743,9 @@ class BaseCase(unittest.TestCase):
                         self.__last_page_screenshot_png)
                     log_helper.log_page_source(test_logpath, self.driver)
             elif self.save_screenshot_after_test:
-                test_id = "%s.%s.%s" % (self.__class__.__module__,
-                                        self.__class__.__name__,
-                                        self._testMethodName)
+                test_id = self.__get_test_id()
                 test_logpath = self.log_path + "/" + test_id
-                if not os.path.exists(test_logpath):
-                    try:
-                        os.makedirs(test_logpath)
-                    except Exception:
-                        pass  # Only reachable during multi-threaded runs
+                self.__create_log_path_as_needed(test_logpath)
                 if not self.__last_page_screenshot_png:
                     self.__set_last_page_screenshot()
                 log_helper.log_screenshot(

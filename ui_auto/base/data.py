@@ -1,4 +1,4 @@
-production = True
+production = False
 
 
 class Data:
@@ -18,17 +18,16 @@ class Data:
 
     def __init__(self):
         self.production = production
-    
+
     def ip_for_edu(self):
-        ip_for_edu = 'https://edu.dingdangcode.com'\
-            if self.production else 'http://192.168.0.160:8096'
+        ip_for_edu = 'https://edu.dingdangcode.com' \
+            if self.production else 'https://edu.dingdangcode.cn/'
 
         return ip_for_edu
 
     def api_ip_for_edu(self):
-        # https://api.dingdangcode.com/ddc-edu
-        ip_for_edu = 'https://eduapi.dingdangcode.com'\
-            if self.production else 'http://192.168.0.160:8081/ddc-edu'
+        ip_for_edu = 'https://api.dingdangcode.com/ddc-edu3' \
+            if self.production else 'https://api.dingdangcode.cn/ddc-edu3'
 
         return ip_for_edu
 
@@ -39,19 +38,19 @@ class Data:
         return ip_for_uni_teach
 
     def api_ip_for_uni_teach(self):
-        ip_for_uni_teach = 'https://uniteachapi.dingdangcode.com'\
+        ip_for_uni_teach = 'https://uniteachapi.dingdangcode.com' \
             if self.production else 'http://192.168.0.160:8099'
 
         return ip_for_uni_teach
 
     def ip_for_uni_lab(self):
-        ip_for_uni_lab = 'https://uni-lab.dingdangcode.com'\
+        ip_for_uni_lab = 'https://uni-lab.dingdangcode.com' \
             if self.production else 'http://192.168.0.160:8098'
 
         return ip_for_uni_lab
 
     def api_ip_for_uni_lab(self):
-        ip_for_uni_lab = 'https://uniteachapi.dingdangcode.com'\
+        ip_for_uni_lab = 'https://uniteachapi.dingdangcode.com' \
             if self.production else 'http://192.168.0.160:8097'
 
         return ip_for_uni_lab
@@ -64,8 +63,34 @@ class Data:
 
     @property
     def global_id(self):
-        global_id = '086' if self.production else '153'
+        global_id = '086' if self.production else '160'
         return global_id
+
+    def manager_data(self):
+        manager_data = {
+            'username': '15008447557',
+            'password': '12345600',
+            'name': '叮当老师'
+        } if self.production else {
+            'username': '15208451947',
+            'password': '123456',
+            'name': '测试管理员new'
+        }
+        return manager_data
+
+    def teacher_data(self):
+        return {
+            'username': f'13900000{self.global_id}',
+            'password': '123456',
+            'name': f'教师{self.global_id}'
+        }
+
+    def student_data(self):
+        return {
+            'username': f'G00{self.global_id}',
+            'password': '123456',
+            'name': f'学生{self.global_id}'
+        }
 
     def teacher_username_for_edu(self):
         # 教育版教师账号
@@ -76,19 +101,15 @@ class Data:
         return f'G00{self.global_id}'
 
     def teacher_name_for_edu(self):
-
         return f'教师{self.global_id}'
 
     def student_name_for_edu(self):
-
         return f'学生{self.global_id}'
 
     def admin_class_name_for_edu(self):
-
         return f'行政班{self.global_id}'
 
     def pro_class_name_for_edu(self):
-
         return f'课程班{self.global_id}'
 
     def manager_username_for_uni_teach(self):
@@ -135,8 +156,8 @@ class UnPw(Data):
 class PointIdIndex:
     # 知识点索引
     level_one_index = 2
-    level_two_index = 3
-    level_three_index = 1
+    level_two_index = 2
+    level_three_index = 0
 
     checkpoint_level_one_index = 1
     checkpoint_level_two_index = 4

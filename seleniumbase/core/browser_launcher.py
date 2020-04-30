@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 import re
@@ -81,6 +82,14 @@ def is_chromedriver_on_path():
     return False
 
 
+def is_edgedriver_on_path():
+    paths = os.environ["PATH"].split(os.pathsep)
+    for path in paths:
+        if os.path.exists(path + '/' + "msedgedriver"):
+            return True
+    return False
+
+
 def is_geckodriver_on_path():
     paths = os.environ["PATH"].split(os.pathsep)
     for path in paths:
@@ -94,7 +103,8 @@ def _add_chrome_proxy_extension(
     """ Implementation of https://stackoverflow.com/a/35293284 for
         https://stackoverflow.com/questions/12848327/
         (Run Selenium on a proxy server that requires authentication.) """
-    if not "".join(sys.argv) == "-c":
+    arg_join = " ".join(sys.argv)
+    if not ("-n" in sys.argv or "-n=" in arg_join or arg_join == "-c"):
         # Single-threaded
         proxy_helper.create_proxy_zip(proxy_string, proxy_user, proxy_pass)
     else:
@@ -123,9 +133,11 @@ def _add_chrome_disable_csp_extension(chrome_options):
 
 
 def _set_chrome_options(
-        downloads_path, headless, proxy_string, proxy_auth,
-        proxy_user, proxy_pass, user_agent, disable_csp, enable_sync,
-        user_data_dir, extension_zip, extension_dir):
+        downloads_path, headless,
+        proxy_string, proxy_auth, proxy_user, proxy_pass,
+        user_agent, disable_csp, enable_sync, no_sandbox, disable_gpu,
+        incognito, user_data_dir, extension_zip, extension_dir, servername,
+        mobile_emulator, device_width, device_height, device_pixel_ratio):
     chrome_options = webdriver.ChromeOptions()
     prefs = {
         "download.default_directory": downloads_path,
@@ -138,12 +150,32 @@ def _set_chrome_options(
     chrome_options.add_experimental_option("prefs", prefs)
     chrome_options.add_experimental_option("w3c", True)
     chrome_options.add_experimental_option(
-        "excludeSwitches", ["enable-automation"])
-    chrome_options.add_experimental_option("useAutomationExtension", False)
+        "excludeSwitches", ["enable-automation", "enable-logging"])
+    if servername == "localhost" or servername == "127.0.0.1":
+        chrome_options.add_experimental_option("useAutomationExtension", False)
+    if mobile_emulator:
+        emulator_settings = {}
+        device_metrics = {}
+        if type(device_width) is int and type(device_height) is int and (
+                type(device_pixel_ratio) is int):
+            device_metrics["width"] = device_width
+            device_metrics["height"] = device_height
+            device_metrics["pixelRatio"] = device_pixel_ratio
+        else:
+            device_metrics["width"] = 411
+            device_metrics["height"] = 731
+            device_metrics["pixelRatio"] = 3
+        emulator_settings["deviceMetrics"] = device_metrics
+        if user_agent:
+            emulator_settings["userAgent"] = user_agent
+        chrome_options.add_experimental_option(
+            "mobileEmulation", emulator_settings)
     if enable_sync:
         chrome_options.add_experimental_option(
             "excludeSwitches", ["disable-sync"])
         chrome_options.add_argument("--enable-sync")
+    if incognito:
+        chrome_options.add_argument("--incognito")
     if user_data_dir:
         abs_path = os.path.abspath(user_data_dir)
         chrome_options.add_argument("user-data-dir=%s" % abs_path)
@@ -188,9 +220,10 @@ def _set_chrome_options(
             # using Chrome's built-in headless mode. See link for details:
             # https://bugs.chromium.org/p/chromium/issues/detail?id=706008
             chrome_options.add_argument("--headless")
+    if headless or disable_gpu:
         chrome_options.add_argument("--disable-gpu")
-        if "linux" in PLATFORM:
-            chrome_options.add_argument("--no-sandbox")
+    if (headless and "linux" in PLATFORM) or no_sandbox:
+        chrome_options.add_argument("--no-sandbox")
     if "linux" in PLATFORM:
         chrome_options.add_argument("--disable-dev-shm-usage")
     return chrome_options
@@ -204,13 +237,15 @@ def _create_firefox_profile(
     profile.set_preference("pdfjs.disabled", True)
     profile.set_preference("app.update.auto", False)
     profile.set_preference("app.update.enabled", False)
+    profile.set_preference("app.update.silent", True)
     profile.set_preference("browser.privatebrowsing.autostart", True)
-    profile.set_preference("devtools.errorconsole.enabled", True)
+    profile.set_preference("devtools.errorconsole.enabled", False)
     profile.set_preference("extensions.allowPrivateBrowsingByDefault", True)
     profile.set_preference("extensions.PrivateBrowsing.notification", False)
     profile.set_preference("extensions.systemAddon.update.enabled", False)
     profile.set_preference("extensions.update.autoUpdateDefault", False)
     profile.set_preference("extensions.update.enabled", False)
+    profile.set_preference("extensions.update.silent", True)
     profile.set_preference(
         "datareporting.healthreport.logging.consoleEnabled", False)
     profile.set_preference("datareporting.healthreport.service.enabled", False)
@@ -301,8 +336,10 @@ def validate_proxy_string(proxy_string):
 def get_driver(browser_name, headless=False, use_grid=False,
                servername='localhost', port=4444, proxy_string=None,
                user_agent=None, cap_file=None, disable_csp=None,
-               enable_sync=None, user_data_dir=None,
-               extension_zip=None, extension_dir=None):
+               enable_sync=None, no_sandbox=None, disable_gpu=None,
+               incognito=None, user_data_dir=None, extension_zip=None,
+               extension_dir=None, mobile_emulator=False, device_width=None,
+               device_height=None, device_pixel_ratio=None):
     proxy_auth = False
     proxy_user = None
     proxy_pass = None
@@ -320,11 +357,12 @@ def get_driver(browser_name, headless=False, use_grid=False,
                     'The format for using a proxy server with authentication '
                     'is: "username:password@hostname:port". If using a proxy '
                     'server without auth, the format is: "hostname:port".')
-            if browser_name != constants.Browser.GOOGLE_CHROME:
+            if browser_name != constants.Browser.GOOGLE_CHROME and (
+                    browser_name != constants.Browser.EDGE):
                 raise Exception(
-                    "Chrome is required when using a proxy server that has "
-                    "authentication! (If using a proxy server without auth, "
-                    "either Chrome or Firefox may be used.)")
+                    "Chrome or Edge is required when using a proxy server "
+                    "that has authentication! (If using a proxy server "
+                    "without auth, Chrome, Edge, or Firefox may be used.)")
         proxy_string = validate_proxy_string(proxy_string)
         if proxy_string and proxy_user and proxy_pass:
             proxy_auth = True
@@ -335,20 +373,24 @@ def get_driver(browser_name, headless=False, use_grid=False,
         return get_remote_driver(
             browser_name, headless, servername, port,
             proxy_string, proxy_auth, proxy_user, proxy_pass, user_agent,
-            cap_file, disable_csp, enable_sync, user_data_dir,
-            extension_zip, extension_dir)
+            cap_file, disable_csp, enable_sync, no_sandbox, disable_gpu,
+            incognito, user_data_dir, extension_zip, extension_dir,
+            mobile_emulator, device_width, device_height, device_pixel_ratio)
     else:
         return get_local_driver(
-            browser_name, headless,
+            browser_name, headless, servername,
             proxy_string, proxy_auth, proxy_user, proxy_pass, user_agent,
-            disable_csp, enable_sync, user_data_dir,
-            extension_zip, extension_dir)
+            disable_csp, enable_sync, no_sandbox, disable_gpu, incognito,
+            user_data_dir, extension_zip, extension_dir, mobile_emulator,
+            device_width, device_height, device_pixel_ratio)
 
 
 def get_remote_driver(
         browser_name, headless, servername, port, proxy_string, proxy_auth,
         proxy_user, proxy_pass, user_agent, cap_file, disable_csp,
-        enable_sync, user_data_dir, extension_zip, extension_dir):
+        enable_sync, no_sandbox, disable_gpu, incognito, user_data_dir,
+        extension_zip, extension_dir,
+        mobile_emulator, device_width, device_height, device_pixel_ratio):
     downloads_path = download_helper.get_downloads_folder()
     download_helper.reset_downloads_folder()
     address = "http://%s:%s/wd/hub" % (servername, port)
@@ -357,9 +399,11 @@ def get_remote_driver(
         desired_caps = capabilities_parser.get_desired_capabilities(cap_file)
     if browser_name == constants.Browser.GOOGLE_CHROME:
         chrome_options = _set_chrome_options(
-            downloads_path, headless, proxy_string, proxy_auth,
-            proxy_user, proxy_pass, user_agent, disable_csp, enable_sync,
-            user_data_dir, extension_zip, extension_dir)
+            downloads_path, headless,
+            proxy_string, proxy_auth, proxy_user, proxy_pass, user_agent,
+            disable_csp, enable_sync, no_sandbox, disable_gpu, incognito,
+            user_data_dir, extension_zip, extension_dir, servername,
+            mobile_emulator, device_width, device_height, device_pixel_ratio)
         capabilities = chrome_options.to_capabilities()
         for key in desired_caps.keys():
             capabilities[key] = desired_caps[key]
@@ -379,7 +423,7 @@ def get_remote_driver(
             for key in desired_caps.keys():
                 firefox_capabilities[key] = desired_caps[key]
             capabilities = firefox_capabilities
-            address = "http://%s:%s/wd/hub" % (servername, port)
+            warnings.simplefilter("ignore", category=DeprecationWarning)
             return webdriver.Remote(
                 command_executor=address,
                 desired_capabilities=capabilities,
@@ -466,10 +510,11 @@ def get_remote_driver(
 
 
 def get_local_driver(
-        browser_name, headless,
+        browser_name, headless, servername,
         proxy_string, proxy_auth, proxy_user, proxy_pass, user_agent,
-        disable_csp, enable_sync, user_data_dir,
-        extension_zip, extension_dir):
+        disable_csp, enable_sync, no_sandbox, disable_gpu, incognito,
+        user_data_dir, extension_zip, extension_dir,
+        mobile_emulator, device_width, device_height, device_pixel_ratio):
     '''
     Spins up a new web browser and returns the driver.
     Can also be used to spin up additional browsers for the same test.
@@ -488,28 +533,44 @@ def get_local_driver(
                 options = webdriver.FirefoxOptions()
                 if headless:
                     options.add_argument('-headless')
+                    firefox_capabilities['moz:firefoxOptions'] = (
+                        {'args': ['-headless']})
                 if LOCAL_GECKODRIVER and os.path.exists(LOCAL_GECKODRIVER):
-                    make_driver_executable_if_not(LOCAL_GECKODRIVER)
+                    try:
+                        make_driver_executable_if_not(LOCAL_GECKODRIVER)
+                    except Exception as e:
+                        logging.debug("\nWarning: Could not make geckodriver"
+                                      " executable: %s" % e)
                 elif not is_geckodriver_on_path():
-                    if not "".join(sys.argv) == "-c":  # Skip if multithreaded
+                    args = " ".join(sys.argv)
+                    if not ("-n" in sys.argv or "-n=" in args or args == "-c"):
+                        # (Not multithreaded)
                         from seleniumbase.console_scripts import sb_install
                         sys_args = sys.argv  # Save a copy of current sys args
-                        print("\nWarning: geckodriver not found."
+                        print("\nWarning: geckodriver not found!"
                               " Installing now:")
-                        sb_install.main(override="geckodriver")
+                        try:
+                            sb_install.main(override="geckodriver")
+                        except Exception as e:
+                            print("\nWarning: Could not install geckodriver: "
+                                  "%s" % e)
                         sys.argv = sys_args  # Put back the original sys args
-                firefox_driver = webdriver.Firefox(
-                    firefox_profile=profile,
-                    capabilities=firefox_capabilities,
-                    options=options)
-            except WebDriverException:
-                # Don't use Geckodriver: Only works for old versions of Firefox
+                if "linux" in PLATFORM or not headless:
+                    firefox_driver = webdriver.Firefox(
+                        firefox_profile=profile,
+                        capabilities=firefox_capabilities)
+                else:
+                    firefox_driver = webdriver.Firefox(
+                        firefox_profile=profile,
+                        capabilities=firefox_capabilities,
+                        options=options)
+            except Exception:
                 profile = _create_firefox_profile(
                     downloads_path, proxy_string, user_agent, disable_csp)
                 firefox_capabilities = DesiredCapabilities.FIREFOX.copy()
-                firefox_capabilities['marionette'] = False
                 firefox_driver = webdriver.Firefox(
-                    firefox_profile=profile, capabilities=firefox_capabilities)
+                    firefox_profile=profile,
+                    capabilities=firefox_capabilities)
             return firefox_driver
         except Exception as e:
             if headless:
@@ -529,28 +590,61 @@ def get_local_driver(
         ie_options.persistent_hover = True
         ie_capabilities = ie_options.to_capabilities()
         if LOCAL_IEDRIVER and os.path.exists(LOCAL_IEDRIVER):
-            make_driver_executable_if_not(LOCAL_IEDRIVER)
+            try:
+                make_driver_executable_if_not(LOCAL_IEDRIVER)
+            except Exception as e:
+                logging.debug("\nWarning: Could not make iedriver"
+                              " executable: %s" % e)
         return webdriver.Ie(capabilities=ie_capabilities)
     elif browser_name == constants.Browser.EDGE:
-        if LOCAL_EDGEDRIVER and os.path.exists(LOCAL_EDGEDRIVER):
-            make_driver_executable_if_not(LOCAL_EDGEDRIVER)
-            # The new Microsoft Edge browser is based on Chromium
+        try:
             chrome_options = _set_chrome_options(
                 downloads_path, headless,
-                proxy_string, proxy_auth, proxy_user, proxy_pass,
-                user_agent, disable_csp, enable_sync, user_data_dir,
-                extension_zip, extension_dir)
+                proxy_string, proxy_auth, proxy_user, proxy_pass, user_agent,
+                disable_csp, enable_sync, no_sandbox, disable_gpu, incognito,
+                user_data_dir, extension_zip, extension_dir, servername,
+                mobile_emulator, device_width, device_height,
+                device_pixel_ratio)
+            if LOCAL_EDGEDRIVER and os.path.exists(LOCAL_EDGEDRIVER):
+                try:
+                    make_driver_executable_if_not(LOCAL_EDGEDRIVER)
+                except Exception as e:
+                    logging.debug("\nWarning: Could not make edgedriver"
+                                  " executable: %s" % e)
+            elif not is_edgedriver_on_path():
+                args = " ".join(sys.argv)
+                if not ("-n" in sys.argv or "-n=" in args or args == "-c"):
+                    # (Not multithreaded)
+                    from seleniumbase.console_scripts import sb_install
+                    sys_args = sys.argv  # Save a copy of current sys args
+                    print("\nWarning: chromedriver not found. Installing now:")
+                    sb_install.main(override="edgedriver")
+                    sys.argv = sys_args  # Put back the original sys args
             return webdriver.Chrome(executable_path=LOCAL_EDGEDRIVER,
                                     options=chrome_options)
-        else:
-            return webdriver.Edge()
+        except Exception as e:
+            if headless:
+                raise Exception(e)
+            if LOCAL_EDGEDRIVER and os.path.exists(LOCAL_EDGEDRIVER):
+                try:
+                    make_driver_executable_if_not(LOCAL_EDGEDRIVER)
+                except Exception as e:
+                    logging.debug("\nWarning: Could not make edgedriver"
+                                  " executable: %s" % e)
+            return webdriver.Chrome(executable_path=LOCAL_EDGEDRIVER)
     elif browser_name == constants.Browser.SAFARI:
-        if "".join(sys.argv) == "-c":  # Skip if multithreaded
+        arg_join = " ".join(sys.argv)
+        if ("-n" in sys.argv) or ("-n=" in arg_join) or (arg_join == "-c"):
+            # Skip if multithreaded
             raise Exception("Can't run Safari tests in multi-threaded mode!")
         return webdriver.Safari()
     elif browser_name == constants.Browser.OPERA:
         if LOCAL_OPERADRIVER and os.path.exists(LOCAL_OPERADRIVER):
-            make_driver_executable_if_not(LOCAL_OPERADRIVER)
+            try:
+                make_driver_executable_if_not(LOCAL_OPERADRIVER)
+            except Exception as e:
+                logging.debug("\nWarning: Could not make operadriver"
+                              " executable: %s" % e)
         return webdriver.Opera()
     elif browser_name == constants.Browser.PHANTOM_JS:
         with warnings.catch_warnings():
@@ -561,13 +655,21 @@ def get_local_driver(
         try:
             chrome_options = _set_chrome_options(
                 downloads_path, headless,
-                proxy_string, proxy_auth, proxy_user, proxy_pass,
-                user_agent, disable_csp, enable_sync, user_data_dir,
-                extension_zip, extension_dir)
+                proxy_string, proxy_auth, proxy_user, proxy_pass, user_agent,
+                disable_csp, enable_sync, no_sandbox, disable_gpu, incognito,
+                user_data_dir, extension_zip, extension_dir, servername,
+                mobile_emulator, device_width, device_height,
+                device_pixel_ratio)
             if LOCAL_CHROMEDRIVER and os.path.exists(LOCAL_CHROMEDRIVER):
-                make_driver_executable_if_not(LOCAL_CHROMEDRIVER)
+                try:
+                    make_driver_executable_if_not(LOCAL_CHROMEDRIVER)
+                except Exception as e:
+                    logging.debug("\nWarning: Could not make chromedriver"
+                                  " executable: %s" % e)
             elif not is_chromedriver_on_path():
-                if not "".join(sys.argv) == "-c":  # Skip if multithreaded
+                args = " ".join(sys.argv)
+                if not ("-n" in sys.argv or "-n=" in args or args == "-c"):
+                    # (Not multithreaded)
                     from seleniumbase.console_scripts import sb_install
                     sys_args = sys.argv  # Save a copy of current sys args
                     print("\nWarning: chromedriver not found. Installing now:")
@@ -578,7 +680,11 @@ def get_local_driver(
             if headless:
                 raise Exception(e)
             if LOCAL_CHROMEDRIVER and os.path.exists(LOCAL_CHROMEDRIVER):
-                make_driver_executable_if_not(LOCAL_CHROMEDRIVER)
+                try:
+                    make_driver_executable_if_not(LOCAL_CHROMEDRIVER)
+                except Exception as e:
+                    logging.debug("\nWarning: Could not make chromedriver"
+                                  " executable: %s" % e)
             return webdriver.Chrome()
     else:
         raise Exception(

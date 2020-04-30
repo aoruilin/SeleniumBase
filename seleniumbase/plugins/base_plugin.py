@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """ This is the Nose plugin for setting a test environment and saving logs. """
 
-import os
 import sys
 import time
 from nose.plugins import Plugin
@@ -16,11 +15,10 @@ class Base(Plugin):
     This parser plugin includes the following command-line options for Nose:
     --env=ENV  (Set a test environment. Use "self.env" to use this in tests.)
     --data=DATA  (Extra data to pass to tests. Use "self.data" in tests.)
-    --settings_file=FILE  (Overrides SeleniumBase settings.py values.)
-    --log_path=LOG_PATH  (The directory where log files get saved to.)
-    --archive_logs  (Archive old log files instead of deleting them.)
+    --settings-file=FILE  (Overrides SeleniumBase settings.py values.)
+    --archive-logs  (Archive old log files instead of deleting them.)
     --report  (The option to create a fancy report after tests complete.)
-    --show_report   If self.report is turned on, then the report will
+    --show-report   If self.report is turned on, then the report will
                     display immediately after tests complete their run.
                     Only use this when running tests locally, as this will
                     pause the test run until the report window is closed.
@@ -30,7 +28,8 @@ class Base(Plugin):
     def options(self, parser, env):
         super(Base, self).options(parser, env=env)
         parser.add_option(
-            '--env', action='store',
+            '--env',
+            action='store',
             dest='environment',
             choices=(
                 constants.Environment.QA,
@@ -43,7 +42,8 @@ class Base(Plugin):
             default=constants.Environment.TEST,
             help="The environment to run the tests in.")
         parser.add_option(
-            '--data', dest='data',
+            '--data',
+            dest='data',
             default=None,
             help='Extra data to pass from the command line.')
         parser.add_option(
@@ -54,33 +54,51 @@ class Base(Plugin):
             help="""The file that stores key/value pairs for overriding
                     values in the SeleniumBase settings.py file.""")
         parser.add_option(
-            '--log_path', dest='log_path',
+            '--log_path', '--log-path',
+            dest='log_path',
             default='latest_logs/',
-            help='Where the log files are saved.')
+            help='Where the log files are saved. (No longer editable!)')
         parser.add_option(
-            '--archive_logs', action="store_true",
+            '--archive_logs', '--archive-logs',
+            action="store_true",
             dest='archive_logs',
             default=False,
             help="Archive old log files instead of deleting them.")
         parser.add_option(
-            '--report', action="store_true", dest='report',
+            '--report',
+            action="store_true",
+            dest='report',
             default=False,
             help='Create a fancy report at the end of the test suite.')
         parser.add_option(
-            '--show_report', action="store_true",
+            '--show_report', '--show-report',
+            action="store_true",
             dest='show_report',
             default=False,
             help="If true when using report, will display it after tests run.")
         found_processes_arg = False
+        found_timeout_arg = False
         for arg in sys.argv:
             if "--processes=" in arg:
                 found_processes_arg = True
+            if "--timeout=" in arg:
+                found_timeout_arg = True
         if found_processes_arg:
             print("* WARNING: Don't use multi-threading with nosetests! *")
             parser.add_option(
-                '--processes', dest='processes',
+                '--processes',
+                dest='processes',
                 default=0,
                 help="WARNING: Don't use multi-threading with nosetests!")
+        if found_timeout_arg:
+            print("\n  WARNING: Don't use --timeout=s from pytest-timeout!")
+            print("  It's not thread-safe for WebDriver processes!")
+            print("  Use --time-limit=s from SeleniumBase instead!\n")
+            parser.add_option(
+                '--timeout',
+                dest='timeout',
+                default=0,
+                help="Don't use --timeout=s! Use --time-limit=s instead!")
 
     def configure(self, options, conf):
         super(Base, self).configure(options, conf)
@@ -95,16 +113,13 @@ class Base(Plugin):
         self.page_results_list = []
         self.test_count = 0
         self.import_error = False
-        log_path = options.log_path
+        log_path = 'latest_logs/'
         archive_logs = options.archive_logs
         log_helper.log_folder_setup(log_path, archive_logs)
         if self.report_on:
             report_helper.clear_out_old_report_logs(archive_past_runs=False)
 
     def beforeTest(self, test):
-        test_logpath = self.options.log_path + "/" + test.id()
-        if not os.path.exists(test_logpath):
-            os.makedirs(test_logpath)
         test.test.environment = self.options.environment
         test.test.env = self.options.environment  # Add a shortened version
         test.test.data = self.options.data
@@ -116,6 +131,8 @@ class Base(Plugin):
         self.start_time = float(time.time())
 
     def finalize(self, result):
+        log_helper.archive_logs_if_set(
+            self.options.log_path, self.options.archive_logs)
         if self.report_on:
             if not self.import_error:
                 report_helper.add_bad_page_log_file(self.page_results_list)

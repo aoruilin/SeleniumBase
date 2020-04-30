@@ -13,3 +13,6 @@ def input_code(code, code_input):
             code_input.send_keys(Keys.SHIFT, Keys.TAB)
         else:
             code_input.send_keys(Keys.ENTER)
+        # if c.startswith('print'):
+        #     code_input.send_keys(Keys.END)
+        #     code_input.send_keys(Keys.BACK_SPACE)

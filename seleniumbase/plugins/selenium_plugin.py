@@ -11,31 +11,37 @@ class SeleniumBrowser(Plugin):
     """
     This parser plugin includes the following command-line options for Nose:
     --browser=BROWSER  (The web browser to use.)
-    --cap_file=FILE  (The web browser's desired capabilities to use.)
-    --user_data_dir=DIR  (Set the Chrome user data directory to use.)
+    --cap-file=FILE  (The web browser's desired capabilities to use.)
+    --user-data-dir=DIR  (Set the Chrome user data directory to use.)
     --server=SERVER  (The server / IP address used by the tests.)
     --port=PORT  (The port that's used by the test server.)
     --proxy=SERVER:PORT  (This is the proxy server:port combo used by tests.)
     --agent=STRING  (This designates the web browser's User Agent to use.)
-    --extension_zip=ZIP  (Load a Chrome Extension .zip file, comma-separated.)
-    --extension_dir=DIR  (Load a Chrome Extension directory, comma-separated.)
+    --mobile  (The option to use the mobile emulator while running tests.)
+    --metrics=STRING  ("CSSWidth,Height,PixelRatio" for mobile emulator tests.)
+    --extension-zip=ZIP  (Load a Chrome Extension .zip file, comma-separated.)
+    --extension-dir=DIR  (Load a Chrome Extension directory, comma-separated.)
     --headless  (The option to run tests headlessly. The default on Linux OS.)
     --headed  (The option to run tests with a GUI on Linux OS.)
-    --start_page=URL  (The starting URL for the web browser when tests begin.)
+    --start-page=URL  (The starting URL for the web browser when tests begin.)
+    --time-limit  (The option to set a time limit per test before failing it.)
     --slow  (The option to slow down the automation.)
     --demo  (The option to visually see test actions as they occur.)
-    --demo_sleep=SECONDS  (The option to wait longer after Demo Mode actions.)
+    --demo-sleep=SECONDS  (The option to wait longer after Demo Mode actions.)
     --highlights=NUM  (Number of highlight animations for Demo Mode actions.)
-    --message_duration=SECONDS  (The time length for Messenger alerts.)
-    --check_js  (The option to check for JavaScript errors after page loads.)
-    --ad_block  (The option to block some display ads after page loads.)
-    --verify_delay=SECONDS  (The delay before MasterQA verification checks.)
-    --disable_csp  (This disables the Content Security Policy of websites.)
-    --enable_sync  (The option to enable "Chrome Sync".)
-    --maximize_window  (The option to start with the web browser maximized.)
-    --save_screenshot  (The option to save a screenshot after each test.)
-    --visual_baseline  (Set the visual baseline for Visual/Layout tests.)
-    --timeout_multiplier=MULTIPLIER  (Multiplies the default timeout values.)
+    --message-duration=SECONDS  (The time length for Messenger alerts.)
+    --check-js  (The option to check for JavaScript errors after page loads.)
+    --ad-block  (The option to block some display ads after page loads.)
+    --verify-delay=SECONDS  (The delay before MasterQA verification checks.)
+    --disable-csp  (This disables the Content Security Policy of websites.)
+    --enable-sync  (The option to enable "Chrome Sync".)
+    --no-sandbox  (The option to enable Chrome's "No-Sandbox" feature.)
+    --disable_gpu  (The option to enable Chrome's "Disable GPU" feature.)
+    --incognito  (The option to enable Chrome's Incognito mode.)
+    --maximize-window  (The option to start with the web browser maximized.)
+    --save-screenshot  (The option to save a screenshot after each test.)
+    --visual-baseline  (Set the visual baseline for Visual/Layout tests.)
+    --timeout-multiplier=MULTIPLIER  (Multiplies the default timeout values.)
     """
     name = 'selenium'  # Usage: --with-selenium
 
@@ -78,7 +84,9 @@ class SeleniumBrowser(Plugin):
             dest='servername',
             default='localhost',
             help="""Designates the Selenium Grid server to use.
-                    Default: localhost.""")
+                    Use "127.0.0.1" to connect to a localhost Grid.
+                    If unset or set to "localhost", Grid isn't used.
+                    Default: "localhost".""")
         parser.add_option(
             '--port',
             action='store',
@@ -104,6 +112,23 @@ class SeleniumBrowser(Plugin):
             help="""Designates the User-Agent for the browser to use.
                     Format: A string.
                     Default: None.""")
+        parser.add_option(
+            '--mobile', '--mobile-emulator', '--mobile_emulator',
+            action="store_true",
+            dest='mobile_emulator',
+            default=False,
+            help="""If this option is enabled, the mobile emulator
+                    will be used while running tests.""")
+        parser.add_option(
+            '--metrics', '--device-metrics', '--device_metrics',
+            action='store',
+            dest='device_metrics',
+            default=None,
+            help="""Designates the three device metrics of the mobile
+                    emulator: CSS Width, CSS Height, and Pixel-Ratio.
+                    Format: A comma-separated string with the 3 values.
+                    Example: "375,734,3"
+                    Default: None. (Will use default values if None)""")
         parser.add_option(
             '--extension_zip', '--extension-zip',
             action='store',
@@ -147,6 +172,13 @@ class SeleniumBrowser(Plugin):
             help="""Designates the starting URL for the web browser
                     when each test begins.
                     Default: None.""")
+        parser.add_option(
+            '--time_limit', '--time-limit', '--timelimit',
+            action='store',
+            dest='time_limit',
+            default=None,
+            help="""Use this to set a time limit per test, in seconds.
+                    If a test runs beyond the limit, it fails.""")
         parser.add_option(
             '--slow_mode', '--slow-mode', '--slow',
             action="store_true",
@@ -221,6 +253,24 @@ class SeleniumBrowser(Plugin):
             default=False,
             help="""Using this enables the "Chrome Sync" feature.""")
         parser.add_option(
+            '--no_sandbox', '--no-sandbox',
+            action="store_true",
+            dest='no_sandbox',
+            default=False,
+            help="""Using this enables the "No Sandbox" feature.""")
+        parser.add_option(
+            '--disable_gpu', '--disable-gpu',
+            action="store_true",
+            dest='disable_gpu',
+            default=False,
+            help="""Using this enables the "Disable GPU" feature.""")
+        parser.add_option(
+            '--incognito',
+            action="store_true",
+            dest='incognito',
+            default=False,
+            help="""Using this enables Chrome's Incognito mode.""")
+        parser.add_option(
             '--maximize_window', '--maximize-window', '--maximize',
             '--fullscreen',
             action="store_true",
@@ -272,6 +322,9 @@ class SeleniumBrowser(Plugin):
         test.test.extension_dir = self.options.extension_dir
         test.test.proxy_string = self.options.proxy_string
         test.test.user_agent = self.options.user_agent
+        test.test.mobile_emulator = self.options.mobile_emulator
+        test.test.device_metrics = self.options.device_metrics
+        test.test.time_limit = self.options.time_limit
         test.test.slow_mode = self.options.slow_mode
         test.test.demo_mode = self.options.demo_mode
         test.test.demo_sleep = self.options.demo_sleep
@@ -282,13 +335,17 @@ class SeleniumBrowser(Plugin):
         test.test.verify_delay = self.options.verify_delay  # MasterQA
         test.test.disable_csp = self.options.disable_csp
         test.test.enable_sync = self.options.enable_sync
+        test.test.no_sandbox = self.options.no_sandbox
+        test.test.disable_gpu = self.options.disable_gpu
+        test.test.incognito = self.options.incognito
         test.test.maximize_option = self.options.maximize_option
         test.test.save_screenshot_after_test = self.options.save_screenshot
         test.test.visual_baseline = self.options.visual_baseline
         test.test.timeout_multiplier = self.options.timeout_multiplier
         test.test.use_grid = False
+        test.test._reuse_session = False
         if test.test.servername != "localhost":
-            # Use Selenium Grid (Use --server=127.0.0.1 for localhost Grid)
+            # Use Selenium Grid (Use --server="127.0.0.1" for localhost Grid)
             test.test.use_grid = True
         if "linux" in sys.platform and (
                 not self.options.headed and not self.options.headless):

@@ -44,6 +44,8 @@ def work_picture():
 def turtle_code():
     code = "import turtle\n\n" \
            "t = turtle.Turtle()\n" \
+           "s = turtle.Screen()\n" \
+           "s.bgpic('userupload/sucai/3702/20200118/bgimg.jpg')\n" \
            "t.begin_fill()\n" \
            "turtle.colormode(255)\n" \
            "t.forward(150)\n" \
@@ -79,8 +81,8 @@ def wrong_code():
 def pygame_code():
     code = "import pygame\n\n" \
            "from pygame.locals import *\n" \
-           "background_image = 'https://edu-release-1255999742.file.myqcloud.com/static/sucai/%E8%83%8C%E6%99%AF.png'\n" \
-           "mouse_image = 'https://edu-release-1255999742.file.myqcloud.com/userupload/sucai/9816/2019-11-2/1572669762412Snipaste_2019-07-23_17-44-01.png'\n" \
+           "background_image = 'userupload/sucai/9816/2019-11-8/pygameBG.jpg'\n" \
+           "mouse_image = 'userupload/sucai/9816/pygamemouse.png'\n" \
            "pygame.init()\n" \
            "screen = pygame.display.set_mode((640, 480), 0, 32)\n" \
            "pygame.display.set_caption('hello world')\n" \

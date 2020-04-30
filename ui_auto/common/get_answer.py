@@ -3,6 +3,7 @@ from itertools import chain
 
 import requests
 
+# from interface.K12edu.common.parameter_for_others import ParameterForOthers
 from ui_auto.base.data import Data
 from ui_auto.base.data import PointIdIndex
 from ui_auto.common.mysql import get_code
@@ -20,18 +21,24 @@ class ParameterForOthers:
         if not self.identity:
             raise Exception('身份不能为空，请输入 identity="manager"、"teacher"或"student"')
         elif 'manager' == self.identity:
-            self.username = Data().manager_username_for_edu()
+            manager_data = Data().manager_data()
+            self.username = manager_data['username']
+            self.password = manager_data['password']
         elif 'teacher' == self.identity:
-            self.username = Data().teacher_username_for_edu()
+            teacher_data = Data().teacher_data()
+            self.username = teacher_data['username']
+            self.password = teacher_data['password']
         elif 'student' == self.identity:
-            self.username = Data().student_username_for_edu()
+            student_data = Data().student_data()
+            self.username = student_data['username']
+            self.password = student_data['password']
         else:
             raise Exception('错误的身份，请输入 identity="manager"、"teacher"或"student"')
         url = f'{self.ip}/pc/login'
-        data = {}
-        password = Data().password_for_edu
-        data['username'] = self.username
-        data['password'] = password
+        data = {
+            "password": self.password,
+            "username": self.username
+        }
         t = requests.session()
         login_ret = t.post(url=url, headers=self.headers, json=data)
         data_ret = login_ret.json()

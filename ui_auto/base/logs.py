@@ -24,6 +24,18 @@ def get_log_path(file_path, name_path):
     return log_path
 
 
+def log_path(file_path, name_path):
+    file_name = str.split(name_path, '.')
+    me_name = file_name[-1]
+    tmp_path = me_name.replace('.', '\\')
+    pos = file_path.find(tmp_path)
+    project_path = file_path[:pos]
+    log_name = time.strftime("%Y%m%d%H%M%S")
+    log_dir = project_path + 'logs\\' + f'{log_name}.txt'
+
+    return log_dir
+
+
 def log(file_path, msg, mode='a+', encoding='utf-8'):
     print(msg)
     fp = open(file=file_path, mode=mode, encoding=encoding)
@@ -32,5 +44,5 @@ def log(file_path, msg, mode='a+', encoding='utf-8'):
     fp.close()
 
 # print(get_log_path(r'E:\中森\dingdangcode_autotest\ui_auto\testcase\test_field\add_draft.py', 'add_draft'))
-# print(get_log_path(r'E:\中森\dingdangcode_autotest\ui_auto\testcase\main_process\edu_main_process.py',
-# 'ui_auto.testcase.main_process.edu_main_process'))
+# print(log_path(r'E:\中森\SeleniumBase\ui_auto\testcase\edu_main_process.py',
+# 'ui_auto.testcase.edu_main_process'))

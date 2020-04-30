@@ -11,14 +11,14 @@ class AddResourcesCase(BaseTestCase):
     name = __name__
 
     url = Data().ip_for_edu()
+    teacher_data = Data().teacher_data()
     username_teacher = Data().teacher_username_for_edu()
     teacher_name = Data().teacher_name_for_edu()
     password = Data().password_for_edu
 
     def test_add_resources(self):
         self.step_log_path = get_log_path(self.file_name, self.name)
-        self.login(self.username_teacher, self.teacher_name, self.password,
-                   teacher_assert=True)
+        self.login(**self.teacher_data, teacher_assert=True)
         self.click_button(*ElementSelector.teach_management_btn_loc)
         self.click_button(*ElementSelector.resource_manage_tab_loc,
                           loading=True)
