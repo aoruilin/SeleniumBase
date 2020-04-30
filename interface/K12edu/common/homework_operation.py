@@ -78,10 +78,19 @@ def add_homework(parameter, hw_name, series_id, point_id_list,
         return False
 
 
-def oj_data(problem_id, problem_type, homework_id):
+def oj_data(problem_id, problem_type, homework_id=None, class_id=None, course_id=None, point_id=None, practice=False):
     answer = get_choice(problem_id=problem_id, problem_name=None) if problem_type == 1 \
         else base64.b64encode(get_code(problem_id=problem_id, problem_name=None).encode('u8')).decode('u8')
     data = {
+        "classId": class_id,
+        "courseId": course_id,
+        "picContentError": "",
+        "picEncryptContent": "",
+        "pointId": point_id,
+        "subjectId": problem_id,
+        "subjectType": problem_type,
+        "userAnswer": answer
+    } if practice else {
         "hwId": homework_id.__str__(),
         "picContentError": "",
         "picEncryptContent": "",
@@ -117,6 +126,19 @@ def do_homework_simple(parameter, cut_num=None, homework_num=1):
         commit_res = requests.post(url=commit_url, headers=parameter.headers, json=commit_data)
         assert_res(commit_res.text)
         time.sleep(1)
+
+
+def student_do_practice(parameter, class_id, course_id, point_id, subject_id_list) -> list:
+    url = f'{parameter.ip}/course/student/evalAndSave/record'
+    result_list = []
+    for p_id, p_type in subject_id_list:
+        data = oj_data(p_id, p_type, class_id=class_id, course_id=course_id, point_id=point_id, practice=True)
+        res = requests.post(url=url, headers=parameter.headers, json=data)
+        data_ret = res.json()
+        result = data_ret['data']['result']
+        out_put = '正确' if result == 1 else '错误'
+        result_list.append((p_id, out_put))
+    return result_list
 
 
 def __base64_img(problem_id):

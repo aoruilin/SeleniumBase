@@ -664,6 +664,36 @@ class BaseTestCase(BaseCase):
         if self.__wait_for_loading():
             self.__assert_equal('发送成功', ElementSelector.tip_loc)
 
+    def student_do_practice(self):
+        """
+        学生做练习题
+        :return:
+        """
+        self.click_button(*ElementSelector.course_detail_practice_loc, loading=True)
+        self.click_and_jump(2, *ElementSelector.course_detail_practice_list_problem_loc,
+                            loading=True)
+        choice_id_list, operation_id_list = self.__get_practice_id()
+        choice_num = len(choice_id_list)
+        operation_num = len(operation_id_list)
+        all_num = choice_num + operation_num
+        # 做作业操作
+        self.__do_homework_operation(choice_num, choice_id_list, problem_type='选择')
+        self.__do_homework_operation(operation_num, operation_id_list, problem_type='操作')
+
+    def __get_practice_id(self):
+        """
+        获取练习题id
+        :return:
+        """
+        course_id = self.parameter.get_user_course_list()[0]
+        class_id = self.parameter.get_class_list(get_all=True)[0]
+        point_id_list = [i['id'] for i in self.parameter.get_all_point_resource_id(1)]
+        all_practice_id = self.parameter.get_practice_id_list(course_id, class_id, point_id_list[0])
+        choice_id_list = list(filter(lambda x: x[1] == 1, all_practice_id))
+        operation_id_list = list(filter(lambda x: x[1] == 2, all_practice_id))
+
+        return choice_id_list, operation_id_list
+
     def student_check_course_loop(self):
         """
         学生端遍历查看列表前3个课件
@@ -688,18 +718,14 @@ class BaseTestCase(BaseCase):
             try:
                 btn_loc = f'//span[text()="{btn}"]/parent::span/preceding-sibling::span/div/div[2]/span' \
                     if full_screen else f'//div[text()="{btn}"]'
-                self.click_button(btn_loc, wait=True)
+                self.click_button(btn_loc, btn)
                 if full_screen:  # 全屏模式继续点击课件名称
                     self.click_button(f'//span[text()="{btn}"]'
-                                      f'/ancestor::div[@class="ant-tree-list-holder-inner"]/div[2]/span[3]')
+                                      f'/ancestor::div[@class="ant-tree-list-holder-inner"]/div[2]/span[3]',
+                                      f'{btn}下的资源')
                 if '自动上传课件' == course_name:  # 后期可能会加上自定义课件功能
                     self.click_button(
                         f'//p[text()="{btn}"]/parent::div/parent::div/parent::div/div[2]/div[2]',
-                        msg=btn
-                    )
-                else:
-                    self.click_button(
-                        f'//p[text()="{btn}"]/parent::div/parent::div/parent::div/div[2]',
                         msg=btn
                     )
             except ElementNotVisibleException:
@@ -747,7 +773,14 @@ class BaseTestCase(BaseCase):
                     if full_screen else ElementSelector.course_detail_video_content_loc
                 self.element_visible(*video_loc)
             except ElementNotVisibleException:
-                log(self.step_log_path, '没有视频资源')
+                log(self.step_log_path, '视频显示异常')
+        if '讲义' == btn:
+            try:
+                pdf_loc = ElementSelector.course_detail_full_screen_pdf_loc \
+                    if full_screen else ElementSelector.course_detail_pdf_loc
+                self.element_visible(*pdf_loc)
+            except ElementNotVisibleException:
+                log(self.step_log_path, '讲义显示异常')
 
     # def uni_teach_student_check_course(self, course_name):
     #     """
@@ -841,7 +874,7 @@ class BaseTestCase(BaseCase):
                 msg=f'题目列表第{operation_p_num}道题'
             )
             code_input = self.take_element(*ElementSelector.homework_detail_code_view_loc)
-            wrong_answer = 'wrong_answer = "wrong"\n"This is a wrong answer for check the wrong tip"'
+            wrong_answer = 'wrong_answer = "wrong answer"'
             if self.__wait_for_loading():
                 code_input.send_keys(wrong_answer)
             code_text_show_up = self.element_visible(*ElementSelector.homework_detail_code_text_loc)
@@ -1171,7 +1204,7 @@ class BaseTestCase(BaseCase):
             self.change_text(*ElementSelector.works_publish_my_work_name_input_loc, text=work_name)
         self.click_button(*ElementSelector.works_publish_btn_loc)
         if self.__wait_for_loading():
-            self.wait_text('发布成功，可在作品大厅进行查看', *ElementSelector.tip_loc)
+            self.__assert_equal('发布成功，可在作品大厅进行查看', ElementSelector.tip_loc)
 
     def audit_work(self, work_name):
         """

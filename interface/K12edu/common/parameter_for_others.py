@@ -371,26 +371,23 @@ class ParameterForOthers:
             course_id_list = [i['id'] for i in data_list]
             return course_id_list
 
-    def get_student_customs_course_list(self, class_id):  # 没改
+    def get_practice_id_list(self, course_id, class_id, point_id):
         """
-        学生获取主题授课的课件列表
-        :param class_id: 要获取的班级的id
+        获取练习题id列表
+        :param course_id: 课程id
+        :param class_id: 班级id
+        :param point_id: 知识点id
         :return:
         """
-        url = f'{self.ip}/pc/gate/course/student/getStudentCustomsCourseList' \
-              f'?pageNum=1&pageSize=6&status=1&sort=0&classId={class_id}'
-        response = requests.get(url=url, headers=self.headers)
-        data_ret = response.json()
+        url = f'{self.ip}/course/student/{course_id}/{class_id}/{point_id}/practises'
+        res = requests.get(url=url, headers=self.headers)
+        data_ret = res.json()
         try:
-            data_list = data_ret['data']['list']
+            return [(i['id'], i['subjectType']) for i in data_ret['data']]
         except TypeError:
-            print('接口"/pc/gate/course/student/getStudentCustomsCourseList"报错，'
-                  f'返回{data_ret["msg"]}')
+            print(f'接口"practises"报错，返回{data_ret["msg"]}')
         except KeyError:
-            print(data_ret)
-        else:
-            course_id_list = [i['id'] for i in data_list]
-            return course_id_list
+            print(f'接口"practises"返回{data_ret}')
 
     def teacher_get_homework_problem_id_list(self):
         """
@@ -469,44 +466,6 @@ class ParameterForOthers:
 
         return all_problem_id_list
 
-    def get_choice_problem_id(self):  # 没改
-        """
-        选择题的problem id
-        :return:
-        """
-        point_id = self.get_point_id()
-        url = f'{self.ip}/pc/choice/list?klPoints={point_id}&pageNum=1&pageSize=12&difficulty=1'
-        response = requests.get(url=url, headers=self.headers)
-        data_ret = response.json()
-        try:
-            problem_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口"/pc/choice/list"报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        else:
-            problem_id_list = [d['id'] for d in problem_list]
-            return problem_id_list
-
-    def get_all_choice_problem_id(self, point_id):  # 没改
-        """
-        获取一个知识点全部选择题problemID
-        :param point_id:
-        :return:
-        """
-        url = f'{self.ip}/pc/choice/list?klPoints={point_id}&pageNum=1&pageSize=12'
-        response = requests.get(url=url, headers=self.headers)
-        data_ret = response.json()
-        try:
-            problem_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口“/pc/choice/list”报错：{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        else:
-            problem_id_list = [d['id'] for d in problem_list]
-            return problem_id_list
-
     def get_eval_id(self, traditional_teach=False):  # 没改
         if traditional_teach:
             url = f'{self.ip}/pc/student/homeworkEval?pageNum=1&pageSize=12'
@@ -525,32 +484,6 @@ class ParameterForOthers:
         else:
             eval_id_list = [i['id'] for i in homework_data_list]
             return eval_id_list
-
-    def get_resource_plan_id(self, standard=False):  # 没改
-        """
-        提供公用的resourcePlanId
-        :param standard: True-标准授课，False-主题授课
-        :return:
-        """
-        if standard:
-            resource_type = 0
-        else:
-            resource_type = 1
-        point_id_tup = self.get_point_id()
-        point_id = point_id_tup[1]
-        url = f'{self.ip}/pc/course/getResourcePlanList?' \
-              f'resourceType={resource_type}&pointId={point_id}&pageNum=1&pageSize=4'
-        response = requests.get(url=url, headers=self.headers)
-        data_ret = response.json()
-        try:
-            data_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口"/pc/course/getResourcePlanList"报错：{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        else:
-            resource_id_list = [r['id'] for r in data_list]
-            return resource_id_list
 
     def get_series_list(self, module_type=1):
         """
@@ -576,25 +509,6 @@ class ParameterForOthers:
             print(f'接口/common/series，返回{data_ret},与预期不符')
         else:
             return series_list
-
-    def get_series_resource_plan_id(self, series):  # 没改
-        """
-        获取一个系列下所有的resourcePlanId
-        :return:
-        """
-        url = f'{self.ip}/pc/resource/getResourcePlanList?' \
-              f'pageNum=1&pageSize=150&resourceType=0&seriesId={series}&keyword='
-        response = requests.get(url=url, headers=self.headers)
-        data_ret = response.json()
-        try:
-            data_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口"/pc/resource/getResourcePlanList"报错：{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        else:
-            resource_id_list = [r['resourceId'] for r in data_list]
-            return resource_id_list
 
     def teacher_get_hw_student_num(self):
         """
@@ -664,53 +578,6 @@ class ParameterForOthers:
         else:
             return [i['studentEvalId'] for i in data_list]
 
-    def get_choice_problem_id_for_ui(self, eval_id):  # 没改
-        choice_url = f'{self.ip}/pc/choice/getChoiceListByEvalId?pageNum=1&pageSize=120&evalId={eval_id}&sort=0'
-        res = requests.get(url=choice_url, headers=self.headers)
-        data_ret = res.json()
-        try:
-            id_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口"/pc/choice/getChoiceListByEvalId"报错：{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        else:
-            problem_id_list = [(c['id'], c['recordId']) for c in id_list]
-            return problem_id_list
-
-    def get_problem_id_for_ui(self, eval_id, traditional_teach=False):  # 没改
-        if traditional_teach:
-            url = f'{self.ip}/pc/student/homeworkEvalRecord/multi?pageNum=1&pageSize=150&evalId={eval_id}'
-        else:
-            url = f'{self.ip}/pc/gate/homework/student/homeworkEvalRecord/multi?pageNum=1&pageSize=120&evalId={eval_id}'
-        response = requests.get(url=url, headers=self.headers)
-        data_ret = response.json()
-        try:
-            data_list = data_ret['data']
-            all_problem_id_list = [p['problemId'] for p in data_list]
-            problem_id_list = [r for r in all_problem_id_list if r is not None]
-            # problem_id_list = list(filter(lambda x: is_not(x, None), all_problem_id_list))
-            return problem_id_list
-        except TypeError:
-            print(f'接口"homeworkEvalRecord"报错：{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-
-    def get_ojcode_for_ord(self, eval_id, traditional_teach=False):  # 没改
-        problem_id_list = self.get_problem_id_for_ui(eval_id, traditional_teach=traditional_teach)
-        ojcode_list = []
-
-        for problem_id in problem_id_list:
-            ojcode = []
-            file_dic = {"fileName": "main.py", "fileType": 1, "rwType": 1, "sort": 0}
-            code = get_code(problem_id=problem_id, problem_name=None)
-            b_code = base64.b64encode(code.encode('utf-8'))
-            s_code = str(b_code)[2:-1]
-            file_dic['fileContent'] = s_code
-            ojcode.append(file_dic)
-            ojcode_list.append(ojcode)
-        return problem_id_list, ojcode_list
-
     @staticmethod
     def get_ojcode_for_cha(problem_id):  # 没改
         ojcode = []
@@ -722,36 +589,6 @@ class ParameterForOthers:
         ojcode.append(file_dic)
 
         return ojcode
-
-    def get_gate_teacher_homework_id(self):  # 没改
-        """获得老师发布的主题授课homeworkID"""
-        url = f'{self.ip}/pc/gate/homework/tchHomeworkList'
-        data = f'pageNum=1&pageSize=50&status=0&classId={self.get_class_list()[0]}&allFlg=1'
-        res = requests.get(url=url, headers=self.headers, params=data)
-        data_ret = res.json()
-        try:
-            data_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口/pc/gate/homework/tchHomeworkList报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        else:
-            return [i['id'] for i in data_list]
-
-    def get_gate_student_homework_id(self):  # 没改
-        """获取学生主题授课homeworkID"""
-        url = f'{self.ip}/pc/gate/homework/student/homeworkEval'
-        data = f'pageNum=1&pageSize=50&classId={self.get_class_list()[0]}'
-        res = requests.get(url=url, headers=self.headers, params=data)
-        data_ret = res.json()
-        try:
-            data_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口/pc/gate/homework/student/homeworkEval报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        else:
-            return [i['id'] for i in data_list]
 
     def get_homework_id_list(self, teacher=False):
         url = f'{self.ip}/homework/tchHwList' if teacher else f'{self.ip}/homework/stuHwList'
@@ -776,99 +613,6 @@ class ParameterForOthers:
         else:
             return [i['homeworkId'] for i in data_list]
 
-    def get_record_id_list(self, traditional_teach=False):  # 没改
-        """
-        获取单个作业的recorId列表
-        :param traditional_teach: 是否为标准授课
-        :return:
-        """
-        url = f'{self.ip}/pc/student/homeworkEvalRecord' \
-            if traditional_teach else \
-            f'{self.ip}/pc/gate/homework/student/homeworkEvalRecord'
-        eval_id_list = self.get_eval_id(traditional_teach=True) \
-            if traditional_teach else self.get_eval_id()
-        data = f'pageNum=1&pageSize=50&evalId={eval_id_list[0]}'
-        response = requests.get(url=url, headers=self.headers,
-                                params=data)
-        data_ret = response.json()
-        try:
-            data_list = data_ret['data']['list']
-        except TypeError:
-            print(f'接口homeworkEvalRecord报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        else:
-            return [i['recordId'] for i in data_list]
-
-    def get_challenge_record_id(self, traditional_teach=False):  # 没改
-        """
-        获取紧急挑战题目recordID
-        :return:
-        """
-        url = f'{self.ip}/pc/student/homeworkEvalChallenge' \
-            if traditional_teach else \
-            f'{self.ip}/pc/gate/homework/student/homeworkEvalChallenge'
-        eval_id_list = self.get_eval_id(traditional_teach=True) \
-            if traditional_teach else self.get_eval_id()
-        data = f'pageNum=1&pageSize=50&evalId={eval_id_list[0]}'
-        response = requests.get(url=url, headers=self.headers,
-                                params=data)
-        data_ret = response.json()
-        try:
-            data_list = data_ret['data']['recordList']['list']
-        except TypeError:
-            print(f'接口homeworkEvalRecord报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        else:
-            return [i['recordId'] for i in data_list]
-
-    def get_challenge_record_id_list(self, traditional_teach=False):  # 没改
-        """
-        获取单个作业的紧急挑战recordId列表
-        :param traditional_teach: 是否为标准授课
-        :return:
-        """
-        url = f'{self.ip}/pc/student/homeworkEvalChallenge' \
-            if traditional_teach else \
-            f'{self.ip}/pc/gate/homework/student/homeworkEvalChallenge'
-        eval_id_list = self.get_eval_id(traditional_teach=True) \
-            if traditional_teach else self.get_eval_id()
-        data = f'pageNum=1&pageSize=50&evalId={eval_id_list[0]}'
-        response = requests.get(url=url, headers=self.headers,
-                                params=data)
-        data_ret = response.json()
-        try:
-            data_list = data_ret['data']['recordList']['list']
-        except TypeError:
-            print(f'接口homeworkEvalRecord报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        else:
-            return [i['recordId'] for i in data_list]
-
-    def get_teacher_id(self):  # 没改
-        """
-        获取学生提交作品选择老师的teacherID
-        :return:
-        """
-        url = f'{self.ip}/pc/worksDisplay/getTeacherListByClassId'
-        response = requests.get(url=url, headers=self.headers)
-        data_ret = response.json()
-        try:
-            data_list = data_ret['data']
-            teacher_info = data_list[0]
-            user_list = teacher_info['userList']
-            user = user_list[0]
-            teacher_id = user['id']
-            return teacher_id
-        except TypeError:
-            print(f'接口/pc/worksDisplay/getTeacherListByClassId报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        except IndexError:
-            print(data_ret)
-
     def get_draft_id_list(self):  # 没改
         """
         用户获取草稿列表
@@ -887,32 +631,6 @@ class ParameterForOthers:
         else:
             draft_id_list = [i['id'] for i in data_list]
             return draft_id_list
-
-    def get_work_id(self):  # 没改
-        """
-        提供待教师审核的作品ID
-        :return:
-        """
-        url = f'{self.ip}/pc/worksDisplay/getMyWorksList?status=2&pageNum=1&pageSize=15&sort=0&keyword='
-        response = requests.get(url=url, headers=self.headers)
-        data_ret = response.json()
-        try:
-            data_list = data_ret['data']['list']
-            work_id_list = []
-            first_work = data_list[0]
-            first_work_id = first_work['id']
-            second_work = data_list[1]
-            second_work_id = second_work['id']
-        except TypeError:
-            print(f'接口"/pc/worksDisplay/getMyWorksList"报错，返回{data_ret["msg"]}')
-        except KeyError:
-            print(data_ret)
-        except IndexError:
-            print('没有数据', data_ret)
-        else:
-            work_id_list.append(first_work_id)
-            work_id_list.append(second_work_id)
-            return work_id_list
 
     def get_work_id_list(self):
         """
@@ -1014,8 +732,9 @@ class ParameterForOthers:
         else:
             return [i['id'] for i in data_list]
 
+
 # print(ParameterForOthers(identity='teacher').get_all_point_resource_id(1))
-# print(ParameterForOthers(identity='student').student_get_problem_id_list())
+# print(ParameterForOthers(identity='student').get_all_point_resource_id(1))
 # p = ParameterForOthers(identity='teacher')
 # print(p.__dict__)
 # print(p.__doc__)

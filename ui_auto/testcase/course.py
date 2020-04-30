@@ -35,6 +35,15 @@ class TestCourse(BaseTestCase):
         self.switch_window(0)
         self.del_course()
 
+    @log_decorator(case_log_path)
+    def test_03_student_do_practice(self):
+        self.step_log_path = self.case_log_path
+        self.login(**self.student_data)
+        self.click_button(*ElementSelector.bar_course_loc)
+        self.click_and_jump(1, *ElementSelector.course_list_card_mode_first_course_loc,
+                            loading=True)
+        self.student_do_practice()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,6 @@
 import time
 import unittest
+import pytest
 from pprint import pprint
 
 import requests
@@ -25,7 +26,8 @@ class CommonController(unittest.TestCase):
         self.teacher_id, self.school_id = self.teacher_parm.get_user_school_id()
         self.student_id, _ = self.student_parm.get_user_school_id()
 
-    def test_01_class(self):
+    @pytest.mark.run(order=1)
+    def test_class(self):
         """
         班级信息
         :return:
@@ -41,7 +43,8 @@ class CommonController(unittest.TestCase):
         except KeyError:
             print(f'接口/common/class，返回{data_ret},与预期不符')
 
-    def test_02_classes(self):
+    @pytest.mark.run(order=2)
+    def test_classes(self):
         """
         班级列表
         :return:
@@ -63,7 +66,8 @@ class CommonController(unittest.TestCase):
             except KeyError:
                 print(f'接口/common/classes，返回{data_ret},与预期不符')
 
-    def test_03_points(self):
+    @pytest.mark.run(order=3)
+    def test_points(self):
         """
         知识点树
         :return:
@@ -87,7 +91,8 @@ class CommonController(unittest.TestCase):
                 except KeyError:
                     print(f'接口/common/points，返回{data_ret},与预期不符')
 
-    def test_04_roles(self):
+    @pytest.mark.run(order=4)
+    def test_roles(self):
         """
         角色列表
         :return:
@@ -107,7 +112,8 @@ class CommonController(unittest.TestCase):
             except KeyError:
                 print(f'接口/common/roles，返回{data_ret},与预期不符')
 
-    def test_05_schools(self):
+    @pytest.mark.run(order=5)
+    def test_schools(self):
         """
         学校列表
         :return:
@@ -124,7 +130,8 @@ class CommonController(unittest.TestCase):
         except KeyError:
             print(f'接口/common/schools，返回{data_ret},与预期不符')
 
-    def test_06_series(self):
+    @pytest.mark.run(order=6)
+    def test_series(self):
         """
         系列课程
         :return:
@@ -146,7 +153,8 @@ class CommonController(unittest.TestCase):
             except KeyError:
                 print(f'接口/common/series，返回{data_ret},与预期不符')
 
-    def test_07_default_covers(self):
+    @pytest.mark.run(order=7)
+    def test_default_covers(self):
         """
         默认封面
         :return:

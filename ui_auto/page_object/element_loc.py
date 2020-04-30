@@ -246,7 +246,7 @@ class ElementSelector:
     course_detail_video_loc = '', '视频tab'  # 待定
     course_detail_notes_loc = '', '讲义tab'  # 待定
     course_detail_teach_plan_loc = '', '教案tab'  # 待定
-    course_detail_practice_loc = '', '练习tab'  # 待定
+    course_detail_practice_loc = '//div[contains(text(),"练习")]', '练习tab'
     course_detail_ppt_next_btn_loc = '//span[@class="cui-toolbar-buttondock aligncenter"]/a[3]', '课件PPT下一页按钮'
     course_detail_ppt_pages_num_loc = '//span[@class="cui-toolbar-buttondock aligncenter"]/a[2]/span', '课件页数'
     course_detail_ppt_content_loc = '//div[@id="browserLayerViewId"]/div[2]', 'PPT内容'
@@ -255,7 +255,10 @@ class ElementSelector:
         '/div[2]/video', '视频标签'
     course_detail_full_screen_video_loc = \
         '//div[@class="seriesFull_container__1QJUr"]/div[1]/div[2]/div[1]/div[2]/div/video', '全屏模式视频标签'
-    course_detail_practice_list_problem_loc = '//div[@class="exerciseList_exercise__3fOL2"]/div[1]', '练习题目'
+    course_detail_pdf_loc = '//div[@class="courseDetail_pdf-content__3FP-w"]', '讲义pdf'
+    course_detail_full_screen_pdf_loc = '//div[@class="seriesFull_pdf-content__3orRB"]', '全屏模式讲义pdf'
+    course_detail_practice_list_problem_loc = '//div[@class="exerciseList_exercise__3fOL2"]/div[1]/div[1]/span[2]',\
+                                              '练习题目'
     course_detail_practice_list_student_name_loc = f'//span[contains(text(),"{Data().student_data()["username"]}")]', \
                                                    '练习列表学生名字'
     course_detail_practice_list_refresh_loc = '//span[contains(text(),"刷")]', '练习列表刷新'
@@ -444,7 +447,7 @@ class ElementSelector:
 
     """试炼场标准编辑"""
     code_input_area_loc = '.ace_content', '试炼场编辑器区域'
-    draft_name_input_loc = '//div[@class="operate-save active"]/div[1]/input', '草稿名称input框'
+    draft_name_input_loc = '//div[@class="operate-save"]/div[1]/input', '草稿名称input框'
     save_btn_loc = '//div[contains(text(),"保存")]', '保存按钮'
     save_success_tip_loc = '//div[@class="el-message el-message--success"]/p', '试炼场成功提示'
     ace_text_input_loc = '//div[@class="ace-box"]/div/div/div/textarea', '试炼场游标'

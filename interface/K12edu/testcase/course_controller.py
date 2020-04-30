@@ -9,6 +9,7 @@ from interface.K12edu.common.parameter_for_others import ParameterForOthers
 from interface.K12edu.common.course_operation import add_course, edit_course
 from interface.K12edu.common.course_operation import finish_course, del_course
 from interface.K12edu.common.picture_list_code import turtle_code
+from interface.K12edu.common.homework_operation import student_do_practice
 
 
 class CourseController(unittest.TestCase):
@@ -248,6 +249,21 @@ class CourseController(unittest.TestCase):
             print(f'接口"/course/user/tag/course/point/current"报错，返回{data_ret["msg"]}')
         except KeyError:
             print(f'接口"/course/user/tag/course/point/current"返回{data_ret}')
+
+    def test_12_student_eval_save_record(self):
+        """
+        学生-课程练题评测&保存记录
+        :return:
+        """
+        class_id = self.student_parm.get_class_list(get_all=True)[0]
+        course_id = self.student_parm.get_user_course_list()[0]
+        data = {
+            'class_id': self.student_parm.get_class_list(get_all=True)[0],
+            'course_id': self.student_parm.get_user_course_list()[0],
+            'point_id': self.point_id_tup[0],
+            'subject_id_list': self.student_parm.get_practice_id_list(course_id, class_id, self.point_id_tup[0])
+        }
+        print(student_do_practice(self.student_parm, **data))
 
 
 if __name__ == '__main__':

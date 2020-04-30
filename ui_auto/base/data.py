@@ -20,7 +20,7 @@ class Data:
         self.production = production
 
     def ip_for_edu(self):
-        ip_for_edu = 'https://edu3.dingdangcode.com' \
+        ip_for_edu = 'https://edu.dingdangcode.com' \
             if self.production else 'https://edu.dingdangcode.cn/'
 
         return ip_for_edu
