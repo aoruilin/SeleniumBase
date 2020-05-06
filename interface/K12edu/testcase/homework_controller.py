@@ -34,7 +34,8 @@ class HomeworkController(unittest.TestCase):
         self.teacher_problem_id_list = self.teacher_parm.teacher_get_homework_problem_id_list()
         self.student_problem_id_list = self.student_parm.student_get_problem_id_list()
 
-    def test_01_post_homework(self):
+    @pytest.mark.run(order=1)
+    def test_post_homework(self):
         """
         老师发布单个作业
         :return:
@@ -55,7 +56,8 @@ class HomeworkController(unittest.TestCase):
                 do_homework_simple(student_param, cut_num=c)
                 c -= 1
 
-    def test_02_post_homework_loop(self):
+    @pytest.mark.run(order=2)
+    def test_post_homework_loop(self):
         """
         老师遍历发布设置发布作业
         :return:
@@ -79,7 +81,8 @@ class HomeworkController(unittest.TestCase):
                             do_homework_simple(student_param, cut_num=c)
                             c -= 1
 
-    def test_03_post_simple_series_problem(self):
+    @pytest.mark.run(order=3)
+    def test_post_simple_series_problem(self):
         """
         教师发布单个系列全部题目
         :return:
@@ -104,7 +107,8 @@ class HomeworkController(unittest.TestCase):
                     do_homework_simple(student_param, cut_num=c)
                     c -= 1
 
-    def test_03_post_all_problem(self):
+    @pytest.mark.run(order=4)
+    def test_post_all_problem(self):
         """
         老师发布全部题目，发之前要确定这个班有权限
         :return:
@@ -124,7 +128,8 @@ class HomeworkController(unittest.TestCase):
                 add_homework(self.teacher_parm, **param)
                 do_homework_simple(self.student_parm, cut_num=None)
 
-    def test_04_teacher_homework_list(self):
+    @pytest.mark.run(order=5)
+    def test_teacher_homework_list(self):
         """
         老师作业列表
         :return:
@@ -153,7 +158,8 @@ class HomeworkController(unittest.TestCase):
                     else:
                         print([{i['homeworkId']: i['homeworkName']} for i in data_list])
 
-    def test_05_teacher_homework_class_list(self):
+    @pytest.mark.run(order=6)
+    def test_teacher_homework_class_list(self):
         """
         老师发布作业班级选择
         :return:
@@ -173,7 +179,8 @@ class HomeworkController(unittest.TestCase):
         except KeyError:
             print(f'接口"/homework/tchHwClassList"返回{data_ret}')
 
-    def test_06_teacher_homework_analysis_list(self):
+    @pytest.mark.run(order=7)
+    def test_teacher_homework_analysis_list(self):
         """
         教师端题目分析统计列表
         :return:
@@ -196,7 +203,8 @@ class HomeworkController(unittest.TestCase):
         else:
             print([{i['problemId']: [i['problemName'], i['correctRate']]} for i in data_list])
 
-    def test_07_teacher_homework_analysis_problem_list(self):
+    @pytest.mark.run(order=8)
+    def test_teacher_homework_analysis_problem_list(self):
         """
         教师端-题目分析-题目列表
         :return:
@@ -215,7 +223,8 @@ class HomeworkController(unittest.TestCase):
         except KeyError:
             print(f'接口"/homework/tchHwAnsProblemList"返回{data_ret}')
 
-    def test_08_teacher_homework_class_list(self):
+    @pytest.mark.run(order=9)
+    def test_teacher_homework_class_list(self):
         """
         教师端作业发布班级选择
         :return:
@@ -236,7 +245,8 @@ class HomeworkController(unittest.TestCase):
         except KeyError:
             print(f'接口"/homework/tchHwClassList"返回{data_ret}')
 
-    def test_09_teacher_homework_current_student_list(self):
+    @pytest.mark.run(order=10)
+    def test_teacher_homework_current_student_list(self):
         """
         教师端当前作业学生下拉列表
         :return:
@@ -259,7 +269,8 @@ class HomeworkController(unittest.TestCase):
             except KeyError:
                 print(f'接口"/homework/tchHwCurrentStuList"返回{data_ret}')
 
-    def test_10_teacher_homework_list(self):
+    @pytest.mark.run(order=11)
+    def test_teacher_homework_list(self):
         """
         教师作业信息查询
         :return:
@@ -275,7 +286,8 @@ class HomeworkController(unittest.TestCase):
         except KeyError:
             print(f'接口"/homework/tchHwList"返回{data_ret}')
 
-    def test_11_teacher_homework_problem_info(self):
+    @pytest.mark.run(order=12)
+    def test_teacher_homework_problem_info(self):
         """
         教师端题目查看
         :return:
@@ -298,7 +310,8 @@ class HomeworkController(unittest.TestCase):
             except KeyError:
                 print(f'接口"/homework/tchHwProblemInfo"返回{data_ret}')
 
-    def test_12_teacher_homework_problem_list(self):
+    @pytest.mark.run(order=13)
+    def test_teacher_homework_problem_list(self):
         """
         教师端-学生列表-题目列表查询
         :return:
@@ -318,7 +331,8 @@ class HomeworkController(unittest.TestCase):
         except KeyError:
             print(f'接口"/homework/tchHwProblemList"返回{data_ret}')
 
-    def test_13_teacher_homework_problem_oj(self):
+    @pytest.mark.run(order=14)
+    def test_teacher_homework_problem_oj(self):
         """
         教师端-测评-预览测评/指定学生
         :return:
@@ -329,7 +343,8 @@ class HomeworkController(unittest.TestCase):
             res = requests.post(url=url, headers=self.teacher_headers, json=data)
             assert_res(res.text)
 
-    def test_14_teacher_homework_series_list(self):
+    @pytest.mark.run(order=15)
+    def test_teacher_homework_series_list(self):
         """
         教师端-作业发布-系列下拉选取
         :return:
@@ -349,7 +364,8 @@ class HomeworkController(unittest.TestCase):
         except KeyError:
             print(f'接口"/homework/tchHwSeriesList"返回{data_ret}')
 
-    def test_15_teacher_homework_student_list(self):
+    @pytest.mark.run(order=16)
+    def test_teacher_homework_student_list(self):
         """
         教师端-学生成绩列表
         :return:
@@ -374,7 +390,8 @@ class HomeworkController(unittest.TestCase):
                       i['studentName']: [i['result'], i['correctCount'], i['finishedCount'], i['level']]
                   } for i in data_list])
 
-    def test_16_teacher_homework_student_resend(self):
+    @pytest.mark.run(order=17)
+    def test_teacher_homework_student_resend(self):
         """
         教师端-学生作业重交
         :return:
@@ -386,7 +403,8 @@ class HomeworkController(unittest.TestCase):
         res = requests.post(url=url, headers=self.teacher_headers, json=data)
         assert_res(res.text)
 
-    def test_17_teacher_homework_delete(self):
+    @pytest.mark.run(order=18)
+    def test_teacher_homework_delete(self):
         """
         教师删除作业
         :return:
@@ -400,7 +418,8 @@ class HomeworkController(unittest.TestCase):
             res = requests.post(url=url, headers=self.teacher_headers, json=data)
             assert_res(res.text)
 
-    def test_18_student_homework_list(self):
+    @pytest.mark.run(order=19)
+    def test_student_homework_list(self):
         """
         学生端-作业列表-作业列表查询
         :return:
@@ -432,7 +451,8 @@ class HomeworkController(unittest.TestCase):
                     else:
                         print([{i['homeworkId']: i['homeworkName']} for i in data_list])
 
-    def test_19_student_homework_add_eval(self):
+    @pytest.mark.run(order=20)
+    def test_student_homework_add_eval(self):
         """
         学生端-作业列表-开始做作业(exist为0时调用)
         :return:
@@ -452,7 +472,8 @@ class HomeworkController(unittest.TestCase):
         except KeyError:
             print(f'接口"/homework/stuHwAddEval"返回{data_ret}')
 
-    def test_20_student_homework_problem_info(self):
+    @pytest.mark.run(order=21)
+    def test_student_homework_problem_info(self):
         """
         学生端-作业题目-详细查询
         :return:
@@ -475,7 +496,8 @@ class HomeworkController(unittest.TestCase):
             except KeyError:
                 print(f'接口"/homework/stuHwProblemInfo"返回{data_ret}')
 
-    def test_21_student_homework_student_info(self):
+    @pytest.mark.run(order=22)
+    def test_student_homework_student_info(self):
         """
         学生端-作业列表-学生信息栏查询
         :return:

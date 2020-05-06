@@ -1,4 +1,5 @@
 import time
+import pytest
 import unittest
 from pprint import pprint
 
@@ -30,7 +31,8 @@ class CourseController(unittest.TestCase):
         self.class_id_list = self.teacher_parm.get_class_list(get_all=True)
         self.series_id_list = self.teacher_parm.get_series_list()
 
-    def test_01_teacher_issue(self):
+    @pytest.mark.run(order=1)
+    def test_teacher_issue(self):
         """
         老师单独发布一个课程并编辑删除
         :return:
@@ -40,7 +42,8 @@ class CourseController(unittest.TestCase):
         finish_course(self.teacher_parm, self.course_id_list[0])
         del_course(self.teacher_parm, self.course_id_list[0])
 
-    def test_02_teacher_issue(self):
+    @pytest.mark.run(order=2)
+    def test_teacher_issue(self):
         """
         老师发布所有系列课程
         :return:
@@ -49,7 +52,8 @@ class CourseController(unittest.TestCase):
             add_course(self.teacher_parm, self.class_id_list[-1], series_id)
             time.sleep(1)
 
-    def test_03_teacher_switch_point(self):
+    @pytest.mark.run(order=3)
+    def test_teacher_switch_point(self):
         """
         老师切换知识点标识
         :return:
@@ -61,7 +65,8 @@ class CourseController(unittest.TestCase):
             assert_res(res.text)
             time.sleep(1)
 
-    def test_04_user_courses(self):
+    @pytest.mark.run(order=4)
+    def test_user_courses(self):
         """
         用户课程列表
         :return:
@@ -89,7 +94,8 @@ class CourseController(unittest.TestCase):
                 else:
                     print([{i['id']: [i['seriesName'], i['issueName']]} for i in data_list])
 
-    def test_05_user_course_point_tag(self):
+    @pytest.mark.run(order=5)
+    def test_user_course_point_tag(self):
         """
         课程知识点标签信息
         :return:
@@ -109,7 +115,8 @@ class CourseController(unittest.TestCase):
             except KeyError:
                 print(f'接口"/course/user/tag/course/points"返回{data_ret}')
 
-    def test_06_teacher_practises(self):
+    @pytest.mark.run(order=6)
+    def test_teacher_practises(self):
         """
         老师查看学生练习
         :return:
@@ -142,7 +149,8 @@ class CourseController(unittest.TestCase):
             except KeyError:
                 print(f'接口"/practises"返回{data_ret}')
 
-    def test_07_teacher_classes(self):
+    @pytest.mark.run(order=7)
+    def test_teacher_classes(self):
         """
         老师-可选班级
         :return:
@@ -161,7 +169,8 @@ class CourseController(unittest.TestCase):
             except KeyError:
                 print(f'接口"/course/teacher/classes"返回{data_ret}')
 
-    def test_08_user_course(self):
+    @pytest.mark.run(order=8)
+    def test_user_course(self):
         """
         课程信息
         :return:
@@ -180,7 +189,8 @@ class CourseController(unittest.TestCase):
             except KeyError:
                 print(f'接口"/course/user/course"返回{data_ret}')
 
-    def test_09_save_play_code(self):
+    @pytest.mark.run(order=9)
+    def test_save_play_code(self):
         """
         课程-保存试炼场用户代码
         :return:
@@ -215,7 +225,8 @@ class CourseController(unittest.TestCase):
                 except KeyError:
                     print(f'接口"/course/user/query/playCode"返回{data_ret}')
 
-    def test_10_tag_course_current(self):
+    @pytest.mark.run(order=10)
+    def test_tag_course_current(self):
         """
         课程-已发布-当前授课标签信息
         :return:
@@ -232,7 +243,8 @@ class CourseController(unittest.TestCase):
         except KeyError:
             print(f'接口"/course/user/tag/course/current"返回{data_ret}')
 
-    def test_11_tag_course_point_current(self):
+    @pytest.mark.run(order=11)
+    def test_tag_course_point_current(self):
         """
         课程-已发布-当前授课知识点标签信息
         :return:
@@ -250,20 +262,23 @@ class CourseController(unittest.TestCase):
         except KeyError:
             print(f'接口"/course/user/tag/course/point/current"返回{data_ret}')
 
-    def test_12_student_eval_save_record(self):
+    @pytest.mark.run(order=12)
+    def test_student_eval_save_record(self):
         """
         学生-课程练题评测&保存记录
         :return:
         """
         class_id = self.student_parm.get_class_list(get_all=True)[0]
         course_id = self.student_parm.get_user_course_list()[0]
-        data = {
-            'class_id': self.student_parm.get_class_list(get_all=True)[0],
-            'course_id': self.student_parm.get_user_course_list()[0],
-            'point_id': self.point_id_tup[0],
-            'subject_id_list': self.student_parm.get_practice_id_list(course_id, class_id, self.point_id_tup[0])
-        }
-        print(student_do_practice(self.student_parm, **data))
+        point_id_list = self.student_parm.get_all_point_resource_id(1)
+        for id_dic in point_id_list:
+            data = {
+                'class_id': class_id,
+                'course_id': course_id,
+                'point_id': id_dic['id'],
+                'subject_id_list': self.student_parm.get_practice_id_list(course_id, class_id, id_dic['id'])
+            }
+            print(student_do_practice(self.student_parm, **data))
 
 
 if __name__ == '__main__':

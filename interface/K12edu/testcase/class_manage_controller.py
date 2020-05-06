@@ -1,7 +1,9 @@
-import unittest
-import requests
 import time
+import pytest
+import unittest
 from pprint import pprint
+
+import requests
 
 from interface.K12edu.common.assert_msg import assert_res
 from interface.K12edu.common.parameter_for_others import ParameterForOthers
@@ -22,7 +24,8 @@ class ClassManage(unittest.TestCase):
 
         self.file_path = f'{get_absolute_path("interface")}\\K12edu\\files\\'
 
-    def test_01_add_course(self):
+    @pytest.mark.run(order=1)
+    def test_add_course(self):
         """
         管理员创建班级
         :return:
@@ -46,7 +49,8 @@ class ClassManage(unittest.TestCase):
         except KeyError:
             print(f"添加班级失败,{data_ret}")
 
-    def test_02_add_form_student(self):
+    @pytest.mark.run(order=2)
+    def test_add_form_student(self):
         """
         表单填写信息新建学生
         :return:
@@ -64,7 +68,8 @@ class ClassManage(unittest.TestCase):
         assert_res(res.text)
         time.sleep(1)
 
-    def test_03_add_course_student(self):
+    @pytest.mark.run(order=3)
+    def test_add_course_student(self):
         """
         选取添加学生
         :return:
@@ -80,7 +85,8 @@ class ClassManage(unittest.TestCase):
             time.sleep(1)
         self.student_id_list = self.manager_param.get_class_student_id(self.class_id_list[0], self.school_id)
 
-    def test_04_upd_student(self):
+    @pytest.mark.run(order=4)
+    def test_upd_student(self):
         """
         班级管理修改学生
         :return:
@@ -105,7 +111,8 @@ class ClassManage(unittest.TestCase):
             except KeyError:
                 print(f"添加班级失败,{data_ret}")
 
-    def test_05_student_list(self):
+    @pytest.mark.run(order=5)
+    def test_student_list(self):
         """
         班级管理-学生列表
         :return:
@@ -132,7 +139,8 @@ class ClassManage(unittest.TestCase):
             else:
                 print([(i['stuNo'], i['stuName'], i['mobile']) for i in data_list])
 
-    def test_06_student_info(self):
+    @pytest.mark.run(order=6)
+    def test_student_info(self):
         """
         班级管理-学生列表-学生信息查询
         :return:
@@ -142,7 +150,8 @@ class ClassManage(unittest.TestCase):
         assert_res(res.text)
         pprint(res.json())
 
-    def test_07_del_students(self):
+    @pytest.mark.run(order=7)
+    def test_del_students(self):
         """
         删除班级学生
         :return:
@@ -156,7 +165,8 @@ class ClassManage(unittest.TestCase):
         assert_res(res.text)
         time.sleep(1)
 
-    def test_08_upd_course(self):
+    @pytest.mark.run(order=8)
+    def test_upd_course(self):
         """
         修改课程班
         :return:
@@ -175,7 +185,8 @@ class ClassManage(unittest.TestCase):
         assert_res(res.text)
         time.sleep(1)
 
-    def test_09_class_list(self):
+    @pytest.mark.run(order=9)
+    def test_class_list(self):
         """
         班级管理-列表
         :return:
@@ -203,7 +214,8 @@ class ClassManage(unittest.TestCase):
                 else:
                     pprint([(i['classId'], i['className'], i['stuCount']) for i in data_list])
 
-    def test_10_del_course(self):
+    @pytest.mark.run(order=10)
+    def test_del_course(self):
         """
         删除对应班级
         :return:
@@ -214,7 +226,8 @@ class ClassManage(unittest.TestCase):
         assert_res(res.text)
         time.sleep(1)
 
-    def test_11_get_class_list(self):
+    @pytest.mark.run(order=11)
+    def test_get_class_list(self):
         """
         班级管理-列表
         :return:
@@ -230,7 +243,8 @@ class ClassManage(unittest.TestCase):
         except KeyError:
             print(f'接口/teachcenter/classmanage/list返回{data_ret}')
 
-    def test_12_select_list(self):
+    @pytest.mark.run(order=12)
+    def test_select_list(self):
         """
         班级管理-查询下拉-列表
         :return:
@@ -247,7 +261,8 @@ class ClassManage(unittest.TestCase):
         except KeyError:
             print(f'接口/teachcenter/classmanage/selectList返回{data_ret}')
 
-    def test_13_student_class_list(self):
+    @pytest.mark.run(order=13)
+    def test_student_class_list(self):
         """
         班级管理-添加学生-学生列表
         :return:
@@ -263,7 +278,8 @@ class ClassManage(unittest.TestCase):
         except KeyError:
             print(f'接口/teachcenter/classmanage/stuClassList返回{data_ret}')
 
-    def test_14_student_import(self):
+    @pytest.mark.run(order=14)
+    def test_student_import(self):
         """
         班级管理-学生列表-批量导入
         :return:
@@ -290,7 +306,8 @@ class ClassManage(unittest.TestCase):
             except KeyError:
                 print(f'接口/teachcenter/classmanage/stuFileImport返回{data_ret}')
 
-    def test_15_student_export(self):
+    @pytest.mark.run(order=15)
+    def test_student_export(self):
         """
         班级管理-学生列表-批量导出
         :return:
@@ -301,7 +318,8 @@ class ClassManage(unittest.TestCase):
         file_name = 'student_export.xls'
         file_write(f'{self.file_path}export\\', file_name, res.content)
 
-    def test_16_student_temp_export(self):
+    @pytest.mark.run(order=16)
+    def test_student_temp_export(self):
         """
         班级管理-学生列表-模板导出
         :return:

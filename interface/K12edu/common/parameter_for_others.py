@@ -733,8 +733,9 @@ class ParameterForOthers:
             return [i['id'] for i in data_list]
 
 
+# from pprint import pprint
 # print(ParameterForOthers(identity='teacher').get_all_point_resource_id(1))
-# print(ParameterForOthers(identity='student').get_all_point_resource_id(1))
+# pprint(ParameterForOthers(identity='student').get_all_point_resource_id(1))
 # p = ParameterForOthers(identity='teacher')
 # print(p.__dict__)
 # print(p.__doc__)
